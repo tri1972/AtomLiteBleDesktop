@@ -1,0 +1,39 @@
+﻿<Page
+    x:Class="AtomLitePIR.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AtomLitePIR"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" FontSize="20">
+
+    <Grid x:Name="log">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="1*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
+        </Grid.RowDefinitions>
+        <ScrollViewer>
+            <TextBlock x:Name="ResultText" Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" 
+                     Text="{Binding Path=textData.Text, UpdateSourceTrigger=PropertyChanged}" />
+        </ScrollViewer>
+        <Button x:Name="Scan_button" Grid.Column="1"  Width="auto" Height="auto" Click="Button_Click" Content="Scan" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+        <Button x:Name="Connect_button2" Grid.Column="1" Grid.Row="1"  Width="auto" Height="auto" Click="Button_Click_2" Content="Connect"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+        <Button x:Name="ScanStop" Grid.Column="1" Grid.Row="2"  Width="auto" Height="auto" Click="Button_Click_1" Content="ScanStop"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+        <Button x:Name="readCharacteristic" Grid.Column="1" Grid.Row="3"  Width="auto" Height="auto" Click="readCharacteristic_Click" Content="readCharacteristic"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+    </Grid>
+    <!--
+    <Grid>
+        <Button x:Name="ScanButton" Content="Scan" Height="86" Margin="385,420,0,0" VerticalAlignment="Top" Width="220" FontSize="20" Click="Button_Click"/>
+        <Button Content="Connect" Height="80" Margin="899,426,0,0" VerticalAlignment="Top" Width="220" FontSize="20" Click="Button_Click_2"/>
+        <Button Content="ScanStop" Margin="0,418,0,0" VerticalAlignment="Top" Height="84" Width="220" Click="Button_Click_1" HorizontalAlignment="Center"/>
+        <TextBlock x:Name="ResultText" HorizontalAlignment="Center" Height="279" Margin="0,73,0,0" Text="TextBlock" TextWrapping="Wrap" VerticalAlignment="Top" Width="774" FontSize="48" TextAlignment="Center" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+    </Grid>
+    -->
+</Page>
