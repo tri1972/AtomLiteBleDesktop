@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" FontSize="20">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" FontSize="20" Loading="PageLoaded">
 
     <Grid x:Name="log">
         <Grid.ColumnDefinitions>

@@ -119,9 +119,13 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="BluetoothLEDeviceDisplay.cs" />
-    <Compile Include="BluetoothService.cs" />
-    <Compile Include="Constants.cs" />
+    <Compile Include="Bluetooth\BluetoothConnector.cs" />
+    <Compile Include="Bluetooth\BluetoothWatcher.cs" />
+    <Compile Include="Bluetooth\BluetoothLEDeviceDisplay.cs" />
+    <Compile Include="Bluetooth\BluetoothReceiver.cs" />
+    <Compile Include="Bluetooth\BluetoothSender.cs" />
+    <Compile Include="Bluetooth\BluetoothService.cs" />
+    <Compile Include="Bluetooth\Constants.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

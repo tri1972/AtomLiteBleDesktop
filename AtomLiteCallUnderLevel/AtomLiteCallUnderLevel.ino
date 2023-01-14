@@ -302,22 +302,6 @@ void setup() {
 
 void loop() {
   String strSend;//送信文字列
-  if(digitalRead(PIR_PIN)==HIGH ){
-    setLED(RED_LED, HIGH);
-    Serial.println("PIR ON");
-  }else{
-    setLED(RED_LED, LOW);
-    Serial.println("PIR OFF");
-  }  
-  
-  if(digitalRead(PUSH_BUTTON_PIN)==HIGH ){
-    digitalWrite(BUTTON_LED_PIN, HIGH);
-    Serial.println("PUSH_BUTTON ON");
-  }else{
-    digitalWrite(BUTTON_LED_PIN, LOW);
-    Serial.println("PUSH_BUTTON OFF");
-  }
-  
   //LEDランプによるステータス表示
   switch(bleState){
     case connect://青色常時点灯
@@ -339,11 +323,15 @@ void loop() {
   }
     // notify changed value
     if (deviceConnected) {
-      if(digitalRead(PIR_PIN)==HIGH ){
-        strSend = "PIR_ON";
+      if(digitalRead(PUSH_BUTTON_PIN)==HIGH ){
+        digitalWrite(BUTTON_LED_PIN, HIGH);
+        strSend = "PUSH_ON";
+        Serial.println("PUSH_BUTTON ON");
         //delay(1000); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
       }else{
-        strSend = "PIR_OFF";
+        digitalWrite(BUTTON_LED_PIN, LOW);
+        strSend = "PUSH_OFF";
+        Serial.println("PUSH_BUTTON OFF");
       }
       pCharacteristic->setValue(strSend.c_str());
       pCharacteristic->notify();

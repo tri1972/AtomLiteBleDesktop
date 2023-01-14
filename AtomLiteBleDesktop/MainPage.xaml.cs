@@ -25,6 +25,7 @@ using Windows.Storage.Streams;
 using Windows.Security.Cryptography;
 using System.Text;
 using SDKTemplate;
+using AtomLitePIR.Bluetooth;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x411 を参照してください
 
@@ -42,7 +43,7 @@ namespace AtomLitePIR
         readonly int E_DEVICE_NOT_AVAILABLE = unchecked((int)0x800710df); // HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE)
         #endregion
 
-        private TextNotifyPropertyChanged _textData = new TextNotifyPropertyChanged();
+        private const string PIRSERVER = "ESP32PIRTRI";
 
         /// <summary>
         /// 定義済みUUIDのリスト
@@ -184,46 +185,46 @@ namespace AtomLitePIR
             PulseOximetryPulsatileEvent = 0x2A60,
             SimpleKeyState = 0xFFE1
         }
-        /// <summary>
-        /// 接続PIRサーバー名
-        /// </summary>
-        private const string PIRServer = "ESP32PIRTRI";
 
-        private BluetoothLEDeviceDisplay deviceInfoSerchedServer = null;
 
         static BluetoothLEAdvertisementWatcher watcher;
-        private DeviceWatcher deviceWatcher;
-        private ObservableCollection<BluetoothLEDeviceDisplay> KnownDevices = new ObservableCollection<BluetoothLEDeviceDisplay>();
-        private List<DeviceInformation> UnknownDevices = new List<DeviceInformation>();
         private BluetoothLEDevice bluetoothLeDevice = null;
         private List<BluetoothService> services = new List<BluetoothService>();
         private GattPresentationFormat presentationFormat;
         private GattCharacteristic selectedCharacteristic;
         private GattCharacteristic registeredCharacteristic;
 
+        private TextNotifyPropertyChanged _textData = new TextNotifyPropertyChanged();
         private IReadOnlyList<GattCharacteristic> characteristics = null;
+
+        private BluetoothWatcher bluetoothWatcher;
 
         public MainPage()
         {
             this.InitializeComponent();
-
             DataContext = new
             {
                 textData = _textData,
             };
         }
 
+        private void PageLoaded(FrameworkElement sender, object args)
+        {
+            this.bluetoothWatcher = new BluetoothWatcher(this.Dispatcher);
+        }
+
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            this.StartBleDeviceWatcher();
+            this.bluetoothWatcher.PIRServer = PIRSERVER;
+            this.bluetoothWatcher.StartBleDeviceWatcher();
             this._textData.Text = "Searching";
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            this.StopBleDeviceWatcher();
+            this.bluetoothWatcher.StopBleDeviceWatcher();
 
-            this._textData.Text = "Searched"+this.deviceInfoSerchedServer.Name+" : "+ this.deviceInfoSerchedServer.Id;
+            this._textData.Text = "Searched"+ this.bluetoothWatcher.DeviceInfoSerchedServer.Name+" : "+ this.bluetoothWatcher.DeviceInfoSerchedServer.Id;
         }
 
         private static void Watcher_Received(BluetoothLEAdvertisementWatcher sender, BluetoothLEAdvertisementReceivedEventArgs args)
@@ -243,257 +244,6 @@ namespace AtomLitePIR
             Debug.WriteLine("");
         }
 
-        private void StartBleDeviceWatcher()
-        {
-            try
-            {
-                // Additional properties we would like about the device.
-                // Property strings are documented here https://msdn.microsoft.com/en-us/library/windows/desktop/ff521659(v=vs.85).aspx
-                string[] requestedProperties = { "System.Devices.Aep.DeviceAddress", "System.Devices.Aep.IsConnected", "System.Devices.Aep.Bluetooth.Le.IsConnectable" };
-
-                // BT_Code: Example showing paired and non-paired in a single query.
-                string aqsAllBluetoothLEDevices = "(System.Devices.Aep.ProtocolId:=\"{bb7bb05e-5972-42b5-94fc-76eaa7084d49}\")";
-
-                deviceWatcher =
-                        DeviceInformation.CreateWatcher(
-                            aqsAllBluetoothLEDevices,
-                            requestedProperties,
-                            DeviceInformationKind.AssociationEndpoint);
-
-                // Register event handlers before starting the watcher.
-                deviceWatcher.Added += DeviceWatcher_Added;
-                deviceWatcher.Updated += DeviceWatcher_Updated;
-                deviceWatcher.Removed += DeviceWatcher_Removed;
-                deviceWatcher.EnumerationCompleted += DeviceWatcher_EnumerationCompleted;
-                deviceWatcher.Stopped += DeviceWatcher_Stopped;
-
-                // Start over with an empty collection.
-                KnownDevices.Clear();
-
-                // Start the watcher. Active enumeration is limited to approximately 30 seconds.
-                // This limits power usage and reduces interference with other Bluetooth activities.
-                // To monitor for the presence of Bluetooth LE devices for an extended period,
-                // use the BluetoothLEAdvertisementWatcher runtime class. See the BluetoothAdvertisement
-                // sample for an example.
-                deviceWatcher.Start();
-            }
-            catch (Exception err)
-            {
-                Debug.WriteLine("err");
-            }
-        }
-
-        /// <summary>
-        /// Stops watching for all nearby Bluetooth devices.
-        /// </summary>
-        private void StopBleDeviceWatcher()
-        {
-            if (deviceWatcher != null)
-            {
-                // Unregister the event handlers.
-                deviceWatcher.Added -= DeviceWatcher_Added;
-                deviceWatcher.Updated -= DeviceWatcher_Updated;
-                deviceWatcher.Removed -= DeviceWatcher_Removed;
-                deviceWatcher.EnumerationCompleted -= DeviceWatcher_EnumerationCompleted;
-                deviceWatcher.Stopped -= DeviceWatcher_Stopped;
-
-                // Stop the watcher.
-                deviceWatcher.Stop();
-                deviceWatcher = null;
-            }
-        }
-
-        /// <summary>
-        /// とりあえず見つかったBluetoothデバイスを順番に列挙していく
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="deviceInfo"></param>
-        private async void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
-        {
-            // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                lock (this)
-                {
-                    try
-                    {
-                        Debug.WriteLine(String.Format("Added {0}{1}", deviceInfo.Id, deviceInfo.Name));
-
-                        // Protect against race condition if the task runs after the app stopped the deviceWatcher.
-                        if (sender == deviceWatcher)
-                        {
-                            // Make sure device isn't already present in the list.
-                            if (FindBluetoothLEDeviceDisplay(deviceInfo.Id) == null)
-                            {
-                                if (deviceInfo.Name != string.Empty)
-                                {
-                                    if(PIRServer== deviceInfo.Name)
-                                    {
-                                        this.deviceInfoSerchedServer = new BluetoothLEDeviceDisplay(deviceInfo);
-                                        this._textData.Text = "detected! : " + PIRServer;
-                                    }
-                                    Debug.WriteLine("Detect Deveice" + deviceInfo.Id + ":" + deviceInfo.Name);
-                                    // If device has a friendly name display it immediately.
-                                    //nameのあるDeviceを配列に保存する
-                                    KnownDevices.Add(new BluetoothLEDeviceDisplay(deviceInfo));
-                                }
-                                else
-                                {
-                                    //nameのないDeviceを配列に保存する
-                                    // Add it to a list in case the name gets updated later. 
-                                    UnknownDevices.Add(deviceInfo);
-                                }
-                            }
-
-                        }
-                    }catch(Exception err)
-                    {
-                        Debug.WriteLine("Error");
-                    }
-                }
-            });
-        }
-
-        /// <summary>
-        /// 列挙されたBluetoothデバイスの中で変更があれば呼ばれる
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="deviceInfoUpdate"></param>
-        private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
-        {
-            // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                lock (this)
-                {
-                    Debug.WriteLine(String.Format("Updated {0}{1}", deviceInfoUpdate.Id, ""));
-
-                    // Protect against race condition if the task runs after the app stopped the deviceWatcher.
-                    if (sender == deviceWatcher)
-                    {
-                        /*
-                        BluetoothLEDeviceDisplay bleDeviceDisplay = FindBluetoothLEDeviceDisplay(deviceInfoUpdate.Id);
-                        if (bleDeviceDisplay != null)
-                        {
-                            // Device is already being displayed - update UX.
-                            bleDeviceDisplay.Update(deviceInfoUpdate);
-                            return;
-                        }
-                        */
-                        DeviceInformation deviceInfo = FindUnknownDevices(deviceInfoUpdate.Id);
-                        if (deviceInfo != null)
-                        {
-                            deviceInfo.Update(deviceInfoUpdate);
-                            // If device has been updated with a friendly name it's no longer unknown.
-                            if (deviceInfo.Name != String.Empty)
-                            {
-                                KnownDevices.Add(new BluetoothLEDeviceDisplay(deviceInfo));
-                                UnknownDevices.Remove(deviceInfo);
-                            }
-                        }
-                        
-                    }
-                }
-            });
-        }
-        /// <summary>
-        /// 列挙されたBluetoothデバイスのなかで削除されたら呼ばれる
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="deviceInfoUpdate"></param>
-        private async void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
-        {
-            // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                lock (this)
-                {
-                    Debug.WriteLine(String.Format("Removed {0}{1}", deviceInfoUpdate.Id, ""));
-                    
-                    // Protect against race condition if the task runs after the app stopped the deviceWatcher.
-                    if (sender == deviceWatcher)
-                    {
-                        // Find the corresponding DeviceInformation in the collection and remove it.
-                        BluetoothLEDeviceDisplay bleDeviceDisplay = FindBluetoothLEDeviceDisplay(deviceInfoUpdate.Id);
-                        if (bleDeviceDisplay != null)
-                        {
-                            KnownDevices.Remove(bleDeviceDisplay);
-                        }
-
-                        DeviceInformation deviceInfo = FindUnknownDevices(deviceInfoUpdate.Id);
-                        if (deviceInfo != null)
-                        {
-                            UnknownDevices.Remove(deviceInfo);
-                        }
-                    }
-                }
-            });
-        }
-
-        /// <summary>
-        /// 列挙が一通り終わった段階で呼ばれる
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private async void DeviceWatcher_EnumerationCompleted(DeviceWatcher sender, object e)
-        {
-            // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                // Protect against race condition if the task runs after the app stopped the deviceWatcher.
-                if (sender == deviceWatcher)
-                {
-                }
-            });
-        }
-
-        private async void DeviceWatcher_Stopped(DeviceWatcher sender, object e)
-        {
-            // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                // Protect against race condition if the task runs after the app stopped the deviceWatcher.
-                if (sender == deviceWatcher)
-                {
-                    /*
-                    rootPage.NotifyUser($"No longer watching for devices.",
-                            sender.Status == DeviceWatcherStatus.Aborted ? NotifyType.ErrorMessage : NotifyType.StatusMessage);
-                    */
-                }
-            });
-        }
-        /// <summary>
-        /// KnownDevices配列（NameがあるBluetoothデバイス）の中から指定されたIDのDeviceInformationを取り出す
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        private BluetoothLEDeviceDisplay FindBluetoothLEDeviceDisplay(string id)
-        {
-            foreach (BluetoothLEDeviceDisplay bleDeviceDisplay in KnownDevices)
-            {
-                if (bleDeviceDisplay.Id == id)
-                {
-                    return bleDeviceDisplay;
-                }
-            }
-            return null;
-        }
-        /// <summary>
-        /// UnknownDevices配列（NameがなかったBluetoothデバイス）の中から指定されたIDのDeviceInformationを取り出す
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        private DeviceInformation FindUnknownDevices(string id)
-        {
-            foreach (DeviceInformation bleDeviceInfo in UnknownDevices)
-            {
-                if (bleDeviceInfo.Id == id)
-                {
-                    return bleDeviceInfo;
-                }
-            }
-            return null;
-        }
 
         private async void Button_Click_2(object sender, RoutedEventArgs e)
         {
@@ -565,7 +315,7 @@ namespace AtomLitePIR
             try
             {
                 // BT_Code: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
-                this.bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(this.deviceInfoSerchedServer.Id);
+                this.bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(this.bluetoothWatcher.DeviceInfoSerchedServer.Id);
                 if (bluetoothLeDevice == null)
                 {
                     Debug.WriteLine("Failed to connect to device.");
@@ -844,7 +594,6 @@ namespace AtomLitePIR
                 throw err;
             }
         }
-
 
 
         /*
