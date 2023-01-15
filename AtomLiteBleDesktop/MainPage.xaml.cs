@@ -30,6 +30,9 @@ using Windows.UI.Popups;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x411 を参照してください
 
+/// <summary>
+/// 参考Url：https://blog.beachside.dev/entry/2018/06/22/210000
+/// </summary>
 namespace AtomLitePIR
 {
     /// <summary>
@@ -65,246 +68,77 @@ namespace AtomLitePIR
             this.bluetoothWatcher = new BluetoothWatcher(this.Dispatcher);
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+
+        private void NavView_Loaded(object sender, RoutedEventArgs e)
         {
-            this.bluetoothWatcher.PIRServer = PIRSERVER;
-            this.bluetoothWatcher.StartBleDeviceWatcher();
-            var task =  await Task.Run<string>(() => {
-                //1s待って。接続Server名が取得できなければnullを返す
-                int counter = 100;
-                while(this.bluetoothWatcher.PIRServerSearched==null )
-                {
-                    if (counter == 0)
-                    {
-                        break;
-                    }
-                    Thread.Sleep(10);
-                    counter--;
-                }
-                if(this.bluetoothWatcher.PIRServerSearched != null)
-                {
-                    return bluetoothWatcher.PIRServerSearched;
-                }
-                else
-                {
-                    return null;
-                }
-            });
-            if (task != null)
+            // MainPage.xaml で書いた MenuItems の下にさらにコードで MenuItems を追加したり...
+            NavView.MenuItems.Add(new NavigationViewItemSeparator());
+            NavView.MenuItems.Add(new NavigationViewItem() { Content = "My content", Icon = new SymbolIcon(Symbol.Folder), Tag = "my-content" });
+
+            // home を選択
+            var item = GetNavigationViewItem("home");
+            NavView.SelectedItem = item;
+            // frame に home を表示
+            NavView_Navigate("home");
+
+            ContentFrame.Navigated += On_Navigated;
+        }
+
+        private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+        {
+            if (args.IsSettingsInvoked)
             {
-                this._textData.Text = "取得サーバー名:\n" + task;
+                ContentFrame.Navigate(typeof(SettingsPage));
             }
             else
             {
-                var dialog = new MessageDialog("接続指定サーバをSearchしたが取得できませんでした", "エラー");
-                _ = dialog.ShowAsync();
+                // メソッドの引数 arg の args.InvokedItem は、メニューがクリックされたら、Content の値が飛んでくる。へー。
+                var tag = sender.MenuItems.OfType<NavigationViewItem>()
+                    .First(x => x.Content.ToString() == args.InvokedItem.ToString())
+                    .Tag.ToString();
+
+                NavView_Navigate(tag);
             }
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private NavigationViewItem GetNavigationViewItem(string tag)
+            => NavView.MenuItems.OfType<NavigationViewItem>().First(i => i.Tag.ToString() == tag);
+
+        private void On_Navigated(object sender, NavigationEventArgs e)
         {
-            this.bluetoothWatcher.StopBleDeviceWatcher();
+            //NavView.IsBackEnabled = ContentFrame.CanGoBack;
 
-            this._textData.Text = "Searched"+ this.bluetoothWatcher.DeviceInfoSerchedServer.Name+" : "+ this.bluetoothWatcher.DeviceInfoSerchedServer.Id;
-        }
-
-        private static void Watcher_Received(BluetoothLEAdvertisementWatcher sender, BluetoothLEAdvertisementReceivedEventArgs args)
-        {
-            Debug.WriteLine("---Received---");
-            var bleServiceUUIDs = args.Advertisement.ServiceUuids;
-
-            Debug.WriteLine("Found");
-            Debug.WriteLine("MAC:" + args.BluetoothAddress.ToString());
-            Debug.WriteLine("NAME:" + args.Advertisement.LocalName.ToString());
-            Debug.WriteLine("ServiceUuid");
-            foreach (var uuidone in bleServiceUUIDs)
+            if (ContentFrame.SourcePageType == typeof(SettingsPage))
             {
-                Debug.WriteLine(uuidone.ToString());
-            }
-            Debug.WriteLine("---END---");
-            Debug.WriteLine("");
-        }
-
-
-        private async void Button_Click_2(object sender, RoutedEventArgs e)
-        {
-            String tmp = string.Copy(this._textData.Text);
-            if (this.bluetoothWatcher.DeviceInfoSerchedServer != null)
-            {
-                var connector = new BluetoothConnector(this.bluetoothWatcher.DeviceInfoSerchedServer);
-                var task = Task.Run(connector.Connect);
-                var characteristic = task.Result;
-                _textData.Text += "\n" + "取得Service名：";
-                foreach (var service in connector.Services)
-                {
-                    _textData.Text += "\n" + string.Copy(service.ServiceGattNativeServiceUuidString);
-                }
-                _textData.Text += "\n" + "取得Characteristic名：";
-                foreach (var name in connector.CharacteristicNames)
-                {
-                    _textData.Text += "\n" + string.Copy(name);
-
-                }
+                NavView.SelectedItem = NavView.SettingsItem as NavigationViewItem;
             }
             else
             {
-                var dialog = new MessageDialog("Scanが実行されていません", "エラー");
-                _ = dialog.ShowAsync();
+                var tag = _pageContents[ContentFrame.SourcePageType];
+                NavView.SelectedItem = GetNavigationViewItem(tag);
             }
-
         }
 
-
-
-
-        private async void CharacteristicRead(GattCharacteristic selectedCharacteristic)
+        private void NavView_Navigate(string tag)
         {
-            // BT_Code: Read the actual value from the device by using Uncached.
-            GattReadResult result = await selectedCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-            if (result.Status == GattCommunicationStatus.Success)
-            {
-                string formattedResult = FormatValueByPresentation(result.Value, presentationFormat);
-            }
-            else
-            {
-            }
+            var targetType = _pageContents.First(c => c.Value.Equals(tag)).Key;
+            ContentFrame.Navigate(targetType);
         }
-        private string FormatValueByPresentation(IBuffer buffer, GattPresentationFormat format)
+
+        private void NavView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
         {
-            // BT_Code: For the purpose of this sample, this function converts only UInt32 and
-            // UTF-8 buffers to readable text. It can be extended to support other formats if your app needs them.
-            byte[] data;
-            CryptographicBuffer.CopyToByteArray(buffer, out data);
-            if (format != null)
-            {
-                if (format.FormatType == GattPresentationFormatTypes.UInt32 && data.Length >= 4)
-                {
-                    return BitConverter.ToInt32(data, 0).ToString();
-                }
-                else if (format.FormatType == GattPresentationFormatTypes.Utf8)
-                {
-                    try
-                    {
-                        return Encoding.UTF8.GetString(data);
-                    }
-                    catch (ArgumentException)
-                    {
-                        return "(error: Invalid UTF-8 string)";
-                    }
-                }
-                else
-                {
-                    // Add support for other format types as needed.
-                    return "Unsupported format: " + CryptographicBuffer.EncodeToHexString(buffer);
-                }
-            }
-            else if (data != null)
-            {
-                
-                // We don't know what format to use. Let's try some well-known profiles, or default back to UTF-8.
-                if (bluetoothConnector.RegisteredCharacteristic.Uuid.Equals(GattCharacteristicUuids.HeartRateMeasurement))
-                {
-                    try
-                    {
-                        return "Heart Rate: " + ParseHeartRateValue(data).ToString();
-                    }
-                    catch (ArgumentException)
-                    {
-                        return "Heart Rate: (unable to parse)";
-                    }
-                }
-                else if (this.bluetoothConnector.RegisteredCharacteristic.Uuid.Equals(GattCharacteristicUuids.BatteryLevel))
-                {
-                    try
-                    {
-                        // battery level is encoded as a percentage value in the first byte according to
-                        // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.battery_level.xml
-                        return "Battery Level: " + data[0].ToString() + "%";
-                    }
-                    catch (ArgumentException)
-                    {
-                        return "Battery Level: (unable to parse)";
-                    }
-                }
-                // This is our custom calc service Result UUID. Format it like an Int
-                else if (this.bluetoothConnector.RegisteredCharacteristic.Uuid.Equals(Constants.ResultCharacteristicUuid))
-                {
-                    return BitConverter.ToInt32(data, 0).ToString();
-                }
-                /*
-                // No guarantees on if a characteristic is registered for notifications.
-                else if (registeredCharacteristic != null)
-                {
-                    // This is our custom calc service Result UUID. Format it like an Int
-                    if (registeredCharacteristic.Uuid.Equals(Constants.ResultCharacteristicUuid))
-                    {
-                        return BitConverter.ToInt32(data, 0).ToString();
-                    }
-                }*/
-                else
-                {
-                    try
-                    {
-                        return "Unknown format: " + Encoding.UTF8.GetString(data);
-                    }
-                    catch (ArgumentException)
-                    {
-                        return "Unknown format";
-                    }
-                }
-            }
-            else
-            {
-                return "Empty data received";
-            }
-            return "Unknown format";
+            // 今回は使わないけどメソッドだけ用意してみた...
         }
-        /// <summary>
-        /// Process the raw data received from the device into application usable data,
-        /// according the the Bluetooth Heart Rate Profile.
-        /// https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.heart_rate_measurement.xml&u=org.bluetooth.characteristic.heart_rate_measurement.xml
-        /// This function throws an exception if the data cannot be parsed.
-        /// </summary>
-        /// <param name="data">Raw data received from the heart rate monitor.</param>
-        /// <returns>The heart rate measurement value.</returns>
-        private static ushort ParseHeartRateValue(byte[] data)
+
+
+        private static IReadOnlyDictionary<Type, string> _pageContents = new Dictionary<Type, string>()
         {
-            // Heart Rate profile defined flag values
-            const byte heartRateValueFormat = 0x01;
-
-            byte flags = data[0];
-            bool isHeartRateValueSizeLong = ((flags & heartRateValueFormat) != 0);
-
-            if (isHeartRateValueSizeLong)
-            {
-                return BitConverter.ToUInt16(data, 1);
-            }
-            else
-            {
-                return data[1];
-            }
-        }
-
-        private async void readCharacteristic_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-
-                // BT_Code: Read the actual value from the device by using Uncached.
-                GattReadResult result = await this.bluetoothConnector.RegisteredCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-                if (result.Status == GattCommunicationStatus.Success)
-                {
-                    presentationFormat = null;
-                    string formattedResult = FormatValueByPresentation(result.Value, presentationFormat);
-                    this._textData.Text += "\n"+ formattedResult;
-                }
-                else
-                {
-                }
-            }catch(Exception err)
-            {
-                throw err;
-            }
-        }
+            {typeof(HomePage), "home"},
+            /*
+            {typeof(AppsPage), "apps"},
+            {typeof(GamesPage), "games"},
+            */
+        };
     }
+
 }
