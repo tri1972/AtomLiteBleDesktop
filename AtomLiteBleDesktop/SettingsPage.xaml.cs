@@ -37,16 +37,10 @@ namespace AtomLitePIR
     /// </summary>
     public sealed partial class SettingsPage : Page
     {
-
-
-
         private const string PIRSERVER = "ESP32PIRTRI";
 
-
-
         static BluetoothLEAdvertisementWatcher watcher;
-        private GattPresentationFormat presentationFormat;
-        private GattCharacteristic selectedCharacteristic;
+        private GattCharacteristic registeredCharacteristic;
 
         private TextNotifyPropertyChanged _textData = new TextNotifyPropertyChanged();
 
@@ -141,7 +135,7 @@ namespace AtomLitePIR
             {
                 this.bluetoothConnector = new BluetoothConnector(this.bluetoothWatcher.DeviceInfoSerchedServer);
                 var task = Task.Run(this.bluetoothConnector.Connect);
-                var characteristic = task.Result;
+                this.registeredCharacteristic = task.Result;
                 _textData.Text += "\n" + "取得Service名：";
                 foreach (var service in this.bluetoothConnector.Services)
                 {
@@ -161,160 +155,45 @@ namespace AtomLitePIR
             }
 
         }
-
-
-
-
-        private async void CharacteristicRead(GattCharacteristic selectedCharacteristic)
-        {
-            // BT_Code: Read the actual value from the device by using Uncached.
-            GattReadResult result = await selectedCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-            if (result.Status == GattCommunicationStatus.Success)
-            {
-                string formattedResult = FormatValueByPresentation(result.Value, presentationFormat);
-            }
-            else
-            {
-            }
-        }
-        private string FormatValueByPresentation(IBuffer buffer, GattPresentationFormat format)
-        {
-            // BT_Code: For the purpose of this sample, this function converts only UInt32 and
-            // UTF-8 buffers to readable text. It can be extended to support other formats if your app needs them.
-            byte[] data;
-            CryptographicBuffer.CopyToByteArray(buffer, out data);
-            if (format != null)
-            {
-                if (format.FormatType == GattPresentationFormatTypes.UInt32 && data.Length >= 4)
-                {
-                    return BitConverter.ToInt32(data, 0).ToString();
-                }
-                else if (format.FormatType == GattPresentationFormatTypes.Utf8)
-                {
-                    try
-                    {
-                        return Encoding.UTF8.GetString(data);
-                    }
-                    catch (ArgumentException)
-                    {
-                        return "(error: Invalid UTF-8 string)";
-                    }
-                }
-                else
-                {
-                    // Add support for other format types as needed.
-                    return "Unsupported format: " + CryptographicBuffer.EncodeToHexString(buffer);
-                }
-            }
-            else if (data != null)
-            {
-
-                // We don't know what format to use. Let's try some well-known profiles, or default back to UTF-8.
-                if (bluetoothConnector.RegisteredCharacteristic.Uuid.Equals(GattCharacteristicUuids.HeartRateMeasurement))
-                {
-                    try
-                    {
-                        return "Heart Rate: " + ParseHeartRateValue(data).ToString();
-                    }
-                    catch (ArgumentException)
-                    {
-                        return "Heart Rate: (unable to parse)";
-                    }
-                }
-                else if (this.bluetoothConnector.RegisteredCharacteristic.Uuid.Equals(GattCharacteristicUuids.BatteryLevel))
-                {
-                    try
-                    {
-                        // battery level is encoded as a percentage value in the first byte according to
-                        // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.battery_level.xml
-                        return "Battery Level: " + data[0].ToString() + "%";
-                    }
-                    catch (ArgumentException)
-                    {
-                        return "Battery Level: (unable to parse)";
-                    }
-                }
-                // This is our custom calc service Result UUID. Format it like an Int
-                else if (this.bluetoothConnector.RegisteredCharacteristic.Uuid.Equals(Constants.ResultCharacteristicUuid))
-                {
-                    return BitConverter.ToInt32(data, 0).ToString();
-                }
-                /*
-                // No guarantees on if a characteristic is registered for notifications.
-                else if (registeredCharacteristic != null)
-                {
-                    // This is our custom calc service Result UUID. Format it like an Int
-                    if (registeredCharacteristic.Uuid.Equals(Constants.ResultCharacteristicUuid))
-                    {
-                        return BitConverter.ToInt32(data, 0).ToString();
-                    }
-                }*/
-                else
-                {
-                    try
-                    {
-                        return "Unknown format: " + Encoding.UTF8.GetString(data);
-                    }
-                    catch (ArgumentException)
-                    {
-                        return "Unknown format";
-                    }
-                }
-            }
-            else
-            {
-                return "Empty data received";
-            }
-            return "Unknown format";
-        }
-        /// <summary>
-        /// Process the raw data received from the device into application usable data,
-        /// according the the Bluetooth Heart Rate Profile.
-        /// https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.heart_rate_measurement.xml&u=org.bluetooth.characteristic.heart_rate_measurement.xml
-        /// This function throws an exception if the data cannot be parsed.
-        /// </summary>
-        /// <param name="data">Raw data received from the heart rate monitor.</param>
-        /// <returns>The heart rate measurement value.</returns>
-        private static ushort ParseHeartRateValue(byte[] data)
-        {
-            // Heart Rate profile defined flag values
-            const byte heartRateValueFormat = 0x01;
-
-            byte flags = data[0];
-            bool isHeartRateValueSizeLong = ((flags & heartRateValueFormat) != 0);
-
-            if (isHeartRateValueSizeLong)
-            {
-                return BitConverter.ToUInt16(data, 1);
-            }
-            else
-            {
-                return data[1];
-            }
-        }
-
         private async void readCharacteristic_Click(object sender, RoutedEventArgs e)
         {
-            try
+            if (this.registeredCharacteristic != null)
             {
+                var receiver = new BluetoothReceiver(this.registeredCharacteristic);
 
-                // BT_Code: Read the actual value from the device by using Uncached.
-                GattReadResult result = await this.bluetoothConnector.RegisteredCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-                if (result.Status == GattCommunicationStatus.Success)
-                {
-                    presentationFormat = null;
-                    string formattedResult = FormatValueByPresentation(result.Value, presentationFormat);
-                    this._textData.Text += "\n" + formattedResult;
-                }
-                else
-                {
-                }
+                var task = Task.Run(receiver.ReadCharacteristic);
+
+                this._textData.Text += "\n" + task.Result;
             }
-            catch (Exception err)
+            else
             {
-                throw err;
+                var dialog = new MessageDialog("Connectされていません(Characteristicが取得できませんでした)", "エラー");
+                _ = dialog.ShowAsync();
+
             }
-        }
+
+                /*
+                try
+                {
+
+                    // BT_Code: Read the actual value from the device by using Uncached.
+                    GattReadResult result = await this.bluetoothConnector.RegisteredCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
+                    if (result.Status == GattCommunicationStatus.Success)
+                    {
+                        presentationFormat = null;
+                        string formattedResult = FormatValueByPresentation(result.Value, presentationFormat);
+                        this._textData.Text += "\n" + formattedResult;
+                    }
+                    else
+                    {
+                    }
+                }
+                catch (Exception err)
+                {
+                    throw err;
+                }
+                */
+            }
     }
 
 }
