@@ -281,7 +281,7 @@ void setup() {
   //PIRピン設定
   pinMode(PIR_PIN,INPUT);
   //Buttonピン設定
-  pinMode(PUSH_BUTTON_PIN ,INPUT);
+  pinMode(PUSH_BUTTON_PIN ,INPUT_PULLUP);
   
   //オープンドレインなので消灯はHIGH
   
