@@ -47,14 +47,10 @@ namespace AtomLitePIR
         private BluetoothWatcher bluetoothWatcher;
         private BluetoothConnector bluetoothConnector;
 
-
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             this.bluetoothWatcher = new BluetoothWatcher(this.Dispatcher);
-
         }
-
-
         public SettingsPage()
         {
             this.InitializeComponent();
@@ -136,7 +132,18 @@ namespace AtomLitePIR
                 this.bluetoothConnector = new BluetoothConnector(this.bluetoothWatcher.DeviceInfoSerchedServer);
                 var task = Task.Run(this.bluetoothConnector.Connect);
                 this.registeredCharacteristic = task.Result;
-                _textData.Text += "\n" + "取得Service名：";
+
+
+                //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
+                if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
+                {
+                    this.registeredCharacteristic.ValueChanged += this.registeredCharacteristicNotify;
+                    await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                }
+                
+
+
+                 _textData.Text += "\n" + "取得Service名：";
                 foreach (var service in this.bluetoothConnector.Services)
                 {
                     _textData.Text += "\n" + string.Copy(service.ServiceGattNativeServiceUuidString);
@@ -155,6 +162,21 @@ namespace AtomLitePIR
             }
 
         }
+        /// <summary>
+        /// BleServerからのNotify受信イベントハンドラ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
+        private async void registeredCharacteristicNotify(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
+        {
+            var data = eventArgs.CharacteristicValue.ToArray();
+            var str= Encoding.UTF8.GetString(data);
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                _textData.Text += "\n" + string.Copy(str);
+            });
+        }
+
         private async void readCharacteristic_Click(object sender, RoutedEventArgs e)
         {
             if (this.registeredCharacteristic != null)
