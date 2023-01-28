@@ -213,6 +213,7 @@ namespace AtomLitePIR.Bluetooth
 
         public async Task<GattCharacteristic> Connect()
         {
+            Task<GattCharacteristic> task=null;
             try
             {
                 // BT_Code: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
@@ -229,6 +230,8 @@ namespace AtomLitePIR.Bluetooth
 
             if (bluetoothLeDevice != null)
             {
+                bluetoothLeDevice.ConnectionStatusChanged += eventConnectionStatusChanged;
+                bluetoothLeDevice.GattServicesChanged += eventGattServicesChanged;
                 // Note: BluetoothLEDevice.GattServices property will return an empty list for unpaired devices. For all uses we recommend using the GetGattServicesAsync method.
                 // BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
                 // If the services supported by the device are expected to change during BT usage, subscribe to the GattServicesChanged event.
@@ -246,19 +249,39 @@ namespace AtomLitePIR.Bluetooth
                             ServiceGattNativeServiceUuidString = GetServiceName(service)
                         });
                     }
+                    task = this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
+                    this.registeredCharacteristic = task.Result;
                 }
                 else
                 {
                     Debug.WriteLine("Device unreachable");
                 }
             }
-
-            var task= this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
-            this.registeredCharacteristic = task.Result;
+            //task= this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
+            //this.registeredCharacteristic = task.Result;
 
             return this.registeredCharacteristic;
         }
 
+        /// <summary>
+        /// Bleサーバー接続状況変化時イベントハンドラ
+        /// </summary>
+        /// <param name="e"></param>
+        /// <param name="sender"></param>
+        private async void eventConnectionStatusChanged(BluetoothLEDevice e,  object sender)
+        {
+
+        }
+
+        /// <summary>
+        /// Bleサーバーサービス変更時イベントハンドラ
+        /// </summary>
+        /// <param name="e"></param>
+        /// <param name="sender"></param>
+        private void eventGattServicesChanged(BluetoothLEDevice e, object sender)
+        {
+            ;
+        }
         /// <summary>
         /// 取得したserviceの中からUserCustomServiceを取得する
         /// </summary>
