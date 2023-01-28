@@ -132,8 +132,7 @@ namespace AtomLitePIR
                 this.bluetoothConnector = new BluetoothConnector(this.bluetoothWatcher.DeviceInfoSerchedServer);
                 var task = Task.Run(this.bluetoothConnector.Connect);
                 this.registeredCharacteristic = task.Result;
-
-
+                
                 //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
                 if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                 {
@@ -162,19 +161,31 @@ namespace AtomLitePIR
             }
 
         }
+
         /// <summary>
         /// BleServerからのNotify受信イベントハンドラ
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="eventArgs"></param>
+        [Obsolete]
         private async void registeredCharacteristicNotify(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
         {
-            var data = eventArgs.CharacteristicValue.ToArray();
-            var str= Encoding.UTF8.GetString(data);
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            try
             {
-                _textData.Text += "\n" + string.Copy(str);
-            });
+                var data = eventArgs.CharacteristicValue.ToArray();
+                var str = Encoding.UTF8.GetString(data);
+                //UIスレッド側のオブジェクトに対して書き込むため、UIスレッド側のメソッドを作り実行
+                //参考：https://m-miya.blog.jp/archives/1063899401.html
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    _textData.Text += "\n" + string.Copy(str);
+                    var sh = this.scrollViewSettings.ScrollableHeight;
+                    this.scrollViewSettings.ScrollToVerticalOffset(sh);
+                });
+            }catch(Exception err)
+            {
+                throw err;
+            }
         }
 
         private async void readCharacteristic_Click(object sender, RoutedEventArgs e)
