@@ -211,7 +211,7 @@ namespace AtomLitePIR.Bluetooth
             this.services = new List<BluetoothService>();
         }
 
-        public async Task<GattCharacteristic> Connect()
+        public async Task<bool> Connect()
         {
             Task<GattCharacteristic> task=null;
             try
@@ -235,8 +235,32 @@ namespace AtomLitePIR.Bluetooth
                 // Note: BluetoothLEDevice.GattServices property will return an empty list for unpaired devices. For all uses we recommend using the GetGattServicesAsync method.
                 // BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
                 // If the services supported by the device are expected to change during BT usage, subscribe to the GattServicesChanged event.
-                GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached);
+                
+                var taskGetGattServices = bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached).AsTask();
+                if ( GattCommunicationStatus.Success == (await taskGetGattServices).Status)
+                {
+                    var services = taskGetGattServices.Result.Services;
+                    foreach (var service in services)
+                    {
+                        this.services.Add(new BluetoothService()
+                        {
+                            Service = service,
+                            ServiceGattNativeServiceUuid = GetGattNativeServiceUuid(service),
+                            ServiceGattNativeServiceUuidString = GetServiceName(service)
+                        });
+                    }
+                    task = this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
+                    this.registeredCharacteristic = task.Result;
+                    return true;
+                }
+                else
+                {
+                    Debug.WriteLine("Device unreachable");
+                    return false;
+                }
 
+                /*
+                GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached);
                 if (result.Status == GattCommunicationStatus.Success)
                 {
                     var services = result.Services;
@@ -251,16 +275,21 @@ namespace AtomLitePIR.Bluetooth
                     }
                     task = this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
                     this.registeredCharacteristic = task.Result;
+                    return true;
                 }
                 else
                 {
                     Debug.WriteLine("Device unreachable");
+                    return false;
                 }
+                */
+            }
+            else
+            {
+                return false;
             }
             //task= this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
             //this.registeredCharacteristic = task.Result;
-
-            return this.registeredCharacteristic;
         }
 
         /// <summary>
