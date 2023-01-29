@@ -36,9 +36,9 @@
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
         Description="AtomLitePIR"
-        BackgroundColor="transparent">
+        BackgroundColor="#00b2f0">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
-        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+        <uap:SplashScreen Image="Assets\splash-sdk.png"/>
       </uap:VisualElements>
     </Application>
   </Applications>
