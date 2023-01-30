@@ -123,6 +123,19 @@ namespace AtomLitePIR
             Debug.WriteLine("");
         }
 
+        /// <summary>
+        /// UIスレッド外で_TextDataに書き込みを行う場合、この関数を使用
+        /// </summary>
+        /// <param name="text"></param>
+        private async void stringAdd_TextDataDispatcher(string text)
+        {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                _textData.Text += text;
+            });
+
+        }
+
 
         private async void Button_Click_2(object sender, RoutedEventArgs e)
         {
@@ -131,40 +144,46 @@ namespace AtomLitePIR
             {
                 this.bluetoothConnector = new BluetoothConnector(this.bluetoothWatcher.DeviceInfoSerchedServer);
 
-
+                this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify;
                 _ = Task.Run(async () =>
                   {
-                      var task = await Task.Run(this.bluetoothConnector.Connect);
-                      if (task)
+                      for (int i = 0; i < 5; i++)
                       {
-                          this.registeredCharacteristic = this.bluetoothConnector.RegisteredCharacteristic;
-
-                        //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
-                        if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
+                          var task = await Task.Run(this.bluetoothConnector.Connect);
+                          string tmpStr;
+                          if (task)
                           {
-                              this.registeredCharacteristic.ValueChanged += this.registeredCharacteristicNotify;
-                              await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                              this.registeredCharacteristic = this.bluetoothConnector.RegisteredCharacteristic;
+
+                              //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
+                              if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
+                              {
+                                  await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                              }
+
+                              stringAdd_TextDataDispatcher("\n" + "取得Service名：");
+                              //_textData.Text += "\n" + "取得Service名：";
+                              foreach (var service in this.bluetoothConnector.Services)
+                              {
+                                  stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
+                                  //_textData.Text += "\n" + string.Copy(service.ServiceGattNativeServiceUuidString);
+                              }
+                              stringAdd_TextDataDispatcher("\n" + "取得Characteristic名：");
+                              //_textData.Text += "\n" + "取得Characteristic名：";
+                              foreach (var name in this.bluetoothConnector.CharacteristicNames)
+                              {
+                                  stringAdd_TextDataDispatcher("\n" + string.Copy(name));
+                                  //_textData.Text += "\n" + string.Copy(name);
+
+                              }
+                              break;
                           }
-
-                          _textData.Text += "\n" + "取得Service名：";
-                          foreach (var service in this.bluetoothConnector.Services)
+                          else
                           {
-                              _textData.Text += "\n" + string.Copy(service.ServiceGattNativeServiceUuidString);
-                          }
-                          _textData.Text += "\n" + "取得Characteristic名：";
-                          foreach (var name in this.bluetoothConnector.CharacteristicNames)
-                          {
-                              _textData.Text += "\n" + string.Copy(name);
-
+                              stringAdd_TextDataDispatcher("・");
                           }
                       }
-                      else
-                      {
-                          await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                          {
-                              _textData.Text += "\n" + "接続できない";
-                          });
-                      }
+                      stringAdd_TextDataDispatcher("\n" + "接続できなかった");
 
                   });
 
@@ -215,17 +234,15 @@ namespace AtomLitePIR
         /// <param name="sender"></param>
         /// <param name="eventArgs"></param>
         [Obsolete]
-        private async void registeredCharacteristicNotify(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
+        private async void registeredCharacteristicNotify(object sender, NotifyReceiveCharacteristicEventArgs e)
         {
             try
             {
-                var data = eventArgs.CharacteristicValue.ToArray();
-                var str = Encoding.UTF8.GetString(data);
                 //UIスレッド側のオブジェクトに対して書き込むため、UIスレッド側のメソッドを作り実行
                 //参考：https://m-miya.blog.jp/archives/1063899401.html
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    _textData.Text += "\n" + string.Copy(str);
+                    _textData.Text += "\n" + string.Copy(e.Message);
                     var sh = this.scrollViewSettings.ScrollableHeight;
                     this.scrollViewSettings.ScrollToVerticalOffset(sh);
                 });

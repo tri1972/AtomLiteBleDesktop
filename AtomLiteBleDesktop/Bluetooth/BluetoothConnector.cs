@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Devices.Bluetooth;
@@ -10,6 +11,13 @@ using Windows.Devices.Enumeration;
 
 namespace AtomLitePIR.Bluetooth
 {
+    //NotifyReceiveCharacteristicイベントで返されるデータ
+    //ここではstring型のひとつのデータのみ返すものとする
+    public class NotifyReceiveCharacteristicEventArgs : EventArgs
+    {
+        public string Message;
+    }
+
     public class BluetoothConnector
     {
         /// <summary>
@@ -202,6 +210,17 @@ namespace AtomLitePIR.Bluetooth
             get { return this.characteristicNames; }
         }
         private List<string> characteristicNames;
+
+        public delegate void NotifyReceiveCharacteristicEventHandler(object sender, NotifyReceiveCharacteristicEventArgs e);
+        public event NotifyReceiveCharacteristicEventHandler NotifyReceiveCharacteristic;
+        protected virtual void OnNotifyReceiveCharacteristic(NotifyReceiveCharacteristicEventArgs e)
+        {
+            if (NotifyReceiveCharacteristic != null)
+            {
+                NotifyReceiveCharacteristic(this, e);
+            }
+        }
+
         /// <summary>
         /// コンストラクタ
         /// </summary>
@@ -211,7 +230,7 @@ namespace AtomLitePIR.Bluetooth
             this.services = new List<BluetoothService>();
         }
 
-        public async Task<bool> Connect()
+        public async Task<bool>  Connect()
         {
             Task<GattCharacteristic> task=null;
             try
@@ -235,54 +254,42 @@ namespace AtomLitePIR.Bluetooth
                 // Note: BluetoothLEDevice.GattServices property will return an empty list for unpaired devices. For all uses we recommend using the GetGattServicesAsync method.
                 // BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
                 // If the services supported by the device are expected to change during BT usage, subscribe to the GattServicesChanged event.
-                
-                var taskGetGattServices = bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached).AsTask();
-                if ( GattCommunicationStatus.Success == (await taskGetGattServices).Status)
-                {
-                    var services = taskGetGattServices.Result.Services;
-                    foreach (var service in services)
-                    {
-                        this.services.Add(new BluetoothService()
-                        {
-                            Service = service,
-                            ServiceGattNativeServiceUuid = GetGattNativeServiceUuid(service),
-                            ServiceGattNativeServiceUuidString = GetServiceName(service)
-                        });
-                    }
-                    task = this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
-                    this.registeredCharacteristic = task.Result;
-                    return true;
-                }
-                else
-                {
-                    Debug.WriteLine("Device unreachable");
-                    return false;
-                }
 
-                /*
-                GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached);
-                if (result.Status == GattCommunicationStatus.Success)
+                var tasksub = Task.Run(async () =>
                 {
-                    var services = result.Services;
-                    foreach (var service in services)
+
+                    GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached);
+                    if (result.Status == GattCommunicationStatus.Success)
                     {
-                        this.services.Add(new BluetoothService()
+                        var services = result.Services;
+                        foreach (var service in services)
                         {
-                            Service = service,
-                            ServiceGattNativeServiceUuid = GetGattNativeServiceUuid(service),
-                            ServiceGattNativeServiceUuidString = GetServiceName(service)
-                        });
+                            this.services.Add(new BluetoothService()
+                            {
+                                Service = service,
+                                ServiceGattNativeServiceUuid = GetGattNativeServiceUuid(service),
+                                ServiceGattNativeServiceUuidString = GetServiceName(service)
+                            });
+                        }
+                        task = this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
+                        this.registeredCharacteristic = task.Result;
+                        this.registeredCharacteristic.ValueChanged += this.registeredCharacteristicNotify;
+                        return true;
                     }
-                    task = this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
-                    this.registeredCharacteristic = task.Result;
+                    else
+                    {
+                        Debug.WriteLine("Device unreachable");
+                        return false;
+                    }
+                });
+                if (tasksub.Result)
+                {
                     return true;
                 }
                 else
                 {
-                    Debug.WriteLine("Device unreachable");
                     return false;
                 }
-                */
             }
             else
             {
@@ -293,13 +300,35 @@ namespace AtomLitePIR.Bluetooth
         }
 
         /// <summary>
+        /// BleServerからのNotify受信イベントハンドラ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
+        [Obsolete]
+        private async void registeredCharacteristicNotify(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
+        {
+            try
+            {
+                var data = eventArgs.CharacteristicValue.ToArray();
+                var str = Encoding.UTF8.GetString(data);
+                NotifyReceiveCharacteristicEventArgs e = new NotifyReceiveCharacteristicEventArgs();
+                e.Message = str;
+                this.OnNotifyReceiveCharacteristic(e);
+            }
+            catch (Exception err)
+            {
+                throw err;
+            }
+        }
+
+        /// <summary>
         /// Bleサーバー接続状況変化時イベントハンドラ
         /// </summary>
         /// <param name="e"></param>
         /// <param name="sender"></param>
         private async void eventConnectionStatusChanged(BluetoothLEDevice e,  object sender)
         {
-
+            disconnectになった場合、ここで再度イベントハンドラの登録を行うようにしてみる
         }
 
         /// <summary>
