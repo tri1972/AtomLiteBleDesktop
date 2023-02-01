@@ -203,6 +203,16 @@ namespace AtomLitePIR.Bluetooth
         private List<string> gattNativeServiceUuidName;
 
         /// <summary>
+        /// Serviceに接続されているか否かを取得します
+        /// </summary>
+        public bool IsConnectService
+        {
+            get { return this.isConnectService; }
+        }
+        private bool isConnectService;
+
+        
+        /// <summary>
         /// Characteristicの名前を取得します
         /// </summary>
         public List<string> CharacteristicNames
@@ -328,7 +338,22 @@ namespace AtomLitePIR.Bluetooth
         /// <param name="sender"></param>
         private async void eventConnectionStatusChanged(BluetoothLEDevice e,  object sender)
         {
-            disconnectになった場合、ここで再度イベントハンドラの登録を行うようにしてみる
+            if(e.ConnectionStatus== BluetoothConnectionStatus.Connected)
+            {
+                if (this.services != null && this.services.Count > 0)
+                {//初回接続時のイベントハンドラによるリクエストについては処理をしないようにする
+                    if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
+                    {//切断された後、再度接続した際はnotifyによるValueChanged イベントを再度受信できるようにする
+                        await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                    }
+                }
+                this.isConnectService = true;
+            }
+            else
+            {
+                this.isConnectService = false;
+            }
+            //disconnectになった場合、ここで再度イベントハンドラの登録を行うようにしてみる
         }
 
         /// <summary>
