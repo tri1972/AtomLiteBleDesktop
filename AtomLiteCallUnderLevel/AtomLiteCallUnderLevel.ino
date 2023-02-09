@@ -16,8 +16,8 @@ UploadSpeed:115200
 #define GREEN_LED 23  //緑色LEDのGPIO番号を指定
 #define BLUE_LED  33  //青色LEDのGPIO番号を指定
 #define PIR_PIN   21  //PIR出力PINを指定
-#define PUSH_BUTTON_PIN 22 //押しボタンのPINを指定
-#define BUTTON_LED_PIN 25 //押しボタンのLEDを指定
+#define PUSH_BUTTON_PIN 25 //押しボタンのPINを指定
+#define BUTTON_LED_PIN 21 //押しボタンのLEDを指定
  
 #define SPEAKER 22    //圧電スピーカーのGPIO番号を指定
 #define SPEAKER_CHANNEL 1 // ledcWriteToneのChannel番号を指定
@@ -279,7 +279,7 @@ void setup() {
   pinMode(BUTTON_LED_PIN, OUTPUT);
   
   //PIRピン設定
-  pinMode(PIR_PIN,INPUT);
+  //pinMode(PIR_PIN,INPUT);
   //Buttonピン設定
   pinMode(PUSH_BUTTON_PIN ,INPUT_PULLUP);
   
@@ -321,6 +321,7 @@ void loop() {
       }
       break;
   }
+        //digitalWrite(BUTTON_LED_PIN, HIGH);
     // notify changed value
     if (deviceConnected) {
       if(digitalRead(PUSH_BUTTON_PIN)==HIGH ){
