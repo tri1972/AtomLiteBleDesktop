@@ -39,6 +39,7 @@ BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristic = NULL;
 
 bool ledOnOff=true;
+bool beforeStateSwitch=LOW;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 uint32_t value = 0;
@@ -326,16 +327,23 @@ void loop() {
     if (deviceConnected) {
       if(digitalRead(PUSH_BUTTON_PIN)==HIGH ){
         digitalWrite(BUTTON_LED_PIN, HIGH);
-        strSend = "PUSH_ON";
-        Serial.println("PUSH_BUTTON ON");
-        //delay(1000); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+        if(beforeStateSwitch==LOW){//スイッチがon→Offにてデータを送る
+          Serial.println("PUSH_BUTTON OFF");
+          strSend = "PUSH_OFF";
+          pCharacteristic->setValue(strSend.c_str());
+          pCharacteristic->notify();
+          beforeStateSwitch=HIGH;
+        }
       }else{
         digitalWrite(BUTTON_LED_PIN, LOW);
-        strSend = "PUSH_OFF";
-        Serial.println("PUSH_BUTTON OFF");
+        if(beforeStateSwitch==HIGH){//スイッチがOff→onにてデータを送る
+          Serial.println("PUSH_BUTTON ON");
+          strSend = "PUSH_ON";
+          pCharacteristic->setValue(strSend.c_str());
+          pCharacteristic->notify();
+          beforeStateSwitch=LOW;
+        }
       }
-      pCharacteristic->setValue(strSend.c_str());
-      pCharacteristic->notify();
     }
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) {
