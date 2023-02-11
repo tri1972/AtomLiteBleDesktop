@@ -20,21 +20,11 @@ namespace AtomLiteBleDesktop
     /// <summary>
     /// それ自体で使用できる空白ページまたはフレーム内に移動できる空白ページ。
     /// </summary>
-    public sealed partial class HomePage : Page
+    public sealed partial class ControlPage : Page
     {
-        private TextNotifyPropertyChanged _textData = new TextNotifyPropertyChanged();
-        public HomePage()
+        public ControlPage()
         {
             this.InitializeComponent();
-        }
-
-        private void Page_Loaded(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
         }
     }
 }

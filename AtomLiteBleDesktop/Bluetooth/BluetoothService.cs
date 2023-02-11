@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
-using static AtomLitePIR.Bluetooth.BluetoothConnector;
-using static AtomLitePIR.MainPage;
+using static AtomLiteBleDesktop.Bluetooth.BluetoothConnector;
+using static AtomLiteBleDesktop.MainPage;
 
-namespace AtomLitePIR
+namespace AtomLiteBleDesktop
 {
     public class BluetoothService
     {

@@ -8,7 +8,7 @@ using Windows.Devices.Enumeration;
 using Windows.UI.Xaml.Media.Imaging;
 using System.Diagnostics;
 
-namespace AtomLitePIR
+namespace AtomLiteBleDesktop
 {
     public class BluetoothLEDeviceDisplay : INotifyPropertyChanged
     {

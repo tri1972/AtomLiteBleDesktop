@@ -1,9 +1,9 @@
 ﻿<Page
-    x:Class="AtomLitePIR.MainPage"
+    x:Class="AtomLiteBleDesktop.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-    xmlns:local="using:AtomLitePIR"
+    xmlns:local="using:AtomLiteBleDesktop"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -24,9 +24,9 @@
                 </NavigationViewItem>
                 <NavigationViewItemSeparator/>
                 <NavigationViewItemHeader Content="Main pages"/>
-                <NavigationViewItem x:Uid="AppsNavItem" Icon="AllApps" Content="Apps" Tag="apps"/>
-                <NavigationViewItem x:Uid="GamesNavItem" Icon="Video" Content="Games" Tag="games"/>
-                <NavigationViewItem x:Uid="MusicNavItem" Icon="Audio" Content="Music" Tag="music"/>
+                <NavigationViewItem x:Uid="AppsNavItem" Icon="AllApps" Content="Control" Tag="Control"/>
+                <NavigationViewItem x:Uid="GamesNavItem" Icon="Video" Content="Dummy" Tag="Dummy"/>
+                <NavigationViewItem x:Uid="MusicNavItem" Icon="Audio" Content="Log" Tag="Log"/>
             </NavigationView.MenuItems>
 
             <NavigationView.AutoSuggestBox>

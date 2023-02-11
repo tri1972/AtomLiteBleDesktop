@@ -25,12 +25,14 @@ using Windows.Storage.Streams;
 using Windows.Security.Cryptography;
 using System.Text;
 using SDKTemplate;
-using AtomLitePIR.Bluetooth;
+using AtomLiteBleDesktop.Bluetooth;
 using Windows.UI.Popups;
+using Microsoft.Toolkit.Uwp.Notifications;
+using Windows.UI.Notifications;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=234238 を参照してください
 
-namespace AtomLitePIR
+namespace AtomLiteBleDesktop
 {
     /// <summary>
     /// それ自体で使用できる空白ページまたはフレーム内に移動できる空白ページ。
@@ -38,6 +40,7 @@ namespace AtomLitePIR
     public sealed partial class SettingsPage : Page
     {
         private const string PIRSERVER = "ESP32PIRTRI";
+        private const int MAX_RETRY_CONNECT = 5;
 
         static BluetoothLEAdvertisementWatcher watcher;
         private GattCharacteristic registeredCharacteristic;
@@ -65,6 +68,13 @@ namespace AtomLitePIR
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
+
+            var hogehogeData = Application.Current.Resources["HogeDataInstance"] as TextNotifyPropertyChanged;
+            hogehogeData.Text = "hogehoge";
+
+
+
+
             this.bluetoothWatcher.PIRServer = PIRSERVER;
             this.bluetoothWatcher.StartBleDeviceWatcher();
             var task = await Task.Run<string>(() => {
@@ -97,6 +107,31 @@ namespace AtomLitePIR
                 var dialog = new MessageDialog("接続指定サーバをSearchしたが取得できませんでした", "エラー");
                 _ = dialog.ShowAsync();
             }
+
+            //通知の中身を作成
+            var content = new ToastContent
+            {
+                Visual = new ToastVisual
+                {
+                    BindingGeneric = new ToastBindingGeneric
+                    {
+                        Children = {
+                new AdaptiveText
+                {
+                    Text = "通知"
+                },
+                new AdaptiveText
+                {
+                    Text = "これは通知です"
+                }
+            }
+                    }
+                }
+            };
+            //通知を作成
+            var notification = new ToastNotification(content.GetXml());
+            //通知を送信
+            ToastNotificationManager.CreateToastNotifier().Show(notification);
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
@@ -140,6 +175,7 @@ namespace AtomLitePIR
         private async void Button_Click_2(object sender, RoutedEventArgs e)
         {
             String tmp = string.Copy(this._textData.Text);
+            int counter = 0;
             if (this.bluetoothWatcher.DeviceInfoSerchedServer != null)
             {
                 this.bluetoothConnector = new BluetoothConnector(this.bluetoothWatcher.DeviceInfoSerchedServer);
@@ -147,7 +183,8 @@ namespace AtomLitePIR
                 this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify;
                 _ = Task.Run(async () =>
                   {
-                      for (int i = 0; i < 5; i++)
+                      counter = MAX_RETRY_CONNECT;
+                      while(counter>0)
                       {
                           var task = await Task.Run(this.bluetoothConnector.Connect);
                           string tmpStr;
@@ -182,8 +219,12 @@ namespace AtomLitePIR
                           {
                               stringAdd_TextDataDispatcher("・");
                           }
+                          counter--;
                       }
-                      stringAdd_TextDataDispatcher("\n" + "接続できなかった");
+                      if (counter == 0)
+                      {
+                          stringAdd_TextDataDispatcher("\n" + "接続できなかった");
+                      }
 
                   });
 

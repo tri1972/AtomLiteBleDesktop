@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.UI.Core;
 
-namespace AtomLitePIR.Bluetooth
+namespace AtomLiteBleDesktop.Bluetooth
 {
     public class BluetoothWatcher
     {

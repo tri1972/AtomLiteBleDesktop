@@ -1,10 +1,18 @@
 ﻿<Application
-    x:Class="AtomLitePIR.App"
+    x:Class="AtomLiteBleDesktop.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:AtomLitePIR"
+    xmlns:local="using:AtomLiteBleDesktop"
     RequestedTheme="Light">
     <Application.Resources>
-        <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+        <ResourceDictionary>
+            <!--TextNotifyPropertyChangedクラスのインスタンスを"HogeDataInstance"インスタンスで参照させる-->
+            <TextNotifyPropertyChanged xmlns="using:AtomLiteBleDesktop" x:Key="HogeDataInstance"/>
+            <ResourceDictionary.MergedDictionaries>
+                <!--Windows UI 2 ライブラリのリソース追加-->
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls">
+                </XamlControlsResources>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

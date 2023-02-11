@@ -1,14 +1,19 @@
 ﻿<Page
-    x:Class="AtomLitePIR.HomePage"
+    x:Class="AtomLiteBleDesktop.HomePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:AtomLitePIR"
+    xmlns:local="using:AtomLiteBleDesktop"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    DataContext="{StaticResource HogeDataInstance}"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Page_Loaded">
 
     <Grid>
-
+        <TextBlock x:Name="StatusTransmission" HorizontalAlignment="Left" Margin="478,106,0,0"  
+                   TextWrapping="Wrap" VerticalAlignment="Top" Height="245" Width="409"
+                   Text="{Binding Text, Mode=OneWay}"/>
+        <Button Content="Button" Margin="1105,409,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+        <TextBlock TextAlignment="Center" VerticalAlignment="Center" FontSize="30">home page</TextBlock>
     </Grid>
 </Page>

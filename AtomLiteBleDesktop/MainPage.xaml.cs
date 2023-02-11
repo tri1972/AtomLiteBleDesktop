@@ -25,15 +25,17 @@ using Windows.Storage.Streams;
 using Windows.Security.Cryptography;
 using System.Text;
 using SDKTemplate;
-using AtomLitePIR.Bluetooth;
+using AtomLiteBleDesktop.Bluetooth;
 using Windows.UI.Popups;
+using Windows.System;
+using AtomLiteBleDesktop;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x411 を参照してください
 
 /// <summary>
 /// 参考Url：https://blog.beachside.dev/entry/2018/06/22/210000
 /// </summary>
-namespace AtomLitePIR
+namespace AtomLiteBleDesktop
 {
     /// <summary>
     /// それ自体で使用できる空白ページまたはフレーム内に移動できる空白ページ。
@@ -63,9 +65,14 @@ namespace AtomLitePIR
             };
         }
 
-        private void PageLoaded(FrameworkElement sender, object args)
+        private async void PageLoaded(FrameworkElement sender, object args)
         {
             this.bluetoothWatcher = new BluetoothWatcher(this.Dispatcher);
+            //画面を起動時に最小にする方法
+            //参考：https://social.msdn.microsoft.com/Forums/vstudio/ja-JP/fe39e1b6-e891-43a8-8bb2-01e4550a4b64/uwpmain?forum=winstoreapp
+            IList<Windows.System.AppDiagnosticInfo> infos = await AppDiagnosticInfo.RequestInfoForAppAsync();
+            IList<AppResourceGroupInfo> resourceInfos = infos[0].GetResourceGroups();
+            await resourceInfos[0].StartSuspendAsync();
         }
 
 
@@ -134,10 +141,9 @@ namespace AtomLitePIR
         private static IReadOnlyDictionary<Type, string> _pageContents = new Dictionary<Type, string>()
         {
             {typeof(HomePage), "home"},
-            /*
-            {typeof(AppsPage), "apps"},
-            {typeof(GamesPage), "games"},
-            */
+            {typeof(ControlPage), "Control"},
+            {typeof(LogPage), "Log"},
+           
         };
     }
 

@@ -1,0 +1,11 @@
+﻿App.xamlにてApplication.ResourcesにてResourceを二つ設定できない場合の記述方法
+https://social.msdn.microsoft.com/Forums/ja-JP/250777d8-1b10-41f2-b037-38d0b74bf92d/resourcedictionary?forum=wpfja
+
+Application.Resourcesの使い方 : Metro Style App Tips(のようなもの) 
+https://gist.github.com/kikuchy/2559432
+
+Pageを越えて、プロパティにBindしたい場合の方法
+https://qiita.com/nemutas/items/1656b7b5328353eeb1d1
+
+UWP - NavigationView Controll の使い方
+https://blog.beachside.dev/entry/2018/06/22/210000

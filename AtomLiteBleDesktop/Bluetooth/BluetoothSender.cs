@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AtomLitePIR.Bluetooth
+namespace AtomLiteBleDesktop.Bluetooth
 {
     class BluetoothSender
     {

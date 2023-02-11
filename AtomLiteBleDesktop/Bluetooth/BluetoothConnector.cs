@@ -9,7 +9,7 @@ using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
 
-namespace AtomLitePIR.Bluetooth
+namespace AtomLiteBleDesktop.Bluetooth
 {
     //NotifyReceiveCharacteristicイベントで返されるデータ
     //ここではstring型のひとつのデータのみ返すものとする

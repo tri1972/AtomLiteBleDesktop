@@ -9,7 +9,7 @@ using Windows.Storage.Streams;
 using SDKTemplate;
 using Windows.Devices.Bluetooth;
 
-namespace AtomLitePIR.Bluetooth
+namespace AtomLiteBleDesktop.Bluetooth
 {
     public class BluetoothReceiver
     {
