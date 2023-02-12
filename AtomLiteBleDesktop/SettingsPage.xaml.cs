@@ -29,6 +29,8 @@ using AtomLiteBleDesktop.Bluetooth;
 using Windows.UI.Popups;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Windows.UI.Notifications;
+using Windows.UI;
+using Windows.System;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=234238 を参照してください
 
@@ -70,7 +72,8 @@ namespace AtomLiteBleDesktop
         {
             this.bluetoothWatcher.PIRServer = PIRSERVER;
             this.bluetoothWatcher.StartBleDeviceWatcher();
-            var task = await Task.Run<string>(() => {
+            var task = await Task.Run<string>(() =>
+            {
                 //1s待って。接続Server名が取得できなければnullを返す
                 int counter = 100;
                 while (this.bluetoothWatcher.PIRServerSearched == null)
@@ -101,6 +104,11 @@ namespace AtomLiteBleDesktop
                 _ = dialog.ShowAsync();
             }
 
+            NotificationToast();
+        }
+
+        private static void NotificationToast()
+        {
             //通知の中身を作成
             var content = new ToastContent
             {
@@ -173,6 +181,7 @@ namespace AtomLiteBleDesktop
             {
                 var hogehogeData = Application.Current.Resources["HomePageDataInstance"] as HomePagePropertyChanged;
                 hogehogeData.StatusText = text;
+                hogehogeData.StatusTextBackground = new SolidColorBrush(Colors.Red);
             });
         }
 
@@ -185,6 +194,7 @@ namespace AtomLiteBleDesktop
                 this.bluetoothConnector = new BluetoothConnector(this.bluetoothWatcher.DeviceInfoSerchedServer);
 
                 this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify;
+                this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify2;
                 _ = Task.Run(async () =>
                   {
                       counter = MAX_RETRY_CONNECT;
@@ -288,13 +298,18 @@ namespace AtomLiteBleDesktop
                     var sh = this.scrollViewSettings.ScrollableHeight;
                     this.scrollViewSettings.ScrollToVerticalOffset(sh);
                 });
-            }catch(Exception err)
+                NotificationToast();
+            }
+            catch(Exception err)
             {
                 throw err;
             }
         }
-
-        private async void readCharacteristic_Click(object sender, RoutedEventArgs e)
+        private async void registeredCharacteristicNotify2(object sender, NotifyReceiveCharacteristicEventArgs e)
+        {
+            ;
+        }
+            private async void readCharacteristic_Click(object sender, RoutedEventArgs e)
         {
             if (this.registeredCharacteristic != null)
             {

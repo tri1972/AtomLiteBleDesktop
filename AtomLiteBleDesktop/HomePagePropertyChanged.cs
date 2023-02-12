@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.UI;
+using Windows.UI.Xaml.Media;
 
 namespace AtomLiteBleDesktop
 {
@@ -24,6 +26,17 @@ namespace AtomLiteBleDesktop
             {
                 _statusText = value;
                 NotifyPropertyChanged("StatusText");
+            }
+        }
+
+        private Brush _statusTextBackground = new SolidColorBrush(Colors.White);
+        public Brush StatusTextBackground
+        {
+            get { return this._statusTextBackground; }
+            set
+            {
+                this._statusTextBackground=value;
+                NotifyPropertyChanged("StatusTextBackground");
             }
         }
         /// <summary>

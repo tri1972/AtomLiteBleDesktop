@@ -31,8 +31,6 @@ namespace AtomLiteBleDesktop
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            this.StatusGrid.Background = new SolidColorBrush(Colors.White);
-
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

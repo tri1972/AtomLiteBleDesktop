@@ -21,7 +21,7 @@
             <RowDefinition Height="1*" />
             <RowDefinition Height="1*" />
         </Grid.RowDefinitions>
-        <Grid x:Name="StatusGrid" Grid.Column="1"  Grid.Row="0" Background="LightBlue">
+        <Grid x:Name="StatusGrid" Grid.Column="1"  Grid.Row="0" Background="{Binding StatusTextBackground, Mode=OneWay}">
             <TextBlock x:Name="StatusText"  TextAlignment="Center" VerticalAlignment="Center" FontSize="100" Text="{Binding StatusText, Mode=OneWay}" SelectionHighlightColor="#FF0092FF"/>
         </Grid>
      </Grid>
