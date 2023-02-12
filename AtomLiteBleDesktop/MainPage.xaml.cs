@@ -51,7 +51,7 @@ namespace AtomLiteBleDesktop
         private GattPresentationFormat presentationFormat;
         private GattCharacteristic selectedCharacteristic;
 
-        private TextNotifyPropertyChanged _textData = new TextNotifyPropertyChanged();
+        private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
 
         private BluetoothWatcher bluetoothWatcher;
         private BluetoothConnector bluetoothConnector;

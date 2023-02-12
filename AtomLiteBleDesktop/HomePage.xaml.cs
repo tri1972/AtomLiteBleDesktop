@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -22,7 +23,7 @@ namespace AtomLiteBleDesktop
     /// </summary>
     public sealed partial class HomePage : Page
     {
-        private TextNotifyPropertyChanged _textData = new TextNotifyPropertyChanged();
+        private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
         public HomePage()
         {
             this.InitializeComponent();
@@ -30,6 +31,7 @@ namespace AtomLiteBleDesktop
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
+            this.StatusGrid.Background = new SolidColorBrush(Colors.White);
 
         }
 

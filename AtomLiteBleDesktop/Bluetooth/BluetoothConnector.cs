@@ -239,7 +239,10 @@ namespace AtomLiteBleDesktop.Bluetooth
             this.deviceInfoSerchedServer = deviceInfoSerchedServer;
             this.services = new List<BluetoothService>();
         }
-
+        /// <summary>
+        /// 非同期BLE接続処理を実行します
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool>  Connect()
         {
             Task<GattCharacteristic> task=null;

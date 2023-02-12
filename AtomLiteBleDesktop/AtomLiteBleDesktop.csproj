@@ -142,7 +142,8 @@
     <Compile Include="SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="TextNotifyPropertyChanged.cs" />
+    <Compile Include="HomePagePropertyChanged.cs" />
+    <Compile Include="SettingsPagePropertyChanged.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

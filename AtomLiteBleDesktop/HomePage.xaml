@@ -5,15 +5,24 @@
     xmlns:local="using:AtomLiteBleDesktop"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    DataContext="{StaticResource HogeDataInstance}"
+    DataContext="{StaticResource HomePageDataInstance}"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Page_Loaded">
 
     <Grid>
-        <TextBlock x:Name="StatusTransmission" HorizontalAlignment="Left" Margin="478,106,0,0"  
-                   TextWrapping="Wrap" VerticalAlignment="Top" Height="245" Width="409"
-                   Text="{Binding Text, Mode=OneWay}"/>
-        <Button Content="Button" Margin="1105,409,0,0" VerticalAlignment="Top" Click="Button_Click"/>
-        <TextBlock TextAlignment="Center" VerticalAlignment="Center" FontSize="30">home page</TextBlock>
-    </Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="1*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
+        </Grid.RowDefinitions>
+        <Grid x:Name="StatusGrid" Grid.Column="1"  Grid.Row="0" Background="LightBlue">
+            <TextBlock x:Name="StatusText"  TextAlignment="Center" VerticalAlignment="Center" FontSize="100" Text="{Binding StatusText, Mode=OneWay}" SelectionHighlightColor="#FF0092FF"/>
+        </Grid>
+     </Grid>
 </Page>

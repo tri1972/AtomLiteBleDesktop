@@ -45,7 +45,7 @@ namespace AtomLiteBleDesktop
         static BluetoothLEAdvertisementWatcher watcher;
         private GattCharacteristic registeredCharacteristic;
 
-        private TextNotifyPropertyChanged _textData = new TextNotifyPropertyChanged();
+        private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
 
         private BluetoothWatcher bluetoothWatcher;
         private BluetoothConnector bluetoothConnector;
@@ -68,13 +68,6 @@ namespace AtomLiteBleDesktop
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-
-            var hogehogeData = Application.Current.Resources["HogeDataInstance"] as TextNotifyPropertyChanged;
-            hogehogeData.Text = "hogehoge";
-
-
-
-
             this.bluetoothWatcher.PIRServer = PIRSERVER;
             this.bluetoothWatcher.StartBleDeviceWatcher();
             var task = await Task.Run<string>(() => {
@@ -159,7 +152,7 @@ namespace AtomLiteBleDesktop
         }
 
         /// <summary>
-        /// UIスレッド外で_TextDataに書き込みを行う場合、この関数を使用
+        /// TextDataにUIスレッド外で書き込みを行う
         /// </summary>
         /// <param name="text"></param>
         private async void stringAdd_TextDataDispatcher(string text)
@@ -170,7 +163,18 @@ namespace AtomLiteBleDesktop
             });
 
         }
-
+        /// <summary>
+        /// HogehogeDataのTextプロパティにUIスレッド外から書き込みを行う
+        /// </summary>
+        /// <param name="text"></param>
+        private async void stringHogehogeData_TextDataDispatcher(string text)
+        {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                var hogehogeData = Application.Current.Resources["HomePageDataInstance"] as HomePagePropertyChanged;
+                hogehogeData.StatusText = text;
+            });
+        }
 
         private async void Button_Click_2(object sender, RoutedEventArgs e)
         {
@@ -187,9 +191,10 @@ namespace AtomLiteBleDesktop
                       while(counter>0)
                       {
                           var task = await Task.Run(this.bluetoothConnector.Connect);
-                          string tmpStr;
                           if (task)
                           {
+                              stringHogehogeData_TextDataDispatcher("接続!");
+
                               this.registeredCharacteristic = this.bluetoothConnector.RegisteredCharacteristic;
 
                               //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
@@ -197,20 +202,15 @@ namespace AtomLiteBleDesktop
                               {
                                   await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
                               }
-
                               stringAdd_TextDataDispatcher("\n" + "取得Service名：");
-                              //_textData.Text += "\n" + "取得Service名：";
                               foreach (var service in this.bluetoothConnector.Services)
                               {
                                   stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
-                                  //_textData.Text += "\n" + string.Copy(service.ServiceGattNativeServiceUuidString);
                               }
                               stringAdd_TextDataDispatcher("\n" + "取得Characteristic名：");
-                              //_textData.Text += "\n" + "取得Characteristic名：";
                               foreach (var name in this.bluetoothConnector.CharacteristicNames)
                               {
                                   stringAdd_TextDataDispatcher("\n" + string.Copy(name));
-                                  //_textData.Text += "\n" + string.Copy(name);
 
                               }
                               break;
@@ -284,6 +284,7 @@ namespace AtomLiteBleDesktop
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     _textData.Text += "\n" + string.Copy(e.Message);
+                    stringHogehogeData_TextDataDispatcher(e.Message);
                     var sh = this.scrollViewSettings.ScrollableHeight;
                     this.scrollViewSettings.ScrollToVerticalOffset(sh);
                 });
@@ -302,6 +303,8 @@ namespace AtomLiteBleDesktop
                 var task = Task.Run(receiver.ReadCharacteristic);
 
                 this._textData.Text += "\n" + task.Result;
+
+                stringHogehogeData_TextDataDispatcher(task.Result);
             }
             else
             {

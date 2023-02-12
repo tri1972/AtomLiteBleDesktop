@@ -11,7 +11,7 @@ namespace AtomLiteBleDesktop
     /// xaml上のTextプロパティを変更するBindingクラス
     /// Text="{Binding Path=textData.Text, UpdateSourceTrigger=PropertyChanged}" 
     /// </summary>
-    public class TextNotifyPropertyChanged : INotifyPropertyChanged
+    public class SettingsPagePropertyChanged : INotifyPropertyChanged
     {
         private string _text = "初期値";
         public string Text
