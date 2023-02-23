@@ -9,3 +9,8 @@ https://qiita.com/nemutas/items/1656b7b5328353eeb1d1
 
 UWP - NavigationView Controll の使い方
 https://blog.beachside.dev/entry/2018/06/22/210000
+
+バックグラウンドタスクの作り方
+https://learn.microsoft.com/ja-jp/windows/uwp/launch-resume/create-and-register-a-background-task
+この中のとくに
+Package.appxmanifestの設定をおこなわないと、クラスが見つからないというエラーになってしまう

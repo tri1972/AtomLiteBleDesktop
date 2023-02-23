@@ -5,8 +5,10 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.Background;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -22,6 +24,14 @@ namespace AtomLiteBleDesktop
     /// </summary>
     sealed partial class App : Application
     {
+        public const string SampleBackgroundTaskEntryPoint = "AtomLiteBleBackground.BluetoothConnector";
+        public const string SampleBackgroundTaskName = "BluetoothConnector";
+        public static string SampleBackgroundTaskProgress = "";
+        public static bool SampleBackgroundTaskRegistered = false;
+
+        public const string TimeTriggeredTaskName = "TimeTriggeredTask";
+        public const string ApplicationTriggerTaskName = "ApplicationTriggerTask";
+
         /// <summary>
         ///単一アプリケーション オブジェクトを初期化します。これは、実行される作成したコードの
         ///最初の行であるため、論理的には main() または WinMain() と等価です。
@@ -71,6 +81,13 @@ namespace AtomLiteBleDesktop
                 // 現在のウィンドウがアクティブであることを確認します
                 Window.Current.Activate();
             }
+
+
+            var task = RegisterBackgroundTask(SampleBackgroundTaskEntryPoint,
+                                                                   SampleBackgroundTaskName,
+                                                                   new SystemTrigger(SystemTriggerType.TimeZoneChange, false),
+                                                                   null);
+
         }
 
         /// <summary>
@@ -95,6 +112,66 @@ namespace AtomLiteBleDesktop
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: アプリケーションの状態を保存してバックグラウンドの動作があれば停止します
             deferral.Complete();
+        }
+        public static BackgroundTaskRegistration RegisterBackgroundTask(String taskEntryPoint, String name, IBackgroundTrigger trigger, IBackgroundCondition condition, BackgroundTaskRegistrationGroup group = null)
+        {
+            BackgroundTaskRegistration task;
+            try
+            {
+                if (TaskRequiresBackgroundAccess(name))
+                {
+                    // If the user denies access, the task will not run.
+                    var requestTask = BackgroundExecutionManager.RequestAccessAsync();
+                }
+
+                var builder = new BackgroundTaskBuilder();
+
+                builder.Name = name;
+                builder.TaskEntryPoint = taskEntryPoint;
+                builder.SetTrigger(trigger);
+
+                if (condition != null)
+                {
+                    builder.AddCondition(condition);
+
+                    //
+                    // If the condition changes while the background task is executing then it will
+                    // be canceled.
+                    //
+                    builder.CancelOnConditionLoss = true;
+                }
+
+                if (group != null)
+                {
+                    builder.TaskGroup = group;
+                }
+
+                task = builder.Register();
+
+                //UpdateBackgroundTaskRegistrationStatus(name, true);
+
+                //
+                // Remove previous completion status.
+                //
+                var settings = ApplicationData.Current.LocalSettings;
+                settings.Values.Remove(name);
+            }catch(Exception err)
+            {
+                throw err;
+            }
+            return task;
+        }
+        public static bool TaskRequiresBackgroundAccess(String name)
+        {
+            if ((name == TimeTriggeredTaskName) ||
+                (name == ApplicationTriggerTaskName))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
