@@ -80,8 +80,12 @@ namespace AtomLiteBleBackground
                 // Record that this background task ran.
                 //
                 String taskStatus = (_progress < 100) ? "Canceled with reason: " + _cancelReason.ToString() : "Completed";
+
+                //ここのアプリケーション データ ストアへ書き込みによりForeGround側にデータを渡す
                 var settings = ApplicationData.Current.LocalSettings;
                 settings.Values[key] = taskStatus;
+                
+                
                 Debug.WriteLine("Background " + _taskInstance.Task.Name + settings.Values[key]);
 
                 //

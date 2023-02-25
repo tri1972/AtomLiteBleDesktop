@@ -14,3 +14,15 @@ https://blog.beachside.dev/entry/2018/06/22/210000
 https://learn.microsoft.com/ja-jp/windows/uwp/launch-resume/create-and-register-a-background-task
 この中のとくに
 Package.appxmanifestの設定をおこなわないと、クラスが見つからないというエラーになってしまう
+
+バックグラウンドで無期限に実行する
+https://learn.microsoft.com/ja-jp/windows/uwp/launch-resume/run-in-the-background-indefinetly
+
+この中の
+<rescap:Capability Name="extendedExecutionUnconstrained"/>
+の宣言については
+
+すべての制限付き機能要素は、パッケージ マニフェストの Capabilities ノードの下で、
+すべての CustomCapability 要素および DeviceCapability 要素の前に指定する必要があります。
+
+を注意しなくてはならない

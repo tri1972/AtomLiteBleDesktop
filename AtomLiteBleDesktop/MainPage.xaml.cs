@@ -29,6 +29,8 @@ using AtomLiteBleDesktop.Bluetooth;
 using Windows.UI.Popups;
 using Windows.System;
 using AtomLiteBleDesktop;
+using Windows.ApplicationModel.Background;
+using Windows.Storage;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x411 を参照してください
 
@@ -73,6 +75,12 @@ namespace AtomLiteBleDesktop
             IList<Windows.System.AppDiagnosticInfo> infos = await AppDiagnosticInfo.RequestInfoForAppAsync();
             IList<AppResourceGroupInfo> resourceInfos = infos[0].GetResourceGroups();
             await resourceInfos[0].StartSuspendAsync();
+
+            var task = BackgroundTaskRegistration.AllTasks
+                .First(x => x.Value.Name == "BluetoothConnector")
+                .Value;
+            task.Progress += this.Task_Progress;
+            task.Completed += this.Task_Completed;
         }
 
 
@@ -145,6 +153,39 @@ namespace AtomLiteBleDesktop
             {typeof(LogPage), "Log"},
            
         };
+
+
+        private string backGroundText;
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+/*
+            var task = BackgroundTaskRegistration.AllTasks
+                .First(x => x.Value.Name == "BluetoothConnector")
+                .Value;
+            task.Progress += this.Task_Progress;
+            task.Completed += this.Task_Completed;
+*/
+        }
+
+        private async void Task_Progress(BackgroundTaskRegistration sender, BackgroundTaskProgressEventArgs args)
+        {
+            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                this.backGroundText = $"{args.Progress}%";
+                Debug.WriteLine(this.backGroundText);
+            });
+        }
+
+        private async void Task_Completed(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
+        {
+            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                this.backGroundText = (string)ApplicationData.Current.LocalSettings.Values["BluetoothConnector"];
+                Debug.WriteLine(this.backGroundText);
+            });
+        }
     }
 
 }

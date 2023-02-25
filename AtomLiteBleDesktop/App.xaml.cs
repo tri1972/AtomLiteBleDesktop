@@ -82,11 +82,18 @@ namespace AtomLiteBleDesktop
                 Window.Current.Activate();
             }
 
-
+            /*
+            var task = RegisterBackgroundTask(SampleBackgroundTaskEntryPoint,
+                                                                   SampleBackgroundTaskName,
+                                                                   new TimeTrigger(15, false),
+                                                                   null);
+            */
+            
             var task = RegisterBackgroundTask(SampleBackgroundTaskEntryPoint,
                                                                    SampleBackgroundTaskName,
                                                                    new SystemTrigger(SystemTriggerType.TimeZoneChange, false),
                                                                    null);
+            
 
         }
 
@@ -113,6 +120,16 @@ namespace AtomLiteBleDesktop
             //TODO: アプリケーションの状態を保存してバックグラウンドの動作があれば停止します
             deferral.Complete();
         }
+
+        /// <summary>
+        ///BackGroundタスクの登録を行う 
+        /// </summary>
+        /// <param name="taskEntryPoint">名前空間.クラス名</param>
+        /// <param name="name">タスクの名前</param>
+        /// <param name="trigger"></param>
+        /// <param name="condition"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
         public static BackgroundTaskRegistration RegisterBackgroundTask(String taskEntryPoint, String name, IBackgroundTrigger trigger, IBackgroundCondition condition, BackgroundTaskRegistrationGroup group = null)
         {
             BackgroundTaskRegistration task;
