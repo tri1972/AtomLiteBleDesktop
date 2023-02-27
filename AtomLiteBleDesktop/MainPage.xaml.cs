@@ -31,6 +31,8 @@ using Windows.System;
 using AtomLiteBleDesktop;
 using Windows.ApplicationModel.Background;
 using Windows.Storage;
+using Windows.ApplicationModel.ExtendedExecution.Foreground;
+using Windows.ApplicationModel.ExtendedExecution;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x411 を参照してください
 
@@ -47,16 +49,20 @@ namespace AtomLiteBleDesktop
 
         private const string PIRSERVER = "ESP32PIRTRI";
 
-
+        /*
 
         static BluetoothLEAdvertisementWatcher watcher;
         private GattPresentationFormat presentationFormat;
         private GattCharacteristic selectedCharacteristic;
+        */
 
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
 
+        /*
         private BluetoothWatcher bluetoothWatcher;
         private BluetoothConnector bluetoothConnector;
+        */
+        private ExtendedExecutionSession session = null;
 
         public MainPage()
         {
@@ -69,21 +75,71 @@ namespace AtomLiteBleDesktop
 
         private async void PageLoaded(FrameworkElement sender, object args)
         {
-            this.bluetoothWatcher = new BluetoothWatcher(this.Dispatcher);
-            //画面を起動時に最小にする方法
-            //参考：https://social.msdn.microsoft.com/Forums/vstudio/ja-JP/fe39e1b6-e891-43a8-8bb2-01e4550a4b64/uwpmain?forum=winstoreapp
-            IList<Windows.System.AppDiagnosticInfo> infos = await AppDiagnosticInfo.RequestInfoForAppAsync();
-            IList<AppResourceGroupInfo> resourceInfos = infos[0].GetResourceGroups();
-            await resourceInfos[0].StartSuspendAsync();
+            //this.bluetoothWatcher = new BluetoothWatcher(this.Dispatcher);
 
+            //BackgroundTaskからのProgressとCompletedイベントを取得するようCallback関数を登録する
             var task = BackgroundTaskRegistration.AllTasks
                 .First(x => x.Value.Name == "BluetoothConnector")
                 .Value;
             task.Progress += this.Task_Progress;
             task.Completed += this.Task_Completed;
+
+
+            var newSession = new ExtendedExecutionSession();
+            newSession.Reason = ExtendedExecutionReason.Unspecified;
+            newSession.Revoked += SessionRevoked;
+            ExtendedExecutionResult result = await newSession.RequestExtensionAsync();
+
+            switch (result)
+            {
+                case ExtendedExecutionResult.Allowed:
+                    session = newSession;
+                    break;
+
+                default:
+                case ExtendedExecutionResult.Denied:
+                    ;
+                    break;
+            }
+
+            //画面を起動時に最小にする方法
+            //参考：https://social.msdn.microsoft.com/Forums/vstudio/ja-JP/fe39e1b6-e891-43a8-8bb2-01e4550a4b64/uwpmain?forum=winstoreapp
+            IList<Windows.System.AppDiagnosticInfo> infos = await AppDiagnosticInfo.RequestInfoForAppAsync();
+            IList<AppResourceGroupInfo> resourceInfos = infos[0].GetResourceGroups();
+            await resourceInfos[0].StartSuspendAsync();
         }
 
+        private async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                switch (args.Reason)
+                {
+                    case ExtendedExecutionRevokedReason.Resumed:
+                        break;
 
+                    case ExtendedExecutionRevokedReason.SystemPolicy:
+                        break;
+                }
+
+                EndExtendedExecution();
+            });
+        }
+
+        private void EndExtendedExecution()
+        {
+            ClearExtendedExecution();
+            //UpdateUI();
+        }
+        void ClearExtendedExecution()
+        {
+            if (session != null)
+            {
+                session.Revoked -= SessionRevoked;
+                session.Dispose();
+                session = null;
+            }
+        }
         private void NavView_Loaded(object sender, RoutedEventArgs e)
         {
             // MainPage.xaml で書いた MenuItems の下にさらにコードで MenuItems を追加したり...

@@ -26,3 +26,10 @@ https://learn.microsoft.com/ja-jp/windows/uwp/launch-resume/run-in-the-backgroun
 すべての CustomCapability 要素および DeviceCapability 要素の前に指定する必要があります。
 
 を注意しなくてはならない
+
+バックグラウンドタスクよりProgressとCompletedのイベントを取得できるようにする
+https://blog.okazuki.jp/entry/2016/04/10/183953
+
+延長実行を使ってアプリの中断を延期する
+https://learn.microsoft.com/ja-jp/windows/uwp/launch-resume/run-minimized-with-extended-execution
+どちらかといえばこちらを使うべきか・・・

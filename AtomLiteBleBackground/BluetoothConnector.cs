@@ -65,6 +65,9 @@ namespace AtomLiteBleBackground
         //
         private void PeriodicTimerCallback(ThreadPoolTimer timer)
         {
+                _progress += 1;
+                _taskInstance.Progress = _progress;
+            /*
             if ((_cancelRequested == false) && (_progress < 100))
             {
                 _progress += 10;
@@ -93,6 +96,7 @@ namespace AtomLiteBleBackground
                 //
                 _deferral.Complete();
             }
+            */
         }
     }
 }
