@@ -65,11 +65,12 @@ namespace AtomLiteBleDesktop
             };
         }
 
-
-
-
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            var instansBluetoothAccesser = BluetoothAccesser.GetInstance(this.Dispatcher);
+            //var task =await Task.Run<string>(()=> { return instansBluetoothAccesser.Watch2(PIRSERVER); });
+            var task = await instansBluetoothAccesser.Watch(PIRSERVER);
+            /*
             this.bluetoothWatcher.PIRServer = PIRSERVER;
             this.bluetoothWatcher.StartBleDeviceWatcher();
             var task = await Task.Run<string>(() =>
@@ -93,9 +94,10 @@ namespace AtomLiteBleDesktop
                 {
                     return null;
                 }
-            });
+            });*/
             if (task != null)
             {
+                this.bluetoothWatcher = instansBluetoothAccesser.BluetoothWatcher;
                 this._textData.Text = "取得サーバー名:\n" + task;
             }
             else

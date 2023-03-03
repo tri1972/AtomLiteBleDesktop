@@ -9,3 +9,6 @@ https://qiita.com/nemutas/items/1656b7b5328353eeb1d1
 
 UWP - NavigationView Controll の使い方
 https://blog.beachside.dev/entry/2018/06/22/210000
+
+延長実行を使ってアプリの中断を延期する
+https://learn.microsoft.com/ja-jp/windows/uwp/launch-resume/run-minimized-with-extended-execution
