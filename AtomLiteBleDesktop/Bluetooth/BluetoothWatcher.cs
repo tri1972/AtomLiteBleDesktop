@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.UI.Core;
@@ -12,8 +13,6 @@ namespace AtomLiteBleDesktop.Bluetooth
 {
     public class BluetoothWatcher
     {
-
-
         /// <summary>
         /// 接続対象PIRサーバー名
         /// </summary>
@@ -35,7 +34,7 @@ namespace AtomLiteBleDesktop.Bluetooth
 
         private DeviceWatcher deviceWatcher;
         private ObservableCollection<BluetoothLEDeviceDisplay> KnownDevices = new ObservableCollection<BluetoothLEDeviceDisplay>();
-        private CoreDispatcher dispatcher;
+        private static CoreDispatcher _mDispatcher;
         private List<DeviceInformation> UnknownDevices = new List<DeviceInformation>();
 
         /// <summary>
@@ -45,13 +44,74 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             get { return this.deviceInfoSerchedServer; }
         }
-
         private BluetoothLEDeviceDisplay deviceInfoSerchedServer = null;
 
+        /// <summary>
+        /// このクラスのインスタンスを作成
+        /// </summary>
+        private static BluetoothWatcher instance = new BluetoothWatcher();
+
+        /// <summary>
+        /// コンストラクタ(singleton用のためprivete)
+        /// </summary>
+        private BluetoothWatcher()
+        {
+        }
+        /// <summary>
+        /// このクラスのインスタンスを取得します
+        /// </summary>
+        /// <param name="dispatcher"></param>
+        /// <returns></returns>
+        public static BluetoothWatcher GetInstance(CoreDispatcher dispatcher)
+        {
+            _mDispatcher = dispatcher;
+            return instance;
+        }
+
+        /*
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="dispatcher"></param>
         public BluetoothWatcher(CoreDispatcher dispatcher)
         {
             this.dispatcher = dispatcher;
             this.pirServer = null;
+        }
+        */
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="PIRSERVER"></param>
+        /// <returns></returns>
+        public async Task<string> Watch(string PIRSERVER)
+        {
+            var task = await Task.Run<string>(() =>
+            {
+                this.PIRServer = PIRSERVER;
+                this.StartBleDeviceWatcher();
+                //1s待って。接続Server名が取得できなければnullを返す
+                int counter = 500;
+                while (this.PIRServerSearched == null)
+                {
+                    if (counter == 0)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(10);
+                    counter--;
+                }
+                if (this.PIRServerSearched != null)
+                {
+                    return this.PIRServerSearched;
+                }
+                else
+                {
+                    return null;
+                }
+            });
+            return task;
         }
 
         public void StartBleDeviceWatcher()
@@ -122,7 +182,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         private async void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
         {
             // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await _mDispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 lock (this)
                 {
@@ -174,7 +234,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
         {
             // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await _mDispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 lock (this)
                 {
@@ -216,7 +276,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         private async void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
         {
             // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await _mDispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 lock (this)
                 {
@@ -250,7 +310,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         private async void DeviceWatcher_EnumerationCompleted(DeviceWatcher sender, object e)
         {
             // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await _mDispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 // Protect against race condition if the task runs after the app stopped the deviceWatcher.
                 if (sender == deviceWatcher)
@@ -262,7 +322,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         private async void DeviceWatcher_Stopped(DeviceWatcher sender, object e)
         {
             // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await _mDispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 // Protect against race condition if the task runs after the app stopped the deviceWatcher.
                 if (sender == deviceWatcher)

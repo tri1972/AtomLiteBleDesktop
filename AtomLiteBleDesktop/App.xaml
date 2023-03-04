@@ -2,10 +2,13 @@
     x:Class="AtomLiteBleDesktop.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:AtomLiteBleDesktop"
+    xmlns:local="using:AtomLiteBleDesktop" 
+    xmlns:bluetooth="using:AtomLiteBleDesktop.Bluetooth"
     RequestedTheme="Light">
     <Application.Resources>
         <ResourceDictionary>
+            <!--お試しで置いたBluetooth用のインスタンス-->
+            <bluetooth:BluetoothAccesser  x:Key="appButtonStyle"/>
             <!--TextNotifyPropertyChangedクラスのインスタンスを"HogeDataInstance"インスタンスで参照させる-->
             <SettingsPagePropertyChanged xmlns="using:AtomLiteBleDesktop" x:Key="HogeDataInstance"/>
             <HomePagePropertyChanged xmlns="using:AtomLiteBleDesktop" x:Key="HomePageDataInstance"/>

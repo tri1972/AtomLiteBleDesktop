@@ -10,6 +10,14 @@ namespace AtomLiteBleDesktop.Bluetooth
 {
     public class BluetoothAccesser
     {
+        /// <summary>
+        /// コンストラクタ:引数なしでないとXamlのResourceDictionnaryに登録できない
+        /// </summary>
+        public BluetoothAccesser()
+        {
+        }
+
+        /*
         private static BluetoothAccesser instance = new BluetoothAccesser();
 
         private BluetoothWatcher bluetoothWatcher;
@@ -28,6 +36,8 @@ namespace AtomLiteBleDesktop.Bluetooth
             _mDispatcher = dispatcher;
             return instance;
         }
+        */
+        /*
 
         public string Watch2(string PIRSERVER)
         {
@@ -89,7 +99,7 @@ namespace AtomLiteBleDesktop.Bluetooth
               });
             return task;
         }
-
+        */
 
 
     }

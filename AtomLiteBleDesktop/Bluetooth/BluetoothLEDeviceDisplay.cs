@@ -41,13 +41,6 @@ namespace AtomLiteBleDesktop
             var glyphBitmapImage = new BitmapImage();
             await glyphBitmapImage.SetSourceAsync(deviceThumbnail);
             GlyphBitmapImage = glyphBitmapImage;
-            OnPropertyChanged("GlyphBitmapImage");
-        }
-
-        private void OnPropertyChanged(string v)
-        {
-            Debug.WriteLine("NotImplementedException:GlyphBitmapImage");
-            //throw new NotImplementedException();
         }
     }
 }

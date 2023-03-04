@@ -54,7 +54,7 @@ namespace AtomLiteBleDesktop
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            this.bluetoothWatcher = new BluetoothWatcher(this.Dispatcher);
+            this.bluetoothWatcher = BluetoothWatcher.GetInstance(this.Dispatcher);
         }
         public SettingsPage()
         {
@@ -67,37 +67,9 @@ namespace AtomLiteBleDesktop
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            var instansBluetoothAccesser = BluetoothAccesser.GetInstance(this.Dispatcher);
-            //var task =await Task.Run<string>(()=> { return instansBluetoothAccesser.Watch2(PIRSERVER); });
-            var task = await instansBluetoothAccesser.Watch(PIRSERVER);
-            /*
-            this.bluetoothWatcher.PIRServer = PIRSERVER;
-            this.bluetoothWatcher.StartBleDeviceWatcher();
-            var task = await Task.Run<string>(() =>
-            {
-                //1s待って。接続Server名が取得できなければnullを返す
-                int counter = 100;
-                while (this.bluetoothWatcher.PIRServerSearched == null)
-                {
-                    if (counter == 0)
-                    {
-                        break;
-                    }
-                    Thread.Sleep(10);
-                    counter--;
-                }
-                if (this.bluetoothWatcher.PIRServerSearched != null)
-                {
-                    return bluetoothWatcher.PIRServerSearched;
-                }
-                else
-                {
-                    return null;
-                }
-            });*/
+            var task = await this.bluetoothWatcher.Watch(PIRSERVER);
             if (task != null)
             {
-                this.bluetoothWatcher = instansBluetoothAccesser.BluetoothWatcher;
                 this._textData.Text = "取得サーバー名:\n" + task;
             }
             else

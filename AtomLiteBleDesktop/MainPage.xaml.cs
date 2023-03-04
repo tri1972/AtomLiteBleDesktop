@@ -53,7 +53,6 @@ namespace AtomLiteBleDesktop
 
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
 
-        private BluetoothWatcher bluetoothWatcher;
         private BluetoothConnector bluetoothConnector;
 
         public MainPage()
@@ -67,7 +66,6 @@ namespace AtomLiteBleDesktop
 
         private async void PageLoaded(FrameworkElement sender, object args)
         {
-            this.bluetoothWatcher = new BluetoothWatcher(this.Dispatcher);
             //画面を起動時に最小にする方法
             //参考：https://social.msdn.microsoft.com/Forums/vstudio/ja-JP/fe39e1b6-e891-43a8-8bb2-01e4550a4b64/uwpmain?forum=winstoreapp
             IList<Windows.System.AppDiagnosticInfo> infos = await AppDiagnosticInfo.RequestInfoForAppAsync();
