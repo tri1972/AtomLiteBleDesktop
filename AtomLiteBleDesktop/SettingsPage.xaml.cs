@@ -49,12 +49,14 @@ namespace AtomLiteBleDesktop
 
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
 
+        private BluetoothAccesser bluetoothAccesser;
         private BluetoothWatcher bluetoothWatcher;
         private BluetoothConnector bluetoothConnector;
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            this.bluetoothWatcher = BluetoothWatcher.GetInstance(this.Dispatcher);
+            this.bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
+            this.bluetoothWatcher = BluetoothWatcher.GetInstance();
         }
         public SettingsPage()
         {
@@ -67,7 +69,8 @@ namespace AtomLiteBleDesktop
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            var task = await this.bluetoothWatcher.Watch(PIRSERVER);
+            var task = await this.bluetoothAccesser.Watch(PIRSERVER);
+            //var task = await this.bluetoothWatcher.Watch(PIRSERVER);
             if (task != null)
             {
                 this._textData.Text = "取得サーバー名:\n" + task;

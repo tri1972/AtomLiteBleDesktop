@@ -33,8 +33,12 @@ namespace AtomLiteBleDesktop.Bluetooth
         private string pirServerSearched;
 
         private DeviceWatcher deviceWatcher;
+
+        //見つかったデバイスを格納する配列
         private ObservableCollection<BluetoothLEDeviceDisplay> KnownDevices = new ObservableCollection<BluetoothLEDeviceDisplay>();
-        private static CoreDispatcher _mDispatcher;
+
+        //UIスレッドにアクセスするためのDispatcher
+        //private static CoreDispatcher _mDispatcher;
         private List<DeviceInformation> UnknownDevices = new List<DeviceInformation>();
 
         /// <summary>
@@ -62,9 +66,8 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="dispatcher"></param>
         /// <returns></returns>
-        public static BluetoothWatcher GetInstance(CoreDispatcher dispatcher)
+        public static BluetoothWatcher GetInstance()
         {
-            _mDispatcher = dispatcher;
             return instance;
         }
 
@@ -81,7 +84,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         */
 
         /// <summary>
-        /// 
+        /// 指定したサーバ名を探し、存在すればそのサーバ名を返却：非同期
         /// </summary>
         /// <param name="PIRSERVER"></param>
         /// <returns></returns>
@@ -113,6 +116,37 @@ namespace AtomLiteBleDesktop.Bluetooth
             });
             return task;
         }
+
+        /// <summary>
+        /// 指定したサーバ名を探し、存在すればそのサーバ名を返却：同期
+        /// </summary>
+        /// <param name="PIRSERVER"></param>
+        /// <returns></returns>
+        public string WatchSync(string PIRSERVER)
+        {
+                this.PIRServer = PIRSERVER;
+                this.StartBleDeviceWatcher();
+                //1s待って。接続Server名が取得できなければnullを返す
+                int counter = 500;
+                while (this.PIRServerSearched == null)
+                {
+                    if (counter == 0)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(10);
+                    counter--;
+                }
+                if (this.PIRServerSearched != null)
+                {
+                    return this.PIRServerSearched;
+                }
+                else
+                {
+                    return null;
+                }
+        }
+
 
         public void StartBleDeviceWatcher()
         {
@@ -179,51 +213,49 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="deviceInfo"></param>
-        private async void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
+        private void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
         {
-            // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await _mDispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+
+            lock (this)
             {
-                lock (this)
+                try
                 {
-                    try
-                    {
-                        Debug.WriteLine(String.Format("Added {0}{1}", deviceInfo.Id, deviceInfo.Name));
+                    Debug.WriteLine(String.Format("Added {0}{1}", deviceInfo.Id, deviceInfo.Name));
 
-                        // Protect against race condition if the task runs after the app stopped the deviceWatcher.
-                        if (sender == deviceWatcher)
+                    // Protect against race condition if the task runs after the app stopped the deviceWatcher.
+                    if (sender == deviceWatcher)
+                    {
+                        // Make sure device isn't already present in the list.
+                        if (FindBluetoothLEDeviceDisplay(deviceInfo.Id) == null)
                         {
-                            // Make sure device isn't already present in the list.
-                            if (FindBluetoothLEDeviceDisplay(deviceInfo.Id) == null)
+                            if (deviceInfo.Name != string.Empty)
                             {
-                                if (deviceInfo.Name != string.Empty)
+                                if (this.pirServer == deviceInfo.Name)
                                 {
-                                    if (this.pirServer == deviceInfo.Name)
-                                    {
-                                        this.deviceInfoSerchedServer = new BluetoothLEDeviceDisplay(deviceInfo);
-                                        this.pirServerSearched=this.pirServer;
-                                    }
-                                    Debug.WriteLine("Detect Deveice" + deviceInfo.Id + ":" + deviceInfo.Name);
-                                    // If device has a friendly name display it immediately.
-                                    //nameのあるDeviceを配列に保存する
-                                    KnownDevices.Add(new BluetoothLEDeviceDisplay(deviceInfo));
+                                    //接続したBleデバイス情報で接続用のデバイスを作成する
+                                    this.deviceInfoSerchedServer = new BluetoothLEDeviceDisplay(deviceInfo);
+                                    this.pirServerSearched = this.pirServer;
                                 }
-                                else
-                                {
-                                    //nameのないDeviceを配列に保存する
-                                    // Add it to a list in case the name gets updated later. 
-                                    UnknownDevices.Add(deviceInfo);
-                                }
+                                Debug.WriteLine("Detect Deveice" + deviceInfo.Id + ":" + deviceInfo.Name);
+                                // If device has a friendly name display it immediately.
+                                //nameのあるDeviceを配列に保存する
+                                KnownDevices.Add(new BluetoothLEDeviceDisplay(deviceInfo));
                             }
-
+                            else
+                            {
+                                //nameのないDeviceを配列に保存する
+                                // Add it to a list in case the name gets updated later. 
+                                UnknownDevices.Add(deviceInfo);
+                            }
                         }
-                    }
-                    catch (Exception err)
-                    {
-                        Debug.WriteLine("Error");
+
                     }
                 }
-            });
+                catch (Exception err)
+                {
+                    Debug.WriteLine("Error");
+                }
+            }
         }
 
         /// <summary>
@@ -231,75 +263,58 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="deviceInfoUpdate"></param>
-        private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
+        private void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
         {
-            // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await _mDispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            lock (this)
             {
-                lock (this)
+                Debug.WriteLine(String.Format("Updated {0}{1}", deviceInfoUpdate.Id, ""));
+
+                // Protect against race condition if the task runs after the app stopped the deviceWatcher.
+                if (sender == deviceWatcher)
                 {
-                    Debug.WriteLine(String.Format("Updated {0}{1}", deviceInfoUpdate.Id, ""));
-
-                    // Protect against race condition if the task runs after the app stopped the deviceWatcher.
-                    if (sender == deviceWatcher)
+                    DeviceInformation deviceInfo = FindUnknownDevices(deviceInfoUpdate.Id);
+                    if (deviceInfo != null)
                     {
-                        /*
-                        BluetoothLEDeviceDisplay bleDeviceDisplay = FindBluetoothLEDeviceDisplay(deviceInfoUpdate.Id);
-                        if (bleDeviceDisplay != null)
+                        deviceInfo.Update(deviceInfoUpdate);
+                        // If device has been updated with a friendly name it's no longer unknown.
+                        if (deviceInfo.Name != String.Empty)
                         {
-                            // Device is already being displayed - update UX.
-                            bleDeviceDisplay.Update(deviceInfoUpdate);
-                            return;
+                            KnownDevices.Add(new BluetoothLEDeviceDisplay(deviceInfo));
+                            UnknownDevices.Remove(deviceInfo);
                         }
-                        */
-                        DeviceInformation deviceInfo = FindUnknownDevices(deviceInfoUpdate.Id);
-                        if (deviceInfo != null)
-                        {
-                            deviceInfo.Update(deviceInfoUpdate);
-                            // If device has been updated with a friendly name it's no longer unknown.
-                            if (deviceInfo.Name != String.Empty)
-                            {
-                                KnownDevices.Add(new BluetoothLEDeviceDisplay(deviceInfo));
-                                UnknownDevices.Remove(deviceInfo);
-                            }
-                        }
-
                     }
+
                 }
-            });
+            }
         }
         /// <summary>
         /// 列挙されたBluetoothデバイスのなかで削除されたら呼ばれる
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="deviceInfoUpdate"></param>
-        private async void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
+        private void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
         {
-            // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await _mDispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            lock (this)
             {
-                lock (this)
+                Debug.WriteLine(String.Format("Removed {0}{1}", deviceInfoUpdate.Id, ""));
+
+                // Protect against race condition if the task runs after the app stopped the deviceWatcher.
+                if (sender == deviceWatcher)
                 {
-                    Debug.WriteLine(String.Format("Removed {0}{1}", deviceInfoUpdate.Id, ""));
-
-                    // Protect against race condition if the task runs after the app stopped the deviceWatcher.
-                    if (sender == deviceWatcher)
+                    // Find the corresponding DeviceInformation in the collection and remove it.
+                    BluetoothLEDeviceDisplay bleDeviceDisplay = FindBluetoothLEDeviceDisplay(deviceInfoUpdate.Id);
+                    if (bleDeviceDisplay != null)
                     {
-                        // Find the corresponding DeviceInformation in the collection and remove it.
-                        BluetoothLEDeviceDisplay bleDeviceDisplay = FindBluetoothLEDeviceDisplay(deviceInfoUpdate.Id);
-                        if (bleDeviceDisplay != null)
-                        {
-                            KnownDevices.Remove(bleDeviceDisplay);
-                        }
+                        KnownDevices.Remove(bleDeviceDisplay);
+                    }
 
-                        DeviceInformation deviceInfo = FindUnknownDevices(deviceInfoUpdate.Id);
-                        if (deviceInfo != null)
-                        {
-                            UnknownDevices.Remove(deviceInfo);
-                        }
+                    DeviceInformation deviceInfo = FindUnknownDevices(deviceInfoUpdate.Id);
+                    if (deviceInfo != null)
+                    {
+                        UnknownDevices.Remove(deviceInfo);
                     }
                 }
-            });
+            }
         }
 
         /// <summary>
@@ -307,32 +322,22 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void DeviceWatcher_EnumerationCompleted(DeviceWatcher sender, object e)
+        private void DeviceWatcher_EnumerationCompleted(DeviceWatcher sender, object e)
         {
-            // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await _mDispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+
+            // Protect against race condition if the task runs after the app stopped the deviceWatcher.
+            if (sender == deviceWatcher)
             {
-                // Protect against race condition if the task runs after the app stopped the deviceWatcher.
-                if (sender == deviceWatcher)
-                {
-                }
-            });
+            }
         }
 
-        private async void DeviceWatcher_Stopped(DeviceWatcher sender, object e)
+        private void DeviceWatcher_Stopped(DeviceWatcher sender, object e)
         {
-            // We must update the collection on the UI thread because the collection is databound to a UI element.
-            await _mDispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            // Protect against race condition if the task runs after the app stopped the deviceWatcher.
+            if (sender == deviceWatcher)
             {
-                // Protect against race condition if the task runs after the app stopped the deviceWatcher.
-                if (sender == deviceWatcher)
-                {
-                    /*
-                    rootPage.NotifyUser($"No longer watching for devices.",
-                            sender.Status == DeviceWatcherStatus.Aborted ? NotifyType.ErrorMessage : NotifyType.StatusMessage);
-                    */
-                }
-            });
+
+            }
         }
 
 

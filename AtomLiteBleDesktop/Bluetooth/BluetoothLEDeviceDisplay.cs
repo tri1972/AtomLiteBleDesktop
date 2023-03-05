@@ -10,6 +10,9 @@ using System.Diagnostics;
 
 namespace AtomLiteBleDesktop
 {
+    /// <summary>
+    /// BluetoothLe(BLE)のデバイス情報を格納する
+    /// </summary>
     public class BluetoothLEDeviceDisplay : INotifyPropertyChanged
     {
         /// <summary>
@@ -19,7 +22,6 @@ namespace AtomLiteBleDesktop
         public BluetoothLEDeviceDisplay(DeviceInformation deviceInfoIn)
         {
             DeviceInformation = deviceInfoIn;
-            UpdateGlyphBitmapImage();
         }
 
         public DeviceInformation DeviceInformation { get; private set; }
@@ -32,15 +34,6 @@ namespace AtomLiteBleDesktop
 
         public IReadOnlyDictionary<string, object> Properties => DeviceInformation.Properties;
 
-        public BitmapImage GlyphBitmapImage { get; private set; }
-
         public event PropertyChangedEventHandler PropertyChanged;
-        private async void UpdateGlyphBitmapImage()
-        {
-            DeviceThumbnail deviceThumbnail = await DeviceInformation.GetGlyphThumbnailAsync();
-            var glyphBitmapImage = new BitmapImage();
-            await glyphBitmapImage.SetSourceAsync(deviceThumbnail);
-            GlyphBitmapImage = glyphBitmapImage;
-        }
     }
 }

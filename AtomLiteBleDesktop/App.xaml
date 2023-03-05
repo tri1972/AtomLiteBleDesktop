@@ -8,7 +8,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <!--お試しで置いたBluetooth用のインスタンス-->
-            <bluetooth:BluetoothAccesser  x:Key="appButtonStyle"/>
+            <bluetooth:BluetoothAccesser  x:Key="appBluetoothAccesserInstance"/>
             <!--TextNotifyPropertyChangedクラスのインスタンスを"HogeDataInstance"インスタンスで参照させる-->
             <SettingsPagePropertyChanged xmlns="using:AtomLiteBleDesktop" x:Key="HogeDataInstance"/>
             <HomePagePropertyChanged xmlns="using:AtomLiteBleDesktop" x:Key="HomePageDataInstance"/>
