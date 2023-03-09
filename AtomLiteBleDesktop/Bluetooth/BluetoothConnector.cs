@@ -169,9 +169,10 @@ namespace AtomLiteBleDesktop.Bluetooth
         readonly int E_DEVICE_NOT_AVAILABLE = unchecked((int)0x800710df); // HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE)
         #endregion
 
-        private BluetoothLEDevice bluetoothLeDevice = null;
-        private BluetoothLEDeviceDisplay deviceInfoSerchedServer = null;
+        private Windows.Devices.Bluetooth.BluetoothLEDevice bluetoothLeDevice = null;
+        private BluetoothLEDevice deviceInfoSerchedServer = null;
 
+        private List<BluetoothService> services;
         /// <summary>
         /// servicesを取得します
         /// </summary>
@@ -179,8 +180,8 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             get { return this.services; }
         }
-        private List<BluetoothService> services;
 
+        private IReadOnlyList<GattCharacteristic> characteristics = null;
         /// <summary>
         /// Characteristicsを取得します
         /// </summary>
@@ -188,8 +189,6 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             get { return this.characteristics; }
         }
-
-        private IReadOnlyList<GattCharacteristic> characteristics = null;
 
         /// <summary>
         /// Characteristicを取得します
@@ -234,7 +233,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public BluetoothConnector(BluetoothLEDeviceDisplay deviceInfoSerchedServer)
+        public BluetoothConnector(BluetoothLEDevice deviceInfoSerchedServer)
         {
             this.deviceInfoSerchedServer = deviceInfoSerchedServer;
             this.services = new List<BluetoothService>();
@@ -249,7 +248,7 @@ namespace AtomLiteBleDesktop.Bluetooth
             try
             {
                 // BT_Code: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
-                this.bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(this.deviceInfoSerchedServer.Id);
+                this.bluetoothLeDevice = await Windows.Devices.Bluetooth.BluetoothLEDevice.FromIdAsync(this.deviceInfoSerchedServer.Id);
                 if (bluetoothLeDevice == null)
                 {
                     Debug.WriteLine("Failed to connect to device.");
@@ -339,7 +338,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="e"></param>
         /// <param name="sender"></param>
-        private async void eventConnectionStatusChanged(BluetoothLEDevice e,  object sender)
+        private async void eventConnectionStatusChanged(Windows.Devices.Bluetooth.BluetoothLEDevice e,  object sender)
         {
             if(e.ConnectionStatus== BluetoothConnectionStatus.Connected)
             {
@@ -364,7 +363,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="e"></param>
         /// <param name="sender"></param>
-        private void eventGattServicesChanged(BluetoothLEDevice e, object sender)
+        private void eventGattServicesChanged(Windows.Devices.Bluetooth.BluetoothLEDevice e, object sender)
         {
             ;
         }

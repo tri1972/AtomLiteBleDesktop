@@ -122,7 +122,7 @@
     <Compile Include="Bluetooth\BluetoothAccesser.cs" />
     <Compile Include="Bluetooth\BluetoothConnector.cs" />
     <Compile Include="Bluetooth\BluetoothWatcher.cs" />
-    <Compile Include="Bluetooth\BluetoothLEDeviceDisplay.cs" />
+    <Compile Include="Bluetooth\BluetoothLEDevice.cs" />
     <Compile Include="Bluetooth\BluetoothReceiver.cs" />
     <Compile Include="Bluetooth\BluetoothSender.cs" />
     <Compile Include="Bluetooth\BluetoothService.cs" />

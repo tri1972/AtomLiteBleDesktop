@@ -34,8 +34,15 @@ namespace AtomLiteBleDesktop.Bluetooth
 
         private DeviceWatcher deviceWatcher;
 
+        /// <summary>
+        /// 見つかったデバイスを格納する配列
+        /// </summary>
+        public ObservableCollection<BluetoothLEDevice> KnownDevices
+        {
+            get { return this.knownDevices; }
+        }
         //見つかったデバイスを格納する配列
-        private ObservableCollection<BluetoothLEDeviceDisplay> KnownDevices = new ObservableCollection<BluetoothLEDeviceDisplay>();
+        private ObservableCollection<BluetoothLEDevice> knownDevices = new ObservableCollection<BluetoothLEDevice>();
 
         //UIスレッドにアクセスするためのDispatcher
         //private static CoreDispatcher _mDispatcher;
@@ -44,11 +51,11 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// <summary>
         /// PIRServerで設定したServer名のBluetoothLEDeviceDisplayインスタンスを返す
         /// </summary>
-        public BluetoothLEDeviceDisplay DeviceInfoSerchedServer
+        public BluetoothLEDevice DeviceInfoSerchedServer
         {
             get { return this.deviceInfoSerchedServer; }
         }
-        private BluetoothLEDeviceDisplay deviceInfoSerchedServer = null;
+        private BluetoothLEDevice deviceInfoSerchedServer = null;
 
         /// <summary>
         /// このクラスのインスタンスを作成
@@ -84,35 +91,69 @@ namespace AtomLiteBleDesktop.Bluetooth
         */
 
         /// <summary>
+        /// 指定したサーバ名を探し、存在すればそのサーバ名を返却
+        /// </summary>
+        /// <param name="PIRSERVER"></param>
+        /// <returns></returns>
+        private string findServer(string PIRSERVER)
+        {
+            this.PIRServer = PIRSERVER;
+            this.StartBleDeviceWatcher();
+            //1s待って。接続Server名が取得できなければnullを返す
+            int counter = 500;
+            while (this.PIRServerSearched == null)
+            {
+                if (counter == 0)
+                {
+                    break;
+                }
+                Thread.Sleep(10);
+                counter--;
+            }
+            if (this.PIRServerSearched != null)
+            {
+                return this.PIRServerSearched;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private volatile bool isScanning;
+        public ObservableCollection<BluetoothLEDevice> StartScanServer()
+        {
+            this.isScanning = true;
+            this.StartBleDeviceWatcher();
+            //1s待って。接続Server名が取得できなければnullを返す
+            int counter = 500*60;
+            while (this.isScanning)
+            {
+                if (counter == 0)
+                {
+                    break;
+                }
+                Thread.Sleep(10);
+                counter--;
+            }
+            return this.knownDevices;
+        }
+
+        public void StopScanServer()
+        {
+            this.isScanning = false;
+        }
+
+        /// <summary>
         /// 指定したサーバ名を探し、存在すればそのサーバ名を返却：非同期
         /// </summary>
         /// <param name="PIRSERVER"></param>
         /// <returns></returns>
-        public async Task<string> Watch(string PIRSERVER)
+        public async Task<string> Search(string PIRSERVER)
         {
             var task = await Task.Run<string>(() =>
             {
-                this.PIRServer = PIRSERVER;
-                this.StartBleDeviceWatcher();
-                //1s待って。接続Server名が取得できなければnullを返す
-                int counter = 500;
-                while (this.PIRServerSearched == null)
-                {
-                    if (counter == 0)
-                    {
-                        break;
-                    }
-                    Thread.Sleep(10);
-                    counter--;
-                }
-                if (this.PIRServerSearched != null)
-                {
-                    return this.PIRServerSearched;
-                }
-                else
-                {
-                    return null;
-                }
+                return findServer(PIRSERVER);
             });
             return task;
         }
@@ -122,29 +163,9 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="PIRSERVER"></param>
         /// <returns></returns>
-        public string WatchSync(string PIRSERVER)
+        public string SearchSync(string PIRSERVER)
         {
-                this.PIRServer = PIRSERVER;
-                this.StartBleDeviceWatcher();
-                //1s待って。接続Server名が取得できなければnullを返す
-                int counter = 500;
-                while (this.PIRServerSearched == null)
-                {
-                    if (counter == 0)
-                    {
-                        break;
-                    }
-                    Thread.Sleep(10);
-                    counter--;
-                }
-                if (this.PIRServerSearched != null)
-                {
-                    return this.PIRServerSearched;
-                }
-                else
-                {
-                    return null;
-                }
+            return findServer(PIRSERVER);
         }
 
 
@@ -154,7 +175,8 @@ namespace AtomLiteBleDesktop.Bluetooth
             {
                 // Additional properties we would like about the device.
                 // Property strings are documented here https://msdn.microsoft.com/en-us/library/windows/desktop/ff521659(v=vs.85).aspx
-                string[] requestedProperties = { "System.Devices.Aep.DeviceAddress", "System.Devices.Aep.IsConnected", "System.Devices.Aep.Bluetooth.Le.IsConnectable" };
+                string[] requestedProperties = { "System.Devices.Aep.DeviceAddress"};
+                //string[] requestedProperties = { "System.Devices.Aep.DeviceAddress", "System.Devices.Aep.IsConnected", "System.Devices.Aep.Bluetooth.Le.IsConnectable" };
 
                 // BT_Code: Example showing paired and non-paired in a single query.
                 string aqsAllBluetoothLEDevices = "(System.Devices.Aep.ProtocolId:=\"{bb7bb05e-5972-42b5-94fc-76eaa7084d49}\")";
@@ -163,7 +185,9 @@ namespace AtomLiteBleDesktop.Bluetooth
                         DeviceInformation.CreateWatcher(
                             aqsAllBluetoothLEDevices,
                             requestedProperties,
-                            DeviceInformationKind.AssociationEndpoint);
+                            DeviceInformationKind.AssociationEndpoint
+                            //DeviceInformationKind.DeviceContainer
+                            );
 
                 // Register event handlers before starting the watcher.
                 deviceWatcher.Added += DeviceWatcher_Added;
@@ -173,7 +197,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                 deviceWatcher.Stopped += DeviceWatcher_Stopped;
 
                 // Start over with an empty collection.
-                KnownDevices.Clear();
+                knownDevices.Clear();
 
                 // Start the watcher. Active enumeration is limited to approximately 30 seconds.
                 // This limits power usage and reduces interference with other Bluetooth activities.
@@ -233,13 +257,13 @@ namespace AtomLiteBleDesktop.Bluetooth
                                 if (this.pirServer == deviceInfo.Name)
                                 {
                                     //接続したBleデバイス情報で接続用のデバイスを作成する
-                                    this.deviceInfoSerchedServer = new BluetoothLEDeviceDisplay(deviceInfo);
+                                    this.deviceInfoSerchedServer = new BluetoothLEDevice(deviceInfo);
                                     this.pirServerSearched = this.pirServer;
                                 }
                                 Debug.WriteLine("Detect Deveice" + deviceInfo.Id + ":" + deviceInfo.Name);
                                 // If device has a friendly name display it immediately.
                                 //nameのあるDeviceを配列に保存する
-                                KnownDevices.Add(new BluetoothLEDeviceDisplay(deviceInfo));
+                                knownDevices.Add(new BluetoothLEDevice(deviceInfo));
                             }
                             else
                             {
@@ -279,7 +303,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                         // If device has been updated with a friendly name it's no longer unknown.
                         if (deviceInfo.Name != String.Empty)
                         {
-                            KnownDevices.Add(new BluetoothLEDeviceDisplay(deviceInfo));
+                            knownDevices.Add(new BluetoothLEDevice(deviceInfo));
                             UnknownDevices.Remove(deviceInfo);
                         }
                     }
@@ -302,10 +326,10 @@ namespace AtomLiteBleDesktop.Bluetooth
                 if (sender == deviceWatcher)
                 {
                     // Find the corresponding DeviceInformation in the collection and remove it.
-                    BluetoothLEDeviceDisplay bleDeviceDisplay = FindBluetoothLEDeviceDisplay(deviceInfoUpdate.Id);
+                    BluetoothLEDevice bleDeviceDisplay = FindBluetoothLEDeviceDisplay(deviceInfoUpdate.Id);
                     if (bleDeviceDisplay != null)
                     {
-                        KnownDevices.Remove(bleDeviceDisplay);
+                        knownDevices.Remove(bleDeviceDisplay);
                     }
 
                     DeviceInformation deviceInfo = FindUnknownDevices(deviceInfoUpdate.Id);
@@ -346,9 +370,9 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        private BluetoothLEDeviceDisplay FindBluetoothLEDeviceDisplay(string id)
+        private BluetoothLEDevice FindBluetoothLEDeviceDisplay(string id)
         {
-            foreach (BluetoothLEDeviceDisplay bleDeviceDisplay in KnownDevices)
+            foreach (BluetoothLEDevice bleDeviceDisplay in knownDevices)
             {
                 if (bleDeviceDisplay.Id == id)
                 {

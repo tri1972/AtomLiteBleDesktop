@@ -19,14 +19,23 @@
             <RowDefinition Height="1*" />
             <RowDefinition Height="1*" />
             <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
         </Grid.RowDefinitions>
-        <ScrollViewer x:Name="scrollViewSettings" Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" >
+        <Grid Grid.Column="1"  Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+            <Button x:Name="ScanStart_button" Grid.Column="0"  Grid.Row="0" Width="auto" Height="auto" Content="Scanstart" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" Click="ScanStart_button_Click"/>
+            <Button x:Name="ScanStop_button" Grid.Column="1"  Grid.Row="0" Width="auto" Height="auto" Content="Scanstop" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" Click="ScanStop_button_Click"/>
+        </Grid>
+        <ScrollViewer x:Name="scrollViewSettings" Grid.Column="0" Grid.Row="0" Grid.RowSpan="5" >
             <TextBlock x:Name="ResultText" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" 
                      Text="{Binding Path=textData.Text, UpdateSourceTrigger=PropertyChanged}" />
         </ScrollViewer>
-        <Button x:Name="Scan_button" Grid.Column="1"  Grid.Row="0" Width="auto" Height="auto" Click="Button_Click" Content="Scan" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
-        <Button x:Name="Connect_button2" Grid.Column="1" Grid.Row="1"  Width="auto" Height="auto" Click="Button_Click_2" Content="Connect"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
-        <Button x:Name="ScanStop" Grid.Column="1" Grid.Row="2"  Width="auto" Height="auto" Click="Button_Click_1" Content="ScanStop"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
-        <Button x:Name="readCharacteristic" Grid.Column="1" Grid.Row="3"  Width="auto" Height="auto" Click="readCharacteristic_Click" Content="readCharacteristic"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+        <Button x:Name="Seach_button" Grid.Column="1"  Grid.Row="0" Width="auto" Height="auto" Click="Button_Click" Content="Search" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+        <Button x:Name="Connect_button2" Grid.Column="1" Grid.Row="2"  Width="auto" Height="auto" Click="Button_Click_2" Content="Connect"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+        <Button x:Name="ScanStop" Grid.Column="1" Grid.Row="3"  Width="auto" Height="auto" Click="Button_Click_1" Content="ScanStop"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+        <Button x:Name="readCharacteristic" Grid.Column="1" Grid.Row="4"  Width="auto" Height="auto" Click="readCharacteristic_Click" Content="readCharacteristic"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
     </Grid>
 </Page>
