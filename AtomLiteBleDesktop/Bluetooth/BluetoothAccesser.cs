@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -31,6 +32,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             public enum Status
             {
+                NotFound,
                 Connected,
                 Connecting,
                 Abort
@@ -81,15 +83,52 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             get { return this.bluetoothConnector.CharacteristicNames; }
         }
+        private event NotifyBluetoothAccesserEventHandler notifyConnectingServer;
 
         /// <summary>
         /// ServerConnectイベント
         /// </summary>
-        public event NotifyBluetoothAccesserEventHandler NotifyConnectingServer;
+        public event NotifyBluetoothAccesserEventHandler NotifyConnectingServer
+        {
+            add
+            {
+                if (this.notifyConnectingServer == null)
+                {
+                    this.notifyConnectingServer += value;
+                }
+                else
+                {
+                    Debug.WriteLine("重複登録ですよ");
+                }
+            }
+            remove
+            {
+                this.notifyConnectingServer -= value;
+            }
+        }
+
+        private event NotifyBluetoothAccesserEventHandler notifyReceiveCharacteristic;
         /// <summary>
         /// BleServerからのNotify受信イベント
         /// </summary>
-        public event NotifyBluetoothAccesserEventHandler NotifyReceiveCharacteristic;
+        public event NotifyBluetoothAccesserEventHandler NotifyReceiveCharacteristic
+        {
+            add
+            {
+                if (this.notifyReceiveCharacteristic == null)
+                {
+                    this.notifyReceiveCharacteristic += value;
+                }
+                else
+                {
+                    Debug.WriteLine("重複登録ですよ");
+                }
+            }
+            remove
+            {
+                this.notifyReceiveCharacteristic -= value;
+            }
+        }
 
         /// <summary>
         /// ServerConnect時イベントキック用関数
@@ -97,21 +136,26 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// <param name="e"></param>
         protected virtual void OnNotifyConnectingServer(string message,　NotifyBluetoothAccesserEventArgs.Status state)
         {
-            if (NotifyConnectingServer != null)
+            if (this.notifyConnectingServer != null)
             {
                 var e = new NotifyBluetoothAccesserEventArgs();
                 e.Message = message;
                 e.State = state;
-                NotifyConnectingServer(this, e);
+                this.notifyConnectingServer(this, e);
             }
         }
+
+        /// <summary>
+        /// Characteristicにてデータを受信した場合のイベントキック用関数
+        /// </summary>
+        /// <param name="e"></param>
         protected virtual void OnNotifyReceiveCharacteristic(NotifyReceiveCharacteristicEventArgs e)
         {
-            if (NotifyReceiveCharacteristic != null)
+            if (this.notifyReceiveCharacteristic != null)
             {
                 var data = new NotifyBluetoothAccesserEventArgs();
                 data.Message = e.Message;
-                NotifyReceiveCharacteristic(this, data);
+                this.notifyReceiveCharacteristic(this, data);
             }
         }
 
@@ -169,41 +213,48 @@ namespace AtomLiteBleDesktop.Bluetooth
         public async void Connect()
         {
             int counter = 0;
-            this.bluetoothConnector = new BluetoothConnector(this.bluetoothWatcher.DeviceInfoSerchedServer);
-
-            this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify;
-
-            await Task.Run(async () =>
+            if (this.bluetoothWatcher != null && this.bluetoothWatcher.DeviceInfoSerchedServer != null)
             {
-                counter = MAX_RETRY_CONNECT;
-                while (counter > 0)
-                {
-                    var task = await Task.Run(this.bluetoothConnector.Connect);
-                    if (task)
-                    {
-                        this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
+                this.bluetoothConnector = new BluetoothConnector(this.bluetoothWatcher.DeviceInfoSerchedServer);
 
-                        this.registeredCharacteristic = this.bluetoothConnector.RegisteredCharacteristic;
+                this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify;
+
+                await Task.Run(async () =>
+                {
+                    counter = MAX_RETRY_CONNECT;
+                    while (counter > 0)
+                    {
+                        var task = await Task.Run(this.bluetoothConnector.Connect);
+                        if (task)
+                        {
+                            this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
+
+                            this.registeredCharacteristic = this.bluetoothConnector.RegisteredCharacteristic;
 
                             //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
                             if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
-                        {
-                            await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                            {
+                                await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                            }
+                            break;
                         }
-                        break;
+                        else
+                        {
+                            this.OnNotifyConnectingServer("Connecting...", NotifyBluetoothAccesserEventArgs.Status.Connecting);
+                        }
+                        counter--;
                     }
-                    else
+                    if (counter == 0)
                     {
-                        this.OnNotifyConnectingServer("Connecting...", NotifyBluetoothAccesserEventArgs.Status.Connecting);
+                        this.OnNotifyConnectingServer("Server Connecting Aborted", NotifyBluetoothAccesserEventArgs.Status.Abort);
                     }
-                    counter--;
-                }
-                if (counter == 0)
-                {
-                    this.OnNotifyConnectingServer("Server Connecting Aborted", NotifyBluetoothAccesserEventArgs.Status.Abort);
-                }
 
-            });
+                });
+            }
+            else
+            {
+                this.OnNotifyConnectingServer("Disconnection", NotifyBluetoothAccesserEventArgs.Status.NotFound);
+            }
         }
 
         /// <summary>

@@ -71,7 +71,6 @@ namespace AtomLiteBleDesktop
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
             var task = await this.bluetoothAccesser.Search(PIRSERVER);
-            //var task = await this.bluetoothWatcher.Search(PIRSERVER);
             if (task != null)
             {
                 this._textData.Text = "取得サーバー名:\n" + task;
@@ -193,7 +192,9 @@ namespace AtomLiteBleDesktop
                     case NotifyBluetoothAccesserEventArgs.Status.Abort:
                         stringAdd_TextDataDispatcher("\n" + "接続できなかった");
                         break;
-
+                    case NotifyBluetoothAccesserEventArgs.Status.NotFound:
+                        stringAdd_TextDataDispatcher("\n" + "接続先が未探索状態です");
+                        break;
                 }
             }
         }
