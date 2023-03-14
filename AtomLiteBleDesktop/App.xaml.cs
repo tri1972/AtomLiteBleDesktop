@@ -1,6 +1,7 @@
 ﻿using AtomLiteBleDesktop.Bluetooth;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -23,6 +24,7 @@ namespace AtomLiteBleDesktop
     /// </summary>
     sealed partial class App : Application
     {
+        private const string PIRSERVER = "ESP32PIRTRI";
         /// <summary>
         ///単一アプリケーション オブジェクトを初期化します。これは、実行される作成したコードの
         ///最初の行であるため、論理的には main() または WinMain() と等価です。
@@ -38,7 +40,7 @@ namespace AtomLiteBleDesktop
         /// アプリケーションが特定のファイルを開くために起動されたときなどに使用されます。
         /// </summary>
         /// <param name="e">起動の要求とプロセスの詳細を表示します。</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -72,6 +74,20 @@ namespace AtomLiteBleDesktop
                 // 現在のウィンドウがアクティブであることを確認します
                 Window.Current.Activate();
             }
+
+            var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
+            var bluetoothWatcher = BluetoothWatcher.GetInstance();
+            var task = await bluetoothAccesser.Search(PIRSERVER);
+            if (task != null)
+            {
+                Debug.WriteLine( "取得サーバー名:\n" + task);
+                bluetoothAccesser.Connect();
+            }
+            else
+            {
+                Debug.WriteLine("接続指定サーバをSearchしたが取得できませんでした", "エラー");
+            }
+
         }
 
         /// <summary>
