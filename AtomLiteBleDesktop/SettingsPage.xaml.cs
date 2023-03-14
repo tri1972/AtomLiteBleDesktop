@@ -45,20 +45,28 @@ namespace AtomLiteBleDesktop
         private const string PIRSERVER = "ESP32PIRTRI";
         private const int MAX_RETRY_CONNECT = 5;
 
-        static BluetoothLEAdvertisementWatcher watcher;
+        //static BluetoothLEAdvertisementWatcher watcher;
         private GattCharacteristic registeredCharacteristic;
 
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
 
         private BluetoothAccesser bluetoothAccesser;
         private BluetoothWatcher bluetoothWatcher;
-        private BluetoothConnector bluetoothConnector;
-
+        //private BluetoothConnector bluetoothConnector;
+        
+        /// <summary>
+        /// ページロードイベントハンドラ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             this.bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
             this.bluetoothWatcher = BluetoothWatcher.GetInstance();
         }
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
         public SettingsPage()
         {
             this.InitializeComponent();
@@ -68,7 +76,7 @@ namespace AtomLiteBleDesktop
             };
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private async void Seach_button_Click(object sender, RoutedEventArgs e)
         {
             var task = await this.bluetoothAccesser.Search(PIRSERVER);
             if (task != null)
@@ -112,13 +120,13 @@ namespace AtomLiteBleDesktop
             ToastNotificationManager.CreateToastNotifier().Show(notification);
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void ScanStop_Click(object sender, RoutedEventArgs e)
         {
             this.bluetoothWatcher.StopBleDeviceWatcher();
 
             this._textData.Text = "Searched" + this.bluetoothWatcher.DeviceInfoSerchedServer.Name + " : " + this.bluetoothWatcher.DeviceInfoSerchedServer.Id;
         }
-
+        /*
         private static void Watcher_Received(BluetoothLEAdvertisementWatcher sender, BluetoothLEAdvertisementReceivedEventArgs args)
         {
             Debug.WriteLine("---Received---");
@@ -135,7 +143,7 @@ namespace AtomLiteBleDesktop
             Debug.WriteLine("---END---");
             Debug.WriteLine("");
         }
-
+        */
         /// <summary>
         /// TextDataにUIスレッド外で書き込みを行う
         /// </summary>
@@ -200,69 +208,11 @@ namespace AtomLiteBleDesktop
         }
 
         [Obsolete]
-        private async void Button_Click_2(object sender, RoutedEventArgs e)
+        private void Connect_button_Click(object sender, RoutedEventArgs e)
         {
             this.bluetoothAccesser.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
             this.bluetoothAccesser.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
             this.bluetoothAccesser.Connect();
-            /*
-            String tmp = string.Copy(this._textData.Text);
-            int counter = 0;
-            if (this.bluetoothWatcher.DeviceInfoSerchedServer != null)
-            {
-                this.bluetoothConnector = new BluetoothConnector(this.bluetoothWatcher.DeviceInfoSerchedServer);
-
-                this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify;
-                this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify2;
-                _ = Task.Run(async () =>
-                  {
-                      counter = MAX_RETRY_CONNECT;
-                      while(counter>0)
-                      {
-                          var task = await Task.Run(this.bluetoothConnector.Connect);
-                          if (task)
-                          {
-                              stringHogehogeData_TextDataDispatcher("接続!");
-
-                              this.registeredCharacteristic = this.bluetoothConnector.RegisteredCharacteristic;
-
-                              //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
-                              if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
-                              {
-                                  await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
-                              }
-                              stringAdd_TextDataDispatcher("\n" + "取得Service名：");
-                              foreach (var service in this.bluetoothConnector.Services)
-                              {
-                                  stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
-                              }
-                              stringAdd_TextDataDispatcher("\n" + "取得Characteristic名：");
-                              foreach (var name in this.bluetoothConnector.CharacteristicNames)
-                              {
-                                  stringAdd_TextDataDispatcher("\n" + string.Copy(name));
-
-                              }
-                              break;
-                          }
-                          else
-                          {
-                              stringAdd_TextDataDispatcher("・");
-                          }
-                          counter--;
-                      }
-                      if (counter == 0)
-                      {
-                          stringAdd_TextDataDispatcher("\n" + "接続できなかった");
-                      }
-
-                  });
-                _textData.Text += "\n" + "処理待ち";
-            }
-            else
-            {
-                var dialog = new MessageDialog("Scanが実行されていません", "エラー");
-                _ = dialog.ShowAsync();
-            }*/
         }
 
         /// <summary>
@@ -331,6 +281,11 @@ namespace AtomLiteBleDesktop
 
         }
 
+        /// <summary>
+        /// ScanStopボタンイベントハンドラ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ScanStop_button_Click(object sender, RoutedEventArgs e)
         {
             this.bluetoothAccesser.StopScanning();

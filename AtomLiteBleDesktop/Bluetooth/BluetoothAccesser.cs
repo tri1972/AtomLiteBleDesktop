@@ -207,7 +207,8 @@ namespace AtomLiteBleDesktop.Bluetooth
         public void StopScanning()
         {
             this.bluetoothWatcher = BluetoothWatcher.GetInstance();
-            this.bluetoothWatcher.StopScanServer();
+            this.bluetoothWatcher.StopBleDeviceWatcher();
+            //this.bluetoothWatcher.StopScanServer();
         }
 
         public async void Connect()

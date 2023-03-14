@@ -219,6 +219,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             if (deviceWatcher != null)
             {
+                this.isScanning = false;
                 // Unregister the event handlers.
                 deviceWatcher.Added -= DeviceWatcher_Added;
                 deviceWatcher.Updated -= DeviceWatcher_Updated;

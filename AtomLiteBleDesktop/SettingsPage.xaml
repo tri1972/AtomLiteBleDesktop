@@ -33,9 +33,9 @@
             <TextBlock x:Name="ResultText" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" 
                      Text="{Binding Path=textData.Text, UpdateSourceTrigger=PropertyChanged}" />
         </ScrollViewer>
-        <Button x:Name="Seach_button" Grid.Column="1"  Grid.Row="0" Width="auto" Height="auto" Click="Button_Click" Content="Search" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
-        <Button x:Name="Connect_button2" Grid.Column="1" Grid.Row="2"  Width="auto" Height="auto" Click="Button_Click_2" Content="Connect"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
-        <Button x:Name="ScanStop" Grid.Column="1" Grid.Row="3"  Width="auto" Height="auto" Click="Button_Click_1" Content="ScanStop"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+        <Button x:Name="Seach_button" Grid.Column="1"  Grid.Row="0" Width="auto" Height="auto" Click="Seach_button_Click" Content="Search" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+        <Button x:Name="Connect_button2" Grid.Column="1" Grid.Row="2"  Width="auto" Height="auto" Click="Connect_button_Click" Content="Connect"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+        <Button x:Name="ScanStop" Grid.Column="1" Grid.Row="3"  Width="auto" Height="auto" Click="ScanStop_Click" Content="ScanStop"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
         <Button x:Name="readCharacteristic" Grid.Column="1" Grid.Row="4"  Width="auto" Height="auto" Click="readCharacteristic_Click" Content="readCharacteristic"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
     </Grid>
 </Page>
