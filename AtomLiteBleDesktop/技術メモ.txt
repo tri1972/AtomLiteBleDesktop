@@ -12,3 +12,6 @@ https://blog.beachside.dev/entry/2018/06/22/210000
 
 延長実行を使ってアプリの中断を延期する
 https://learn.microsoft.com/ja-jp/windows/uwp/launch-resume/run-minimized-with-extended-execution
+
+ListBoxのDataTemplateの中で要素を横幅いっぱいにStretchして表示する
+https://kaorun.hatenablog.com/entry/20111015/1318661503

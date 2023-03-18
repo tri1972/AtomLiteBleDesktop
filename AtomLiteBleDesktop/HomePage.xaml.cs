@@ -2,6 +2,7 @@
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -37,7 +38,7 @@ namespace AtomLiteBleDesktop
         {
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
-
+            bluetoothAccesser.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
             bluetoothAccesser.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
         }
 
@@ -57,6 +58,7 @@ namespace AtomLiteBleDesktop
                 switch (e.State)
                 {
                     case NotifyBluetoothAccesserEventArgs.Status.Connected:
+                        stringHogehogeData_TextDataDispatcher("Connect!!");
                         stringAdd_TextDataDispatcher("\n" + "取得Service名：");
                         foreach (var service in (sender as BluetoothAccesser).Services)
                         {
@@ -144,5 +146,58 @@ namespace AtomLiteBleDesktop
             });
 
         }
+
+        /// <summary>
+        /// HogehogeDataのTextプロパティにUIスレッド外から書き込みを行う
+        /// </summary>
+        /// <param name="text"></param>
+        private async void stringHogehogeData_TextDataDispatcher(string text)
+        {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                var hogehogeData = Application.Current.Resources["HomePageDataInstance"] as HomePagePropertyChanged;
+                hogehogeData.StatusText = text;
+                hogehogeData.StatusTextBackground = new SolidColorBrush(Colors.Red);
+            });
+        }
+
+        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void Button_ASAP_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+    }
+    public class Server
+    {
+        public String FirstName { get; set; }
+        public String LastName { get; set; }
+        public String Address { get; set; }
+
+        public Server(String firstName, String lastName, String address)
+        {
+            this.FirstName = firstName;
+            this.LastName = lastName;
+            this.Address = address;
+        }
+
+    }
+    public class Servers : ObservableCollection<Server>
+    {
+        public Servers()
+        {
+            Add(new Server("Michael", "Anderberg",
+                    "12 North Third Street, Apartment 45"));
+            Add(new Server("Chris", "Ashton",
+                    "34 West Fifth Street, Apartment 67"));
+            Add(new Server("Seo-yun", "Jun",
+                    "56 East Seventh Street, Apartment 89"));
+            Add(new Server("Guido", "Pica",
+                    "78 South Ninth Street, Apartment 10"));
+        }
+
     }
 }
