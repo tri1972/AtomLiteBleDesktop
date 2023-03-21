@@ -24,7 +24,10 @@ namespace AtomLiteBleDesktop
     /// </summary>
     sealed partial class App : Application
     {
+        List<string> servers;
         private const string PIRSERVER = "ESP32PIRTRI";
+        private const string dummySERVER1 = "dummy1";
+        private const string dummySERVER2 = "dummy2";
         /// <summary>
         ///単一アプリケーション オブジェクトを初期化します。これは、実行される作成したコードの
         ///最初の行であるため、論理的には main() または WinMain() と等価です。
@@ -33,6 +36,10 @@ namespace AtomLiteBleDesktop
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            servers = new List<string>();
+            servers.Add(dummySERVER1);
+            servers.Add(dummySERVER2);
+            servers.Add(PIRSERVER);
         }
 
         /// <summary>
@@ -76,17 +83,44 @@ namespace AtomLiteBleDesktop
             }
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
-            var bluetoothWatcher = BluetoothWatcher.GetInstance();
-            var task = await bluetoothAccesser.Search(PIRSERVER);
-            if (task != null)
+
+            foreach(var server in servers)
             {
-                Debug.WriteLine( "取得サーバー名:\n" + task);
+                var task = await bluetoothAccesser.SearchDevice(server);
+                if (task != null)
+                {
+                    Debug.WriteLine("取得サーバー名:" + task.Name);
+                }
+                else
+                {
+                    Debug.WriteLine(server+"サーバーは見つかりませんでした:\n");
+                }
+
+            }
+            //var bluetoothWatcher = BluetoothWatcher.GetInstance();
+            /*
+            var tasks = await bluetoothAccesser.Searches(servers);
+            //var task = await bluetoothAccesser.Search(PIRSERVER);
+            if (tasks != null)
+            {
+                foreach (var task in tasks)
+                {
+                    if (task == null)
+                    {
+                        Debug.WriteLine("サーバーは見つかりませんでした:\n");
+                    }
+                    else
+                    {
+                        Debug.WriteLine("取得サーバー名:\n" + task);
+                    }
+                }
                 bluetoothAccesser.Connect();
             }
             else
             {
                 Debug.WriteLine("接続指定サーバをSearchしたが取得できませんでした", "エラー");
             }
+            */
 
         }
 

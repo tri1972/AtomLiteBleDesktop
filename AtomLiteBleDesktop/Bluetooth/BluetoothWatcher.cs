@@ -89,7 +89,7 @@ namespace AtomLiteBleDesktop.Bluetooth
             this.pirServer = null;
         }
         */
-
+        
         /// <summary>
         /// 指定したサーバ名を探し、存在すればそのサーバ名を返却
         /// </summary>
@@ -118,6 +118,37 @@ namespace AtomLiteBleDesktop.Bluetooth
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// 指定したサーバ名を探し、存在すればDeviceを返却
+        /// </summary>
+        /// <param name="server"></param>
+        /// <returns></returns>
+        public BluetoothLEDevice FindServerDevice(string server)
+        {
+            BluetoothLEDevice output =null;
+            this.StartBleDeviceWatcher();
+            //1s待って。接続Server名が取得できなければfalseを返す
+            int counter = 500;
+            while (counter>0)
+            {
+                foreach (var device in this.knownDevices)
+                {
+                    if (device.Name == server)
+                    {
+                        output = device;
+                        break;
+                    }
+                }
+                if (output != null)
+                {
+                    break;
+                }
+                Thread.Sleep(10);
+                counter--;
+            }
+            return output;
         }
 
         private volatile bool isScanning;
@@ -260,6 +291,10 @@ namespace AtomLiteBleDesktop.Bluetooth
                                     //接続したBleデバイス情報で接続用のデバイスを作成する
                                     this.deviceInfoSerchedServer = new BluetoothLEDevice(deviceInfo);
                                     this.pirServerSearched = this.pirServer;
+                                }
+                                else
+                                {
+                                    this.pirServerSearched = null;
                                 }
                                 Debug.WriteLine("Detect Deveice" + deviceInfo.Id + ":" + deviceInfo.Name);
                                 // If device has a friendly name display it immediately.

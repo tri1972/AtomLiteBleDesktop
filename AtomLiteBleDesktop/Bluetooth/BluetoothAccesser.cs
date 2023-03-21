@@ -170,6 +170,31 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
         }
 
+        public async Task<List<string>> Searches(List<string> servers)
+        {
+            this.bluetoothWatcher = BluetoothWatcher.GetInstance();
+            var task = await Task.Run<List<string>>(() =>
+            {
+                var findServers = new List<string>();
+                foreach (var server in servers)
+                {
+                    findServers.Add(this.bluetoothWatcher.SearchSync(server));
+                }
+                return findServers;
+            });
+            return task;
+        }
+        public async Task<BluetoothLEDevice> SearchDevice(string server)
+        {
+            this.bluetoothWatcher = BluetoothWatcher.GetInstance();
+
+            var task = await Task.Run<BluetoothLEDevice>(() =>
+            {
+                return this.bluetoothWatcher.FindServerDevice(server);
+            });
+            return task;
+        }
+
         /// <summary>
         /// 指定したサーバ名を探し、存在すればそのサーバ名を返却：非同期
         /// </summary>
