@@ -13,7 +13,7 @@ namespace AtomLiteBleDesktop
     /// <summary>
     /// BluetoothLe(BLE)のデバイス情報を格納する
     /// </summary>
-    public class BluetoothLEDevice : INotifyPropertyChanged
+    public class BluetoothLEDevice //: INotifyPropertyChanged
     {
         /// <summary>
         /// コンストラクタ
@@ -34,6 +34,6 @@ namespace AtomLiteBleDesktop
 
         public IReadOnlyDictionary<string, object> Properties => DeviceInformation.Properties;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        //public event PropertyChangedEventHandler PropertyChanged=null;
     }
 }

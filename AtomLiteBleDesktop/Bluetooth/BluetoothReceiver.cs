@@ -146,7 +146,6 @@ namespace AtomLiteBleDesktop.Bluetooth
             {
                 return "Empty data received";
             }
-            return "Unknown format";
         }
 
 

@@ -47,13 +47,13 @@ namespace AtomLiteBleDesktop
 
 
 
-        static BluetoothLEAdvertisementWatcher watcher;
-        private GattPresentationFormat presentationFormat;
-        private GattCharacteristic selectedCharacteristic;
+        //static BluetoothLEAdvertisementWatcher watcher;
+        //private GattPresentationFormat presentationFormat;
+        //private GattCharacteristic selectedCharacteristic;
 
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
 
-        private BluetoothConnector bluetoothConnector;
+        //private BluetoothConnector bluetoothConnector;
 
         public MainPage()
         {

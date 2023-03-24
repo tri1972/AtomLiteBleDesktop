@@ -239,7 +239,7 @@ namespace AtomLiteBleDesktop.Bluetooth
             }
             catch (Exception err)
             {
-                Debug.WriteLine("err");
+                Debug.WriteLine(err.Message);
             }
         }
 
@@ -313,7 +313,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                 }
                 catch (Exception err)
                 {
-                    Debug.WriteLine("Error");
+                    Debug.WriteLine(err.Message);
                 }
             }
         }

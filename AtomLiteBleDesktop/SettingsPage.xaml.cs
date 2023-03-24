@@ -46,7 +46,7 @@ namespace AtomLiteBleDesktop
         private const int MAX_RETRY_CONNECT = 5;
 
         //static BluetoothLEAdvertisementWatcher watcher;
-        private GattCharacteristic registeredCharacteristic;
+        private GattCharacteristic registeredCharacteristic=null;
 
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
 
@@ -207,7 +207,6 @@ namespace AtomLiteBleDesktop
             }
         }
 
-        [Obsolete]
         private void Connect_button_Click(object sender, RoutedEventArgs e)
         {
             this.bluetoothAccesser.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
@@ -220,7 +219,6 @@ namespace AtomLiteBleDesktop
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="eventArgs"></param>
-        [Obsolete]
         private async void registeredCharacteristicNotify(object sender, NotifyBluetoothAccesserEventArgs e)
         {
             try
@@ -232,7 +230,8 @@ namespace AtomLiteBleDesktop
                     _textData.Text += "\n" + string.Copy(e.Message);
                     stringHogehogeData_TextDataDispatcher(e.Message);
                     var sh = this.scrollViewSettings.ScrollableHeight;
-                    this.scrollViewSettings.ScrollToVerticalOffset(sh);
+                    this.scrollViewSettings.ChangeView(null, sh, null);
+                    //this.scrollViewSettings.ScrollToVerticalOffset(sh);
                 });
                 NotificationToast();
             }
@@ -242,7 +241,7 @@ namespace AtomLiteBleDesktop
             }
         }
 
-        private async void readCharacteristic_Click(object sender, RoutedEventArgs e)
+        private void readCharacteristic_Click(object sender, RoutedEventArgs e)
         {
             if (this.registeredCharacteristic != null)
             {

@@ -89,7 +89,6 @@ namespace AtomLiteBleDesktop
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="eventArgs"></param>
-        [Obsolete]
         private async void registeredCharacteristicNotify(object sender, NotifyBluetoothAccesserEventArgs e)
         {
             try

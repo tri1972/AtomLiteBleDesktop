@@ -162,7 +162,7 @@ namespace AtomLiteBleDesktop.Bluetooth
 
 
         //UIスレッドにアクセスするためのDispatcher
-        private static CoreDispatcher _mDispatcher;
+        //private static CoreDispatcher _mDispatcher;
 
         /// <summary>
         /// コンストラクタ:引数なしでないとXamlのResourceDictionnaryに登録できない
@@ -338,7 +338,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void registeredCharacteristicNotify(object sender, NotifyReceiveCharacteristicEventArgs e)
+        private void registeredCharacteristicNotify(object sender, NotifyReceiveCharacteristicEventArgs e)
         {
             OnNotifyReceiveCharacteristic(e);
         }

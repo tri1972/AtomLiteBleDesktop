@@ -163,9 +163,9 @@ namespace AtomLiteBleDesktop.Bluetooth
         }
 
         #region Error Codes
-        readonly int E_BLUETOOTH_ATT_WRITE_NOT_PERMITTED = unchecked((int)0x80650003);
-        readonly int E_BLUETOOTH_ATT_INVALID_PDU = unchecked((int)0x80650004);
-        readonly int E_ACCESSDENIED = unchecked((int)0x80070005);
+        //readonly int E_BLUETOOTH_ATT_WRITE_NOT_PERMITTED = unchecked((int)0x80650003);
+        //readonly int E_BLUETOOTH_ATT_INVALID_PDU = unchecked((int)0x80650004);
+        //readonly int E_ACCESSDENIED = unchecked((int)0x80070005);
         readonly int E_DEVICE_NOT_AVAILABLE = unchecked((int)0x800710df); // HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE)
         #endregion
 
@@ -316,8 +316,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="eventArgs"></param>
-        [Obsolete]
-        private async void registeredCharacteristicNotify(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
+        private void registeredCharacteristicNotify(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
         {
             try
             {
@@ -340,9 +339,10 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// <param name="sender"></param>
         private async void eventConnectionStatusChanged(Windows.Devices.Bluetooth.BluetoothLEDevice e,  object sender)
         {
-            if(e.ConnectionStatus== BluetoothConnectionStatus.Connected)
+#warning 初回Connect関数実行時にConnectできなければthis.services.Count=0のため再接続動作ができない
+            if (e.ConnectionStatus == BluetoothConnectionStatus.Connected)
             {
-                if (this.services != null && this.services.Count > 0)
+                if (this.services != null && this.services.Count > 0) 
                 {//初回接続時のイベントハンドラによるリクエストについては処理をしないようにする
                     if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                     {//切断された後、再度接続した際はnotifyによるValueChanged イベントを再度受信できるようにする
@@ -425,6 +425,7 @@ namespace AtomLiteBleDesktop.Bluetooth
             }
             catch (Exception ex)
             {
+                Debug.WriteLine(ex.Message);
                 // On error, act as if there are no characteristics.
                 characteristics = new List<GattCharacteristic>();
             }
