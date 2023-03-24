@@ -37,9 +37,9 @@ namespace AtomLiteBleDesktop
             this.InitializeComponent();
             this.Suspending += OnSuspending;
             servers = new List<string>();
+            servers.Add(PIRSERVER);
             servers.Add(dummySERVER1);
             servers.Add(dummySERVER2);
-            servers.Add(PIRSERVER);
         }
 
         /// <summary>
@@ -90,6 +90,7 @@ namespace AtomLiteBleDesktop
                 if (task != null)
                 {
                     Debug.WriteLine("取得サーバー名:" + task.Name);
+                    bluetoothAccesser.Connect(task);
                 }
                 else
                 {
@@ -97,31 +98,6 @@ namespace AtomLiteBleDesktop
                 }
 
             }
-            //var bluetoothWatcher = BluetoothWatcher.GetInstance();
-            /*
-            var tasks = await bluetoothAccesser.Searches(servers);
-            //var task = await bluetoothAccesser.Search(PIRSERVER);
-            if (tasks != null)
-            {
-                foreach (var task in tasks)
-                {
-                    if (task == null)
-                    {
-                        Debug.WriteLine("サーバーは見つかりませんでした:\n");
-                    }
-                    else
-                    {
-                        Debug.WriteLine("取得サーバー名:\n" + task);
-                    }
-                }
-                bluetoothAccesser.Connect();
-            }
-            else
-            {
-                Debug.WriteLine("接続指定サーバをSearchしたが取得できませんでした", "エラー");
-            }
-            */
-
         }
 
         /// <summary>
