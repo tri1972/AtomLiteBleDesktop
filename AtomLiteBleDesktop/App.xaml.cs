@@ -94,7 +94,8 @@ namespace AtomLiteBleDesktop
                         if (task.IsFindDevice)
                         {
                             Debug.WriteLine("取得サーバー名:" + task.Name);
-                            bluetoothAccesser.Connect(task);
+                            task.Connect();
+                            //bluetoothAccesser.Connect();
                         }
                         else
                         {

@@ -261,54 +261,6 @@ namespace AtomLiteBleDesktop.Bluetooth
             //this.bluetoothWatcher.StopScanServer();
         }
         
-
-        public async void Connect(BluetoothLEDevice device)
-        {
-            int counter = 0;
-            if (this.bluetoothWatcher!=null && device != null)
-            {
-                await Task.Run(async () =>
-                {
-                    this.bluetoothConnector = new BluetoothConnector(device);
-
-                    this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify;
-
-                    counter = MAX_RETRY_CONNECT;
-                    while (counter > 0)
-                    {
-                        var task = await Task.Run(this.bluetoothConnector.Connect);
-                        if (task)
-                        {
-                            this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
-
-                            this.registeredCharacteristic = this.bluetoothConnector.RegisteredCharacteristic;
-
-                            //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
-                            if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
-                            {
-                                await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
-                            }
-                            break;
-                        }
-                        else
-                        {
-                            this.OnNotifyConnectingServer("Connecting...", NotifyBluetoothAccesserEventArgs.Status.Connecting);
-                        }
-                        counter--;
-                    }
-                    if (counter == 0)
-                    {
-                        this.OnNotifyConnectingServer("Server Connecting Aborted", NotifyBluetoothAccesserEventArgs.Status.Abort);
-                    }
-
-                });
-            }
-            else
-            {
-                this.OnNotifyConnectingServer("Disconnection", NotifyBluetoothAccesserEventArgs.Status.NotFound);
-            }
-
-        }
         
         public async void Connect()
         {
