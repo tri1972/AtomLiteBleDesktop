@@ -122,12 +122,13 @@ namespace AtomLiteBleDesktop.Bluetooth
 
         /// <summary>
         /// 指定したサーバ名を探し、存在すればDeviceを返却
+        /// 存在しなければ、見つからなかったという情報のDeviceを返却
         /// </summary>
         /// <param name="server"></param>
         /// <returns></returns>
         public BluetoothLEDevice FindServerDevice(string server)
         {
-            BluetoothLEDevice output =null;
+            BluetoothLEDevice output = new BluetoothLEDevice();
             this.StartBleDeviceWatcher();
             //1s待って。接続Server名が取得できなければfalseを返す
             int counter = 500;
@@ -141,7 +142,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                         break;
                     }
                 }
-                if (output != null)
+                if (output.IsFindDevice)
                 {
                     break;
                 }
@@ -206,8 +207,9 @@ namespace AtomLiteBleDesktop.Bluetooth
             {
                 // Additional properties we would like about the device.
                 // Property strings are documented here https://msdn.microsoft.com/en-us/library/windows/desktop/ff521659(v=vs.85).aspx
-                string[] requestedProperties = { "System.Devices.Aep.DeviceAddress"};
-                //string[] requestedProperties = { "System.Devices.Aep.DeviceAddress", "System.Devices.Aep.IsConnected", "System.Devices.Aep.Bluetooth.Le.IsConnectable" };
+                //下記下側のrequestedPropertiesを選択しないとDeviceInformation.Properties["System.Devices.Aep.IsConnected"] 等で例外スローとなる
+                //string[] requestedProperties = { "System.Devices.Aep.DeviceAddress"};
+                string[] requestedProperties = { "System.Devices.Aep.DeviceAddress", "System.Devices.Aep.IsConnected", "System.Devices.Aep.Bluetooth.Le.IsConnectable" };
 
                 // BT_Code: Example showing paired and non-paired in a single query.
                 string aqsAllBluetoothLEDevices = "(System.Devices.Aep.ProtocolId:=\"{bb7bb05e-5972-42b5-94fc-76eaa7084d49}\")";
@@ -271,7 +273,6 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// <param name="deviceInfo"></param>
         private void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
         {
-
             lock (this)
             {
                 try

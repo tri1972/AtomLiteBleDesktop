@@ -8,7 +8,7 @@
     DataContext="{StaticResource HomePageDataInstance}"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Page_Loaded">
-    <Grid>
+    <Grid x:Name="HomeGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="8*" />

@@ -15,3 +15,17 @@ https://learn.microsoft.com/ja-jp/windows/uwp/launch-resume/run-minimized-with-e
 
 ListBoxのDataTemplateの中で要素を横幅いっぱいにStretchして表示する
 https://kaorun.hatenablog.com/entry/20111015/1318661503
+
+DataTemplate を使用しての ListBox の項目を表示
+https://learn.microsoft.com/ja-jp/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.datatemplate?view=windows-app-sdk-1.2
+
+xamlファイルのResourceからインスタンスを取得する方法
+    <Grid x:Name="HomeGrid">
+        <Grid.Resources>
+            <local:Servers x:Key="servers"/>
+
+上記のようなResourcesからインスタンスを取得するには次のようなコードで行う
+
+this.resourceGridServer = (Servers)this.HomeGrid.Resources["servers"];
+
+Gridなどに名前を付けて、そのResourcesプロパティを検索させるやり方でインスタンスを取得できる

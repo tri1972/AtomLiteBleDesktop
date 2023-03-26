@@ -84,18 +84,34 @@ namespace AtomLiteBleDesktop
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
 
-            foreach(var server in servers)
+            try
             {
-                var task = await bluetoothAccesser.SearchDevice(server);
-                if (task != null)
+                foreach (var server in servers)
                 {
-                    Debug.WriteLine("取得サーバー名:" + task.Name);
-                    bluetoothAccesser.Connect(task);
+                    var task = await bluetoothAccesser.SearchDevice(server);
+                    if (task != null)
+                    {
+                        if (task.IsFindDevice)
+                        {
+                            Debug.WriteLine("取得サーバー名:" + task.Name);
+                            bluetoothAccesser.Connect(task);
+                        }
+                        else
+                        {
+                            Debug.WriteLine(server + "サーバーは見つかりませんでした:\n");
+
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine(server + "SearchDeviceでnullが返りました:\n");
+                    }
+
                 }
-                else
-                {
-                    Debug.WriteLine(server+"サーバーは見つかりませんでした:\n");
-                }
+            }
+            catch (Exception err)
+            {
+                Debug.WriteLine(err.Message);
 
             }
         }

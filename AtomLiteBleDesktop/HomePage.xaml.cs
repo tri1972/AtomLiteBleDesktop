@@ -3,6 +3,7 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -28,6 +29,8 @@ namespace AtomLiteBleDesktop
     /// </summary>
     public sealed partial class HomePage : Page
     {
+
+        private Servers resourceGridServer;
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
         public HomePage()
         {
@@ -40,6 +43,7 @@ namespace AtomLiteBleDesktop
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
             bluetoothAccesser.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
             bluetoothAccesser.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
+            this.resourceGridServer = (Servers)this.HomeGrid.Resources["servers"];
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -60,6 +64,14 @@ namespace AtomLiteBleDesktop
                     case NotifyBluetoothAccesserEventArgs.Status.Connected:
                         stringHogehogeData_TextDataDispatcher("Connect!!");
                         stringAdd_TextDataDispatcher("\n" + "取得Service名：");
+                        try
+                        {
+                            listBoxAdd_TextDataDispatcher("test", "test", "test");
+                        }catch(Exception err)
+                        {
+                            Debug.WriteLine(err.Message);
+                        }
+
                         foreach (var service in (sender as BluetoothAccesser).Services)
                         {
                             stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
@@ -147,6 +159,19 @@ namespace AtomLiteBleDesktop
         }
 
         /// <summary>
+        /// TextDataにUIスレッド外で書き込みを行う
+        /// </summary>
+        /// <param name="text"></param>
+        private async void listBoxAdd_TextDataDispatcher(string text0, string text1, string text2)
+        {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                resourceGridServer.Add(new Server(text0, text1, text2));
+            });
+
+        }
+
+        /// <summary>
         /// HogehogeDataのTextプロパティにUIスレッド外から書き込みを行う
         /// </summary>
         /// <param name="text"></param>
@@ -172,13 +197,13 @@ namespace AtomLiteBleDesktop
     }
     public class Server
     {
-        public String FirstName { get; set; }
+        public String DeviceName { get; set; }
         public String LastName { get; set; }
         public String Address { get; set; }
 
-        public Server(String firstName, String lastName, String address)
+        public Server(String deviceName, String lastName, String address)
         {
-            this.FirstName = firstName;
+            this.DeviceName = deviceName;
             this.LastName = lastName;
             this.Address = address;
         }
@@ -188,14 +213,6 @@ namespace AtomLiteBleDesktop
     {
         public Servers()
         {
-            Add(new Server("Michael", "Anderberg",
-                    "12 North Third Street, Apartment 45"));
-            Add(new Server("Chris", "Ashton",
-                    "34 West Fifth Street, Apartment 67"));
-            Add(new Server("Seo-yun", "Jun",
-                    "56 East Seventh Street, Apartment 89"));
-            Add(new Server("Guido", "Pica",
-                    "78 South Ninth Street, Apartment 10"));
         }
 
     }
