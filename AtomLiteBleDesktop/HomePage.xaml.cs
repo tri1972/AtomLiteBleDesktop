@@ -3,6 +3,7 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -42,8 +43,6 @@ namespace AtomLiteBleDesktop
         {
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
-#warning ここでイベントハンドラの登録を行うが、deviceをすべて検索しないうちにここへ来てしまう
-
             var task = Task.Run(() =>
             {
                 while (bluetoothAccesser.NumberDevice != bluetoothAccesser.Devices.Count) ;//取得要求Serverがすべて処理されるまで待ち
@@ -133,6 +132,7 @@ namespace AtomLiteBleDesktop
         /// <param name="e"></param>
         private void NotifyConnectServerBluetoothEventHandler(object sender, NotifyBluetoothAccesserEventArgs e)
         {
+#warning BLEがDisConnectになった場合はこのイベントハンドラには来ないのを修正する
             if (sender is BluetoothLEDevice)
             {
                 AccesserStatusChange(e.State,sender as BluetoothLEDevice);
@@ -251,11 +251,40 @@ namespace AtomLiteBleDesktop
 
         }
     }
-    public class Server
+    public class Server : INotifyPropertyChanged
     {
-        public String DeviceName { get; set; }
-        public String RxStatus { get; set; }
+        private String deviceName;
+        public String DeviceName 
+        {
+            get { return this.deviceName; }
+            set 
+            { 
+                this.deviceName = value;
+                NotifyPropertyChanged("DeviceName");
+            }
+        }
+        
+        private String rxStatus;
+        public String RxStatus
+        {
+            get { return this.rxStatus; }
+            set { 
+                this.rxStatus = value;
+                NotifyPropertyChanged("RxStatus");
+            }
+        }
+
         public String Address { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        void NotifyPropertyChanged(string info)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(info));
+            }
+        }
 
         public Server(String deviceName, String rxStatus, String address)
         {
