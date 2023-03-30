@@ -14,10 +14,12 @@ namespace AtomLiteBleDesktop.Bluetooth
 {
     public class BluetoothAccesser
     {
+        /*
         /// <summary>
         /// Connect時の最大リトライ回数
         /// </summary>
         private const int MAX_RETRY_CONNECT = 5;
+        */
 
         /// <summary>
         /// BluetoothAccesserのeventハンドラの関数の引数と戻り値を設定
@@ -57,7 +59,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                 set { this.message = value; }
             }
         }
-
+        /*
         /// <summary>
         /// BluetoothWatcherインスタンス
         /// </summary>
@@ -84,8 +86,29 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             get { return this.bluetoothConnector.CharacteristicNames; }
         }
-        private event NotifyBluetoothAccesserEventHandler notifyConnectingServer;
+        */
 
+        private int numberDevice;
+        /// <summary>
+        /// BluetoothDevice数
+        /// </summary>
+        public int NumberDevice
+        {
+            get { return this.numberDevice; }
+        }
+
+
+        private List<BluetoothLEDevice> devices;
+        /// <summary>
+        /// Connctsで名前を指定したDevice
+        /// </summary>
+        public List< BluetoothLEDevice> Devices
+        {
+            get { return this.devices; }
+        }
+
+        private event NotifyBluetoothAccesserEventHandler notifyConnectingServer;
+        
         /// <summary>
         /// ServerConnectイベント
         /// </summary>
@@ -130,7 +153,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                 this.notifyReceiveCharacteristic -= value;
             }
         }
-
+        /*
         /// <summary>
         /// ServerConnect時イベントキック用関数
         /// </summary>
@@ -159,7 +182,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                 this.notifyReceiveCharacteristic(this, data);
             }
         }
-
+        */
 
         //UIスレッドにアクセスするためのDispatcher
         //private static CoreDispatcher _mDispatcher;
@@ -169,8 +192,10 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         public BluetoothAccesser()
         {
+            this.devices = new List<BluetoothLEDevice>();
         }
 
+        /*
         public async Task<List<string>> Searches(List<string> servers)
         {
             this.bluetoothWatcher = BluetoothWatcher.GetInstance();
@@ -185,7 +210,12 @@ namespace AtomLiteBleDesktop.Bluetooth
             });
             return task;
         }
-
+        */
+        /*
+        /// <summary>
+        /// Device名を指定するだけでConnectまで実行
+        /// </summary>
+        /// <param name="deviceNames"></param>
         public async void Connects(List<string> deviceNames)
         {
             foreach (var deviceName in deviceNames)
@@ -194,6 +224,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                 if (task != null)
                 {
                     Debug.WriteLine("取得サーバー名:" + task.Name);
+                    this.devices.Add(task);
                     task.Connect();
                 }
                 else
@@ -204,6 +235,45 @@ namespace AtomLiteBleDesktop.Bluetooth
             }
 
         }
+        */
+
+
+        public async void SearchDevices(List<string> deviceNames)
+        {
+            try
+            {
+                this.numberDevice = deviceNames.Count;
+                foreach (var deviceName in deviceNames)
+                {
+                    var task = await this.SearchDevice(deviceName);
+                    if (task != null)
+                    {
+                        if (task.IsFindDevice)
+                        {
+                            Debug.WriteLine("取得サーバー名:" + task.Name);
+                            task.Connect();
+                            //bluetoothAccesser.Connect();
+                        }
+                        else
+                        {
+                            Debug.WriteLine(deviceName + "サーバーは見つかりませんでした:\n");
+
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine(deviceName + "SearchDeviceでnullが返りました:\n");
+                    }
+
+                }
+            }
+            catch (Exception err)
+            {
+                Debug.WriteLine(err.Message);
+
+            }
+        }
+
         /// <summary>
         /// ペアリングができているデバイスを探す 
         /// </summary>
@@ -211,15 +281,17 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// <returns></returns>
         public async Task<BluetoothLEDevice> SearchDevice(string deviceName)
         {
-            this.bluetoothWatcher = BluetoothWatcher.GetInstance();
+            var bluetoothWatcher = BluetoothWatcher.GetInstance();
 
             var task = await Task.Run<BluetoothLEDevice>(() =>
             {
-                return this.bluetoothWatcher.FindServerDevice(deviceName);
+                var device = bluetoothWatcher.FindServerDevice(deviceName);
+                this.devices.Add(device);
+                return device;
             });
             return task;
         }
-
+        /*
         /// <summary>
         /// 指定したサーバ名を探し、存在すればそのサーバ名を返却：非同期
         /// </summary>
@@ -261,7 +333,8 @@ namespace AtomLiteBleDesktop.Bluetooth
             //this.bluetoothWatcher.StopScanServer();
         }
         
-        
+        */
+        /*
         public async void Connect()
         {
             int counter = 0;
@@ -308,7 +381,6 @@ namespace AtomLiteBleDesktop.Bluetooth
                 this.OnNotifyConnectingServer("Disconnection", NotifyBluetoothAccesserEventArgs.Status.NotFound);
             }
         }
-        
         /// <summary>
         /// Characteristic受信時イベントハンドラ
         /// </summary>
@@ -318,5 +390,6 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             OnNotifyReceiveCharacteristic(e);
         }
+        */
     }
 }

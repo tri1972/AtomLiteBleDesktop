@@ -231,30 +231,6 @@ namespace AtomLiteBleDesktop.Bluetooth
             }
         }
 
-        private event NotifyBluetoothAccesserEventHandler notifyConnectingServer;
-
-        /// <summary>
-        /// ServerConnectイベント
-        /// </summary>
-        public event NotifyBluetoothAccesserEventHandler NotifyConnectingServer
-        {
-            add
-            {
-                if (this.notifyConnectingServer == null)
-                {
-                    this.notifyConnectingServer += value;
-                }
-                else
-                {
-                    Debug.WriteLine("重複登録ですよ");
-                }
-            }
-            remove
-            {
-                this.notifyConnectingServer -= value;
-            }
-        }
-
         /// <summary>
         /// コンストラクタ
         /// </summary>
@@ -567,21 +543,6 @@ namespace AtomLiteBleDesktop.Bluetooth
             bytes[1] = 0;
             var baseUuid = new Guid(bytes);
             return baseUuid == bluetoothBaseUuid;
-        }
-
-        /// <summary>
-        /// ServerConnect時イベントキック用関数
-        /// </summary>
-        /// <param name="e"></param>
-        public　void OnNotifyConnectingServer(string message, NotifyBluetoothAccesserEventArgs.Status state)
-        {
-            if (this.notifyConnectingServer != null)
-            {
-                var e = new NotifyBluetoothAccesserEventArgs();
-                e.Message = message;
-                e.State = state;
-                this.notifyConnectingServer(this, e);
-            }
         }
     }
 }

@@ -76,8 +76,9 @@ namespace AtomLiteBleDesktop
             };
         }
 
-        private async void Seach_button_Click(object sender, RoutedEventArgs e)
+        private void Seach_button_Click(object sender, RoutedEventArgs e)
         {
+            /*
             var task = await this.bluetoothAccesser.Search(PIRSERVER);
             if (task != null)
             {
@@ -90,6 +91,7 @@ namespace AtomLiteBleDesktop
             }
 
             NotificationToast();
+            */
         }
 
         private static void NotificationToast()
@@ -182,16 +184,19 @@ namespace AtomLiteBleDesktop
                 switch (e.State)
                 {
                     case NotifyBluetoothAccesserEventArgs.Status.Connected:
-                        stringAdd_TextDataDispatcher("\n" + "取得Service名：");
-                        foreach (var service in (sender as BluetoothAccesser).Services)
-                        {
-                            stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
-                        }
-                        stringAdd_TextDataDispatcher("\n" + "取得Characteristic名：");
-                        foreach (var name in (sender as BluetoothAccesser).CharacteristicNames)
-                        {
-                            stringAdd_TextDataDispatcher("\n" + string.Copy(name));
 
+                        foreach (var device in (sender as BluetoothAccesser).Devices)
+                        {
+                            foreach (var service in device.BluetoothConnector.Services)
+                            {
+                                stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
+                            }
+                            stringAdd_TextDataDispatcher("\n" + "取得Characteristic名：");
+                            foreach (var name in device.CharacteristicNames)
+                            {
+                                stringAdd_TextDataDispatcher("\n" + string.Copy(name));
+
+                            }
                         }
                         break;
                     case NotifyBluetoothAccesserEventArgs.Status.Connecting:
@@ -211,7 +216,7 @@ namespace AtomLiteBleDesktop
         {
             this.bluetoothAccesser.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
             this.bluetoothAccesser.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
-            this.bluetoothAccesser.Connect();
+            //this.bluetoothAccesser.Connect();
         }
 
         /// <summary>
@@ -261,8 +266,9 @@ namespace AtomLiteBleDesktop
             }
         }
 
-        private async void ScanStart_button_Click(object sender, RoutedEventArgs e)
+        private void ScanStart_button_Click(object sender, RoutedEventArgs e)
         {
+            /*
             var task = await this.bluetoothAccesser.StartScanning();
             if (task != null)
             {
@@ -277,7 +283,7 @@ namespace AtomLiteBleDesktop
                 var dialog = new MessageDialog("接続指定サーバをSearchしたが取得できませんでした", "エラー");
                 _ = dialog.ShowAsync();
             }
-
+            */
         }
 
         /// <summary>
@@ -287,7 +293,9 @@ namespace AtomLiteBleDesktop
         /// <param name="e"></param>
         private void ScanStop_button_Click(object sender, RoutedEventArgs e)
         {
+            /*
             this.bluetoothAccesser.StopScanning();
+            */
         }
     }
 

@@ -23,10 +23,22 @@ namespace AtomLiteBleDesktop
         /// </summary>
         private const int MAX_RETRY_CONNECT = 5;
 
+        private BluetoothConnector bluetoothConnector;
         /// <summary>
         /// BluetoothConnectorインスタンス
         /// </summary>
-        private BluetoothConnector bluetoothConnector;
+        public BluetoothConnector BluetoothConnector
+        {
+            get { return this.bluetoothConnector; }
+        }
+
+        /// <summary>
+        /// Characteristicの名前を取得します
+        /// </summary>
+        public List<string> CharacteristicNames
+        {
+            get { return this.bluetoothConnector.CharacteristicNames; }
+        }
 
         private GattCharacteristic registeredCharacteristic;
 
@@ -46,6 +58,7 @@ namespace AtomLiteBleDesktop
         private string name;
         public string Name
         {
+            set { this.name = value; }
             get { return this.name; }
         }
         private bool isPaired;
@@ -84,6 +97,30 @@ namespace AtomLiteBleDesktop
             remove
             {
                 this.notifyReceiveCharacteristic -= value;
+            }
+        }
+
+        private event NotifyBluetoothAccesserEventHandler notifyConnectingServer;
+
+        /// <summary>
+        /// ServerConnectイベント
+        /// </summary>
+        public event NotifyBluetoothAccesserEventHandler NotifyConnectingServer
+        {
+            add
+            {
+                if (this.notifyConnectingServer == null)
+                {
+                    this.notifyConnectingServer += value;
+                }
+                else
+                {
+                    Debug.WriteLine("重複登録ですよ");
+                }
+            }
+            remove
+            {
+                this.notifyConnectingServer -= value;
             }
         }
 
@@ -136,10 +173,10 @@ namespace AtomLiteBleDesktop
         /// コンストラクタ
         /// Deviceが見つからなかった場合
         /// </summary>
-        public BluetoothLEDevice()
+        public BluetoothLEDevice(string name)
         {
             this.id = null;
-            this.name = null;
+            this.name = name;
             this.isFindDevice = false;
             this.isPaired = false;
             this.isConnected = false;
@@ -162,8 +199,7 @@ namespace AtomLiteBleDesktop
                     var task = await Task.Run(this.bluetoothConnector.Connect);
                     if (task)
                     {
-                        this.bluetoothConnector.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
-
+                        this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
                         this.registeredCharacteristic = this.bluetoothConnector.RegisteredCharacteristic;
 
                             //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
@@ -175,13 +211,13 @@ namespace AtomLiteBleDesktop
                     }
                     else
                     {
-                        this.bluetoothConnector.OnNotifyConnectingServer("Connecting...", NotifyBluetoothAccesserEventArgs.Status.Connecting);
+                        this.OnNotifyConnectingServer("Connecting...", NotifyBluetoothAccesserEventArgs.Status.Connecting);
                     }
                     counter--;
                 }
                 if (counter == 0)
                 {
-                    this.bluetoothConnector.OnNotifyConnectingServer("Server Connecting Aborted", NotifyBluetoothAccesserEventArgs.Status.Abort);
+                    this.OnNotifyConnectingServer("Server Connecting Aborted", NotifyBluetoothAccesserEventArgs.Status.Abort);
                 }
 
             });
@@ -200,6 +236,22 @@ namespace AtomLiteBleDesktop
                 this.notifyReceiveCharacteristic(this, data);
             }
         }
+
+        /// <summary>
+        /// ServerConnect時イベントキック用関数
+        /// </summary>
+        /// <param name="e"></param>
+        public void OnNotifyConnectingServer(string message, NotifyBluetoothAccesserEventArgs.Status state)
+        {
+            if (this.notifyConnectingServer != null)
+            {
+                var e = new NotifyBluetoothAccesserEventArgs();
+                e.Message = message;
+                e.State = state;
+                this.notifyConnectingServer(this, e);
+            }
+        }
+
         /// <summary>
         /// Characteristic受信時イベントハンドラ
         /// </summary>

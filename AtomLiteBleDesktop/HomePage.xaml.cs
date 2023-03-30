@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
@@ -41,13 +42,88 @@ namespace AtomLiteBleDesktop
         {
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
-            bluetoothAccesser.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
+#warning ここでイベントハンドラの登録を行うが、deviceをすべて検索しないうちにここへ来てしまう
+
+            var task = Task.Run(() =>
+            {
+                while (bluetoothAccesser.NumberDevice != bluetoothAccesser.Devices.Count) ;//取得要求Serverがすべて処理されるまで待ち
+                foreach (var device in bluetoothAccesser.Devices)
+                {
+                    if (device.IsFindDevice)
+                    {
+                        try
+                        {
+                            listBoxAdd_TextDataDispatcher(device.Name, "find!", "test");
+                        }
+                        catch (Exception err)
+                        {
+                            Debug.WriteLine(err.Message);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            listBoxAdd_TextDataDispatcher(device.Name, "Notfind!", "test");
+                        }
+                        catch (Exception err)
+                        {
+                            Debug.WriteLine(err.Message);
+                        }
+                    }
+                    if (device.BluetoothConnector != null)
+                    {
+                        if (device.BluetoothConnector.IsConnectService)
+                        {
+                            AccesserStatusChange(NotifyBluetoothAccesserEventArgs.Status.Connected, null);
+                        }
+                        device.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
+                    }
+                }
+            });
+            
+            //bluetoothAccesser.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
             bluetoothAccesser.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
             this.resourceGridServer = (Servers)this.HomeGrid.Resources["servers"];
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+        }
+
+        private void AccesserStatusChange(BluetoothAccesser.NotifyBluetoothAccesserEventArgs.Status status, BluetoothLEDevice sender)
+        {
+            switch (status)
+            {
+                case NotifyBluetoothAccesserEventArgs.Status.Connected:
+                    stringHogehogeData_TextDataDispatcher("Connect!!");
+                    stringAdd_TextDataDispatcher("\n" + "取得Service名：");//接続した場合のUIへのBindをおこなう
+                    listBoxAdd_TextDataDispatcher(sender.Name, "Connected!", "test");
+                    if (sender != null)
+                    {
+                            foreach (var service in sender.BluetoothConnector.Services)
+                            {
+                                stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
+                            }
+                            stringAdd_TextDataDispatcher("\n" + "取得Characteristic名：");
+                            foreach (var name in sender.CharacteristicNames)
+                            {
+                                stringAdd_TextDataDispatcher("\n" + string.Copy(name));
+
+                            }
+                    }
+                    break;
+                case NotifyBluetoothAccesserEventArgs.Status.Connecting:
+                    stringAdd_TextDataDispatcher("・");
+                    break;
+                case NotifyBluetoothAccesserEventArgs.Status.Abort:
+                    stringAdd_TextDataDispatcher("\n" + "接続できなかった");
+                    break;
+                case NotifyBluetoothAccesserEventArgs.Status.NotFound:
+                    stringAdd_TextDataDispatcher("\n" + "接続先が未探索状態です");
+                    break;
+            }
+
         }
 
         /// <summary>
@@ -57,42 +133,9 @@ namespace AtomLiteBleDesktop
         /// <param name="e"></param>
         private void NotifyConnectServerBluetoothEventHandler(object sender, NotifyBluetoothAccesserEventArgs e)
         {
-            if (sender is BluetoothAccesser)
+            if (sender is BluetoothLEDevice)
             {
-                switch (e.State)
-                {
-                    case NotifyBluetoothAccesserEventArgs.Status.Connected:
-                        stringHogehogeData_TextDataDispatcher("Connect!!");
-                        stringAdd_TextDataDispatcher("\n" + "取得Service名：");
-                        try
-                        {
-                            listBoxAdd_TextDataDispatcher("test", "test", "test");
-                        }catch(Exception err)
-                        {
-                            Debug.WriteLine(err.Message);
-                        }
-
-                        foreach (var service in (sender as BluetoothAccesser).Services)
-                        {
-                            stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
-                        }
-                        stringAdd_TextDataDispatcher("\n" + "取得Characteristic名：");
-                        foreach (var name in (sender as BluetoothAccesser).CharacteristicNames)
-                        {
-                            stringAdd_TextDataDispatcher("\n" + string.Copy(name));
-
-                        }
-                        break;
-                    case NotifyBluetoothAccesserEventArgs.Status.Connecting:
-                        stringAdd_TextDataDispatcher("・");
-                        break;
-                    case NotifyBluetoothAccesserEventArgs.Status.Abort:
-                        stringAdd_TextDataDispatcher("\n" + "接続できなかった"); 
-                        break;
-                    case NotifyBluetoothAccesserEventArgs.Status.NotFound:
-                        stringAdd_TextDataDispatcher("\n" + "接続先が未探索状態です");
-                        break;
-                }
+                AccesserStatusChange(e.State,sender as BluetoothLEDevice);
             }
         }
 
@@ -166,7 +209,20 @@ namespace AtomLiteBleDesktop
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                resourceGridServer.Add(new Server(text0, text1, text2));
+                bool hasItem = false;
+                foreach(var item in resourceGridServer)
+                {
+                    if (item.DeviceName == text0)
+                    {
+                        item.RxStatus = text1;
+                        hasItem = true;
+                        break;
+                    }
+                }
+                if (!hasItem)
+                {
+                    resourceGridServer.Add(new Server(text0, text1, text2));
+                }
             });
 
         }
@@ -198,13 +254,13 @@ namespace AtomLiteBleDesktop
     public class Server
     {
         public String DeviceName { get; set; }
-        public String LastName { get; set; }
+        public String RxStatus { get; set; }
         public String Address { get; set; }
 
-        public Server(String deviceName, String lastName, String address)
+        public Server(String deviceName, String rxStatus, String address)
         {
             this.DeviceName = deviceName;
-            this.LastName = lastName;
+            this.RxStatus = rxStatus;
             this.Address = address;
         }
 

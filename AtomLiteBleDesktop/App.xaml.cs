@@ -47,7 +47,7 @@ namespace AtomLiteBleDesktop
         /// アプリケーションが特定のファイルを開くために起動されたときなどに使用されます。
         /// </summary>
         /// <param name="e">起動の要求とプロセスの詳細を表示します。</param>
-        protected override async void OnLaunched(LaunchActivatedEventArgs e)
+        protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -83,7 +83,8 @@ namespace AtomLiteBleDesktop
             }
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
-
+            bluetoothAccesser.SearchDevices(servers);
+            /*
             try
             {
                 foreach (var server in servers)
@@ -115,6 +116,7 @@ namespace AtomLiteBleDesktop
                 Debug.WriteLine(err.Message);
 
             }
+            */
         }
 
         /// <summary>

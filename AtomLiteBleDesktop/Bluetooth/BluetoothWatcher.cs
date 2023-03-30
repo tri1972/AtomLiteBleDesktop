@@ -128,10 +128,10 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// <returns></returns>
         public BluetoothLEDevice FindServerDevice(string server)
         {
-            BluetoothLEDevice output = new BluetoothLEDevice();
+            BluetoothLEDevice output = new BluetoothLEDevice(server);
             this.StartBleDeviceWatcher();
             //1s待って。接続Server名が取得できなければfalseを返す
-            int counter = 500;
+            int counter = 10;
             while (counter>0)
             {
                 foreach (var device in this.knownDevices)

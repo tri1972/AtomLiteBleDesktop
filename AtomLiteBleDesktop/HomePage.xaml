@@ -57,7 +57,7 @@
                                     <RowDefinition Height="1*" />
                                     <RowDefinition Height="1*" />
                                 </Grid.RowDefinitions>
-                                <TextBlock x:Name="ServerStatus" Grid.Column="0"  Grid.Row="0" Text="TextBlock" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                <TextBlock x:Name="ServerStatus" Grid.Column="0"  Grid.Row="0" Text="{Binding DeviceName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                                 <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.Column="0"  Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="3" Background="AliceBlue" Margin="10,10,10,20" >
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="1*" />
@@ -69,7 +69,7 @@
                                         <RowDefinition Height="5*" />
                                         <RowDefinition Height="1*" />
                                     </Grid.RowDefinitions>
-                                    <TextBlock x:Name="RxStatus" Grid.Column="0"  Grid.Row="0" Text="TextBlock" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                    <TextBlock x:Name="RxStatus" Grid.Column="0"  Grid.Row="0" Text="{Binding RxStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                                     <Button x:Name="Button_ASAP" Content="ButtonASAP" Margin="10,10,10,10" Grid.Row="1"  Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
                                     <Button x:Name="Button_Wait" Content="ButtonWait" Margin="10,10,10,10" Grid.Row="1"  Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
                                     <Button x:Name="Button_Wrong" Content="ButtonWrong" Margin="10,10,10,10" Grid.Row="1"  Grid.Column="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
