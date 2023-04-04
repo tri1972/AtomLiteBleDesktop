@@ -184,19 +184,19 @@ namespace AtomLiteBleDesktop
                 switch (e.State)
                 {
                     case NotifyBluetoothAccesserEventArgs.Status.Connected:
-
                         foreach (var device in (sender as BluetoothAccesser).Devices)
                         {
                             foreach (var service in device.BluetoothConnector.Services)
                             {
                                 stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
+
+                                foreach (var name in service.CharacteristicNames)
+                                {
+                                    stringAdd_TextDataDispatcher("\n" + string.Copy(name));
+
+                                }
                             }
                             stringAdd_TextDataDispatcher("\n" + "取得Characteristic名：");
-                            foreach (var name in device.CharacteristicNames)
-                            {
-                                stringAdd_TextDataDispatcher("\n" + string.Copy(name));
-
-                            }
                         }
                         break;
                     case NotifyBluetoothAccesserEventArgs.Status.Connecting:

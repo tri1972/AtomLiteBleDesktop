@@ -12,12 +12,6 @@ using static AtomLiteBleDesktop.Bluetooth.BluetoothAccesser;
 
 namespace AtomLiteBleDesktop.Bluetooth
 {
-    //NotifyReceiveCharacteristicイベントで返されるデータ
-    //ここではstring型のひとつのデータのみ返すものとする
-    public class NotifyReceiveCharacteristicEventArgs : EventArgs
-    {
-        public string Message;
-    }
 
     public class BluetoothConnector
     {
@@ -182,15 +176,6 @@ namespace AtomLiteBleDesktop.Bluetooth
             get { return this.services; }
         }
 
-        private IReadOnlyList<GattCharacteristic> characteristics = null;
-        /// <summary>
-        /// Characteristicsを取得します
-        /// </summary>
-        public IReadOnlyList<GattCharacteristic> Characteristics
-        {
-            get { return this.characteristics; }
-        }
-
         /// <summary>
         /// Characteristicを取得します
         /// </summary>
@@ -211,15 +196,6 @@ namespace AtomLiteBleDesktop.Bluetooth
         }
         private bool isConnectService;
 
-        
-        /// <summary>
-        /// Characteristicの名前を取得します
-        /// </summary>
-        public List<string> CharacteristicNames
-        {
-            get { return this.characteristicNames; }
-        }
-        private List<string> characteristicNames;
 
         public delegate void NotifyReceiveCharacteristicEventHandler(object sender, NotifyReceiveCharacteristicEventArgs e);
         public event NotifyReceiveCharacteristicEventHandler NotifyReceiveCharacteristic;
@@ -280,11 +256,11 @@ namespace AtomLiteBleDesktop.Bluetooth
                             this.services.Add(new BluetoothService()
                             {
                                 Service = service,
-                                ServiceGattNativeServiceUuid = GetGattNativeServiceUuid(service),
-                                ServiceGattNativeServiceUuidString = GetServiceName(service)
+                                ServiceGattNativeServiceUuid = BluetoothHelper.GetGattNativeServiceUuid(service),
+                                ServiceGattNativeServiceUuidString = BluetoothHelper.GetServiceName(service)
                             });
                         }
-                        task = this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
+                        task = this.getUserCustomService(this.services).GetRegisteredCharacteristic();
                         this.registeredCharacteristic = task.Result;
                         this.registeredCharacteristic.ValueChanged += this.registeredCharacteristicNotify;
                         return true;
@@ -389,160 +365,5 @@ namespace AtomLiteBleDesktop.Bluetooth
             return null;
         }
 
-        /// <summary>
-        /// serviceの中から未定義のCharacteristicをRegistedCharacteristicとして取得する
-        /// </summary>
-        /// <param name="bleService"></param>
-        private async Task<GattCharacteristic> getRegisteredCharacteristic(BluetoothService bleService)
-        {
-            var service = bleService.Service;
-
-            try
-            {
-                // Ensure we have access to the device.
-                var accessStatus = await service.RequestAccessAsync();
-                if (accessStatus == DeviceAccessStatus.Allowed)
-                {
-                    // BT_Code: Get all the child characteristics of a service. Use the cache mode to specify uncached characterstics only 
-                    // and the new Async functions to get the characteristics of unpaired devices as well. 
-                    var result = await service.GetCharacteristicsAsync(BluetoothCacheMode.Uncached);
-                    if (result.Status == GattCommunicationStatus.Success)
-                    {
-                        characteristics = result.Characteristics;
-                    }
-                    else
-                    {
-                        // On error, act as if there are no characteristics.
-                        characteristics = new List<GattCharacteristic>();
-                    }
-                }
-                else
-                {
-                    // On error, act as if there are no characteristics.
-                    characteristics = new List<GattCharacteristic>();
-
-                }
-
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                // On error, act as if there are no characteristics.
-                characteristics = new List<GattCharacteristic>();
-            }
-            foreach (GattCharacteristic c in characteristics)
-            {
-                if (this.characteristicNames == null)
-                {
-                    this.characteristicNames = new List<string>();
-                }
-                this.characteristicNames.Add (GetCharacteristicName(c));
-                if (GetCharacteristicType(c) == GattNativeCharacteristicUuid.None)
-                {
-                    //定義済みuuidでないものをCharacteristicsとする
-                    return c;
-                }
-            }
-            return null;
-        }
-
-        public static string GetCharacteristicName(GattCharacteristic characteristic)
-        {
-            GattNativeCharacteristicUuid output;
-            if ((output = GetCharacteristicType(characteristic)) != GattNativeCharacteristicUuid.None)
-            {
-                return output.ToString();
-            }
-
-            if (!string.IsNullOrEmpty(characteristic.UserDescription))
-            {
-                return characteristic.UserDescription;
-            }
-
-            else
-            {
-                return "Custom Characteristic: " + characteristic.Uuid;
-            }
-        }
-
-
-        public static GattNativeCharacteristicUuid GetCharacteristicType(GattCharacteristic characteristic)
-        {
-            if (IsSigDefinedUuid(characteristic.Uuid))
-            {
-                GattNativeCharacteristicUuid characteristicName;
-                if (Enum.TryParse(ConvertUuidToShortId(characteristic.Uuid).ToString(), out characteristicName))
-                {
-                    return characteristicName;
-                }
-            }
-            return GattNativeCharacteristicUuid.None;
-        }
-
-        public static GattNativeServiceUuid GetGattNativeServiceUuid(GattDeviceService service)
-        {
-            if (IsSigDefinedUuid(service.Uuid))
-            {
-                GattNativeServiceUuid serviceName;
-                if (Enum.TryParse(ConvertUuidToShortId(service.Uuid).ToString(), out serviceName))
-                {
-                    return serviceName;
-                }
-            }
-            return GattNativeServiceUuid.None;
-        }
-
-
-        public static string GetServiceName(GattDeviceService service)
-        {
-            if (IsSigDefinedUuid(service.Uuid))
-            {
-                GattNativeServiceUuid serviceName;
-                if (Enum.TryParse(ConvertUuidToShortId(service.Uuid).ToString(), out serviceName))
-                {
-                    return serviceName.ToString();
-                }
-            }
-            return "Custom Service: " + service.Uuid;
-        }
-
-        /// <summary>
-        ///     Converts from standard 128bit UUID to the assigned 32bit UUIDs. Makes it easy to compare services
-        ///     that devices expose to the standard list.
-        /// </summary>
-        /// <param name="uuid">UUID to convert to 32 bit</param>
-        /// <returns></returns>
-        public static ushort ConvertUuidToShortId(Guid uuid)
-        {
-            // Get the short Uuid
-            var bytes = uuid.ToByteArray();
-            var shortUuid = (ushort)(bytes[0] | (bytes[1] << 8));
-            return shortUuid;
-        }
-
-        /// <summary>
-        /// 定義済みUUIDかどうか判別する
-        ///     The SIG has a standard base value for Assigned UUIDs. In order to determine if a UUID is SIG defined,
-        ///     zero out the unique section and compare the base sections.
-        ///     
-        /// </summary>
-        /// <param name="uuid">The UUID to determine if SIG assigned</param>
-        /// <returns></returns>
-        private static bool IsSigDefinedUuid(Guid uuid)
-        {
-            var bluetoothBaseUuid = new Guid("00000000-0000-1000-8000-00805F9B34FB");
-
-            var bytes = uuid.ToByteArray();
-            // Zero out the first and second bytes
-            // Note how each byte gets flipped in a section - 1234 becomes 34 12
-            // Example Guid: 35918bc9-1234-40ea-9779-889d79b753f0
-            //                   ^^^^
-            // bytes output = C9 8B 91 35 34 12 EA 40 97 79 88 9D 79 B7 53 F0
-            //                ^^ ^^
-            bytes[0] = 0;
-            bytes[1] = 0;
-            var baseUuid = new Guid(bytes);
-            return baseUuid == bluetoothBaseUuid;
-        }
     }
 }

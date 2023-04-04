@@ -10,6 +10,7 @@ using System.Diagnostics;
 using AtomLiteBleDesktop.Bluetooth;
 using static AtomLiteBleDesktop.Bluetooth.BluetoothAccesser;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
+using static AtomLiteBleDesktop.BluetoothService;
 
 namespace AtomLiteBleDesktop
 {
@@ -18,6 +19,16 @@ namespace AtomLiteBleDesktop
     /// </summary>
     public class BluetoothLEDevice //: INotifyPropertyChanged
     {
+
+        //NotifyReceiveCharacteristicイベントで返されるデータ
+        //ここではstring型のひとつのデータのみ返すものとする
+        public class NotifyReceiveLEDeviceCharacteristicEventArgs : EventArgs
+        {
+            public BluetoothService Service;
+            public BluetoothCharacteristic Characteristic;
+            public string Message;
+        }
+
         /// <summary>
         /// Connect時の最大リトライ回数
         /// </summary>
@@ -31,7 +42,7 @@ namespace AtomLiteBleDesktop
         {
             get { return this.bluetoothConnector; }
         }
-
+        /*
         /// <summary>
         /// Characteristicの名前を取得します
         /// </summary>
@@ -39,9 +50,10 @@ namespace AtomLiteBleDesktop
         {
             get { return this.bluetoothConnector.CharacteristicNames; }
         }
-
+        */
+        /*
         private GattCharacteristic registeredCharacteristic;
-
+        */
         public DeviceInformation DeviceInformation { get; private set; }
 
         private bool isFindDevice;
@@ -77,11 +89,18 @@ namespace AtomLiteBleDesktop
             get { return this.isConnectable; }
         }
 
-        private event NotifyBluetoothAccesserEventHandler notifyReceiveCharacteristic;
+        /// <summary>
+        /// BluetoothLEDeviceのeventハンドラの関数の引数と戻り値を設定
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public delegate void NotifyBluetoothLEDeviceEventHandler(object sender, NotifyReceiveLEDeviceCharacteristicEventArgs e);
+
+        private event NotifyBluetoothLEDeviceEventHandler notifyReceiveCharacteristic;
         /// <summary>
         /// BleServerからのNotify受信イベント
         /// </summary>
-        public event NotifyBluetoothAccesserEventHandler NotifyReceiveCharacteristic
+        public event NotifyBluetoothLEDeviceEventHandler NotifyReceiveCharacteristic
         {
             add
             {
@@ -191,7 +210,7 @@ namespace AtomLiteBleDesktop
             {
                 this.bluetoothConnector = new BluetoothConnector(this);
 
-                this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify;
+                //this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify;
 
                 counter = MAX_RETRY_CONNECT;
                 while (counter > 0)
@@ -200,13 +219,21 @@ namespace AtomLiteBleDesktop
                     if (task)
                     {
                         this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
+
+
+                        foreach(var server in this.bluetoothConnector.Services)
+                        {
+                            server.NotifyReceiveCharacteristic += NotifyReceiveServerCharacteristic;
+                        }
+                        /*
                         this.registeredCharacteristic = this.bluetoothConnector.RegisteredCharacteristic;
 
-                            //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
-                            if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
+                        //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
+                        if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                         {
                             await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
                         }
+                        */
                         break;
                     }
                     else
@@ -223,16 +250,27 @@ namespace AtomLiteBleDesktop
             });
         }
 
+        public void NotifyReceiveServerCharacteristic(object sender, NotifyReceiveServerCharacteristicEventArgs e)
+        {
+            if (sender is BluetoothService)
+            {
+                OnNotifyReceiveCharacteristic(sender as BluetoothService, e);
+            }
+        }
+
         /// <summary>
         /// Characteristicにてデータを受信した場合のイベントキック用関数
         /// </summary>
         /// <param name="e"></param>
-        public void OnNotifyReceiveCharacteristic(NotifyReceiveCharacteristicEventArgs e)
+        public void OnNotifyReceiveCharacteristic(BluetoothService sender, NotifyReceiveServerCharacteristicEventArgs e)
         {
             if (this.notifyReceiveCharacteristic != null)
             {
-                var data = new NotifyBluetoothAccesserEventArgs();
+                var data = new NotifyReceiveLEDeviceCharacteristicEventArgs();
                 data.Message = e.Message;
+                data.Characteristic = e.Characteristic;
+                data.Service = sender;
+
                 this.notifyReceiveCharacteristic(this, data);
             }
         }
@@ -252,6 +290,7 @@ namespace AtomLiteBleDesktop
             }
         }
 
+        /*
         /// <summary>
         /// Characteristic受信時イベントハンドラ
         /// </summary>
@@ -261,7 +300,7 @@ namespace AtomLiteBleDesktop
         {
             OnNotifyReceiveCharacteristic(e);
         }
-
+        */
         //public event PropertyChangedEventHandler PropertyChanged=null;
     }
 }

@@ -21,6 +21,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using static AtomLiteBleDesktop.Bluetooth.BluetoothAccesser;
+using static AtomLiteBleDesktop.BluetoothLEDevice;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=234238 を参照してください
 
@@ -77,6 +78,7 @@ namespace AtomLiteBleDesktop
                             AccesserStatusChange(NotifyBluetoothAccesserEventArgs.Status.Connected, null);
                         }
                         device.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
+                        device.NotifyReceiveCharacteristic += NotifyBluetoothLEDeviceCharacteristicEvent;
                     }
                 }
             });
@@ -97,19 +99,22 @@ namespace AtomLiteBleDesktop
                 case NotifyBluetoothAccesserEventArgs.Status.Connected:
                     stringHogehogeData_TextDataDispatcher("Connect!!");
                     stringAdd_TextDataDispatcher("\n" + "取得Service名：");//接続した場合のUIへのBindをおこなう
-                    listBoxAdd_TextDataDispatcher(sender.Name, "Connected!", "test");
                     if (sender != null)
                     {
-                            foreach (var service in sender.BluetoothConnector.Services)
+                        listBoxAdd_TextDataDispatcher(sender.Name, "Connected!", "test");
+                        foreach (var service in sender.BluetoothConnector.Services)
+                        {
+                            stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
+                            if (service.CharacteristicNames != null)
                             {
-                                stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
-                            }
-                            stringAdd_TextDataDispatcher("\n" + "取得Characteristic名：");
-                            foreach (var name in sender.CharacteristicNames)
-                            {
-                                stringAdd_TextDataDispatcher("\n" + string.Copy(name));
+                                foreach (var name in service.CharacteristicNames)
+                                {
+                                    stringAdd_TextDataDispatcher("\n" + string.Copy(name));
 
+                                }
                             }
+                        }
+                        stringAdd_TextDataDispatcher("\n" + "取得Characteristic名：");
                     }
                     break;
                 case NotifyBluetoothAccesserEventArgs.Status.Connecting:
@@ -137,6 +142,11 @@ namespace AtomLiteBleDesktop
             {
                 AccesserStatusChange(e.State,sender as BluetoothLEDevice);
             }
+        }
+
+        void NotifyBluetoothLEDeviceCharacteristicEvent(object sender, NotifyReceiveLEDeviceCharacteristicEventArgs e)
+        {
+            ;
         }
 
         /// <summary>
