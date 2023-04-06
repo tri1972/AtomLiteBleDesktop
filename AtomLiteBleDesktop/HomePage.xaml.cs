@@ -32,9 +32,26 @@ namespace AtomLiteBleDesktop
     /// </summary>
     public sealed partial class HomePage : Page
     {
+        /// <summary>
+        /// Device状態
+        /// </summary>
+        enum typeDeviceStatus
+        {
+            RxData,
+            TxData,
+            Connected,
+            NotFind,
+            Find
+        }
+
+        private const string SERVICE_UUID_CALL_UNDER_LEVEL= "e72609f6-2bcb-4fb0-824a-5276ec9e355d";
+        private const string CHARACTERISTIC_UUID_CALL_UNDER_LEVEL = "cca99442-dab6-4f69-8bc2-685e2412d178";
 
         private Servers resourceGridServer;
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
+
+
+
         public HomePage()
         {
             this.InitializeComponent();
@@ -53,7 +70,7 @@ namespace AtomLiteBleDesktop
                     {
                         try
                         {
-                            listBoxAdd_TextDataDispatcher(device.Name, "find!", "test");
+                            listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.Find, null, null, null, null);
                         }
                         catch (Exception err)
                         {
@@ -64,7 +81,7 @@ namespace AtomLiteBleDesktop
                     {
                         try
                         {
-                            listBoxAdd_TextDataDispatcher(device.Name, "Notfind!", "test");
+                            listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.NotFind, null, null, null, null);
                         }
                         catch (Exception err)
                         {
@@ -101,7 +118,7 @@ namespace AtomLiteBleDesktop
                     stringAdd_TextDataDispatcher("\n" + "取得Service名：");//接続した場合のUIへのBindをおこなう
                     if (sender != null)
                     {
-                        listBoxAdd_TextDataDispatcher(sender.Name, "Connected!", "test");
+                        listBoxAdd_TextDataDispatcher(sender.Name, typeDeviceStatus.Connected, null, null, null, null);
                         foreach (var service in sender.BluetoothConnector.Services)
                         {
                             stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
@@ -146,7 +163,13 @@ namespace AtomLiteBleDesktop
 
         void NotifyBluetoothLEDeviceCharacteristicEvent(object sender, NotifyReceiveLEDeviceCharacteristicEventArgs e)
         {
-            ;
+            if (e.Service.Service.Uuid.ToString().Equals(SERVICE_UUID_CALL_UNDER_LEVEL))
+            {
+                if (e.Characteristic.Characteristic.Uuid.ToString().Equals(CHARACTERISTIC_UUID_CALL_UNDER_LEVEL))
+                {
+                    listBoxAdd_TextDataDispatcher((sender as BluetoothLEDevice).Name, typeDeviceStatus.RxData, e.Service.Service.Uuid.ToString(), e.Characteristic.Characteristic.Uuid.ToString(),"Rx", e.Message);
+                }
+            }
         }
 
         /// <summary>
@@ -215,23 +238,46 @@ namespace AtomLiteBleDesktop
         /// TextDataにUIスレッド外で書き込みを行う
         /// </summary>
         /// <param name="text"></param>
-        private async void listBoxAdd_TextDataDispatcher(string text0, string text1, string text2)
+        private async void listBoxAdd_TextDataDispatcher(string deviceName, typeDeviceStatus deviceStatus,string serverName,string characteristicName, string characteristicStatus, string CharacteristicData)
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
                 bool hasItem = false;
                 foreach(var item in resourceGridServer)
                 {
-                    if (item.DeviceName == text0)
+                    if (item.DeviceName == deviceName)
                     {
-                        item.RxStatus = text1;
+                        switch (deviceStatus)
+                        {
+                            case typeDeviceStatus.Connected:
+                                item.RxStatus = "Connected";
+                                item.PanelFrontColor = new SolidColorBrush( Colors.LimeGreen);
+                                break;
+                            case typeDeviceStatus.Find:
+                                item.RxStatus = "Find!";
+                                item.PanelFrontColor = new SolidColorBrush(Colors.AliceBlue);
+                                break;
+                            case typeDeviceStatus.NotFind:
+                                item.RxStatus = "NotFind!";
+                                item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
+                                break;
+                            case typeDeviceStatus.RxData:
+                                item.ServerName= serverName;
+                                item.RxStatus = "Connected";
+                                item.CharacteristicName= characteristicName;
+                                item.CharacteristicStatus= characteristicStatus;
+                                item.CharacteristicData= CharacteristicData;
+                                item.PanelFrontColor = new SolidColorBrush(Colors.LimeGreen);
+                                break;
+
+                        }
                         hasItem = true;
                         break;
                     }
                 }
                 if (!hasItem)
                 {
-                    resourceGridServer.Add(new Server(text0, text1, text2));
+                    resourceGridServer.Add(new Server(deviceName, "NotFind!"));
                 }
             });
 
@@ -263,6 +309,27 @@ namespace AtomLiteBleDesktop
     }
     public class Server : INotifyPropertyChanged
     {
+
+        private Brush panelBackColor = new SolidColorBrush(Color.FromArgb(0xff, 0xa0, 0x90, 0x90));//#FFA09090
+        public Brush PanelBackColor
+        {
+            get { return this.panelBackColor; }
+            set { 
+                this.panelBackColor = value;
+                NotifyPropertyChanged("PanelBackColor");
+            }
+        }
+
+        private Brush panelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));// #FFD19F9F;
+        public Brush PanelFrontColor
+        {
+            get { return this.panelFrontColor; }
+            set { 
+                this.panelFrontColor = value;
+                NotifyPropertyChanged("PanelFrontColor");
+            }
+        }
+
         private String deviceName;
         public String DeviceName 
         {
@@ -273,7 +340,18 @@ namespace AtomLiteBleDesktop
                 NotifyPropertyChanged("DeviceName");
             }
         }
-        
+
+        private String serverName;
+        public String ServerName
+        {
+            get { return this.serverName; }
+            set
+            {
+                this.serverName = value;
+                NotifyPropertyChanged("ServerName");
+            }
+        }
+
         private String rxStatus;
         public String RxStatus
         {
@@ -284,7 +362,38 @@ namespace AtomLiteBleDesktop
             }
         }
 
-        public String Address { get; set; }
+        private String characteristicName;
+        public String CharacteristicName
+        {
+            get { return this.characteristicName; }
+            set
+            {
+                this.characteristicName = value;
+                NotifyPropertyChanged("CharacteristicName");
+            }
+        }
+
+        private String characteristicStatus;
+        public String CharacteristicStatus
+        {
+            get { return this.characteristicStatus; }
+            set
+            {
+                this.characteristicStatus = value;
+                NotifyPropertyChanged("CharacteristicStatus");
+            }
+        }
+
+        private String characteristicData;
+        public String CharacteristicData
+        {
+            get { return this.characteristicData; }
+            set
+            {
+                this.characteristicData = value;
+                NotifyPropertyChanged("CharacteristicData");
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -296,11 +405,10 @@ namespace AtomLiteBleDesktop
             }
         }
 
-        public Server(String deviceName, String rxStatus, String address)
+        public Server(String deviceName, String rxStatus)
         {
             this.DeviceName = deviceName;
             this.RxStatus = rxStatus;
-            this.Address = address;
         }
 
     }
@@ -308,6 +416,17 @@ namespace AtomLiteBleDesktop
     {
         public Servers()
         {
+            //以下の実装については静的にxamlに結合されるため、表示テストの為に残す（実際に使用する場合はコメントアウトすること
+            /*
+            Add(new Server("Michael", "Connected")
+            {
+                ServerName = "test",
+            });
+            ;
+            Add(new Server("Chris", "NotFind"));
+            Add(new Server("Seo-yun", "Find!!"));
+            Add(new Server("Guido", "COnnecting"));
+            */
         }
 
     }

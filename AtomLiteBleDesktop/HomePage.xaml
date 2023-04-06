@@ -44,8 +44,8 @@
                             <RowDefinition Height="92*" />
                             <RowDefinition Height="4*" />
                         </Grid.RowDefinitions>
-                        <StackPanel  Grid.Column="1"  Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="#FFA09090" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                        <StackPanel  Grid.Column="0"  Grid.Row="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="#FFD19F9F" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <StackPanel  Grid.Column="1"  Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{Binding PanelBackColor, Mode=OneWay}"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        <StackPanel  Grid.Column="0"  Grid.Row="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{Binding PanelFrontColor, Mode=OneWay}"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                             <Grid  HorizontalAlignment="Stretch" Height="300">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1*" />
@@ -57,7 +57,16 @@
                                     <RowDefinition Height="1*" />
                                     <RowDefinition Height="1*" />
                                 </Grid.RowDefinitions>
-                                <TextBlock x:Name="ServerStatus" Grid.Column="0"  Grid.Row="0" Text="{Binding DeviceName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                <Grid Grid.Column="0"  Grid.Row="0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="1*" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock x:Name="ServerStatus" Grid.Column="0"  Grid.Row="0" Text="{Binding DeviceName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                    <TextBlock x:Name="ServerName" Grid.Column="0"  Grid.Row="1" Text="{Binding ServerName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                    <TextBlock x:Name="RxStatus" Grid.Column="0"  Grid.Row="2" Text="{Binding RxStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                </Grid>
                                 <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.Column="0"  Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="3" Background="AliceBlue" Margin="10,10,10,20" >
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="1*" />
@@ -69,7 +78,9 @@
                                         <RowDefinition Height="5*" />
                                         <RowDefinition Height="1*" />
                                     </Grid.RowDefinitions>
-                                    <TextBlock x:Name="RxStatus" Grid.Column="0"  Grid.Row="0" Text="{Binding RxStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                    <TextBlock x:Name="Characteristic" Grid.Column="0"  Grid.Row="0" Text="{Binding CharacteristicName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                    <TextBlock x:Name="CharacteristicStatus" Grid.Column="1"  Grid.Row="0" Text="{Binding CharacteristicStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                    <TextBlock x:Name="CharacteristicData" Grid.Column="2"  Grid.Row="0" Text="{Binding CharacteristicData}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                                     <Button x:Name="Button_ASAP" Content="ButtonASAP" Margin="10,10,10,10" Grid.Row="1"  Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
                                     <Button x:Name="Button_Wait" Content="ButtonWait" Margin="10,10,10,10" Grid.Row="1"  Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
                                     <Button x:Name="Button_Wrong" Content="ButtonWrong" Margin="10,10,10,10" Grid.Row="1"  Grid.Column="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
