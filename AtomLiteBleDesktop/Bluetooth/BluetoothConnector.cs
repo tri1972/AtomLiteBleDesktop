@@ -262,7 +262,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                         }
                         task = this.getUserCustomService(this.services).GetRegisteredCharacteristic();
                         this.registeredCharacteristic = task.Result;
-                        this.registeredCharacteristic.ValueChanged += this.registeredCharacteristicNotify;
+                        //this.registeredCharacteristic.ValueChanged += this.registeredCharacteristicNotify;
                         return true;
                     }
                     else
@@ -314,16 +314,20 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="e"></param>
         /// <param name="sender"></param>
-        private async void eventConnectionStatusChanged(Windows.Devices.Bluetooth.BluetoothLEDevice e,  object sender)
+        private void eventConnectionStatusChanged(Windows.Devices.Bluetooth.BluetoothLEDevice e,  object sender)
         {
-#warning 初回Connect関数実行時にConnectできなければthis.services.Count=0のため再接続動作ができない
             if (e.ConnectionStatus == BluetoothConnectionStatus.Connected)
-            {
+            {//初回Connect関数実行時にConnectできなければthis.services.Count=0のため再接続動作ができない
+                //→Characteristicクラスのコンストラクタにてnotifyイベントを受けるようにする
                 if (this.services != null && this.services.Count > 0) 
                 {//初回接続時のイベントハンドラによるリクエストについては処理をしないようにする
-                    if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
-                    {//切断された後、再度接続した際はnotifyによるValueChanged イベントを再度受信できるようにする
-                        await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+
+                    foreach(var service in services)
+                    {
+                        foreach(var characteristic in service.Characteristics)
+                        {//切断された後、再度接続した際はnotifyによるValueChanged イベントを再度受信できるようにする
+                            characteristic.CanNotifyCharacteristic();
+                        }
                     }
                 }
                 this.isConnectService = true;

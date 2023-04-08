@@ -74,6 +74,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         public BluetoothCharacteristic(GattCharacteristic characteristic)
         {
             this.characteristic = characteristic;
+            CanNotifyCharacteristic();
             this.characteristic.ValueChanged += this.registeredCharacteristicNotify;
             this.name = GetCharacteristicName(characteristic);
             this.type=GetCharacteristicType(characteristic);
@@ -89,6 +90,16 @@ namespace AtomLiteBleDesktop.Bluetooth
             this.characteristic = null;
         }
 
+        /// <summary>
+        /// CharacteristicのNotifyを有効とする
+        /// </summary>
+        public async void CanNotifyCharacteristic()
+        {
+            if (this.characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
+            {//Notifyをここで有効とする
+                await this.characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+            }
+        }
 
         public static string GetCharacteristicName(GattCharacteristic characteristic)
         {
