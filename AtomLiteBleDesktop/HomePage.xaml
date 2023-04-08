@@ -81,7 +81,7 @@
                                     <TextBlock x:Name="Characteristic" Grid.Column="0"  Grid.Row="0" Text="{Binding CharacteristicName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                                     <TextBlock x:Name="CharacteristicStatus" Grid.Column="1"  Grid.Row="0" Text="{Binding CharacteristicStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                                     <TextBlock x:Name="CharacteristicData" Grid.Column="2"  Grid.Row="0" Text="{Binding CharacteristicData}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                                    <Button x:Name="Button_ASAP" Content="ButtonASAP" Margin="10,10,10,10" Grid.Row="1"  Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+                                    <Button x:Name="Button_ASAP" Content="ButtonASAP" Margin="10,10,10,10" Grid.Row="1"  Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus"/>
                                     <Button x:Name="Button_Wait" Content="ButtonWait" Margin="10,10,10,10" Grid.Row="1"  Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
                                     <Button x:Name="Button_Wrong" Content="ButtonWrong" Margin="10,10,10,10" Grid.Row="1"  Grid.Column="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
                                 </Grid>

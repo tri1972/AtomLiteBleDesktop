@@ -104,8 +104,12 @@ namespace AtomLiteBleDesktop
             bluetoothAccesser.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
             this.resourceGridServer = (Servers)this.HomeGrid.Resources["servers"];
         }
+        private void Control_GotFocus(object sender, RoutedEventArgs e)
+        {
+            ;
+        }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+            private void Button_Click(object sender, RoutedEventArgs e)
         {
         }
 

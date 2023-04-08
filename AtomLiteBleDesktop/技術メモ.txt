@@ -33,3 +33,6 @@ Gridなどに名前を付けて、そのResourcesプロパティを検索させ�
 
 xaml上の文字列などのコントロールを動的に変更する場合の実装方法について
 https://social.msdn.microsoft.com/Forums/ja-JP/65112e0a-72c1-48d9-9953-9437e7c4ca04/12304c-wpf-?forum=wpfja
+
+ListBox中のButtonControlなどのイベントを取得したい場合
+https://atmarkit.itmedia.co.jp/ait/articles/1711/15/news032.html
