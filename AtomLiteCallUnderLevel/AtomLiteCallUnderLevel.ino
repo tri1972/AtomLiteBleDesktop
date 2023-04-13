@@ -67,9 +67,11 @@ enum statusBlinkMode{
 enum statusBLEState{
   connect,
   disconnect,
-  calling,
-  called,
-  attension,
+  ASAP,
+  WAIT,
+  WRONG,
+  EMERGENCY,
+  GOOD,
   none,
 };
 
@@ -92,23 +94,23 @@ class MyCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
       std::string value = pCharacteristic->getValue();
       String strValue=value.c_str();
-/*
+
       if (strValue.length() > 0) {
         if(strValue.equals("a")){
-            Serial.println("Calling");
-            bleState=calling;
+            Serial.println("ASAP");
+            bleState=ASAP;
         }else if(strValue.equals("b")){
-            Serial.println("called");
-            bleState=called;
+            Serial.println("WAIT");
+            bleState=WAIT;
         }else if(strValue.equals("c")){
-            Serial.println("Attension");
-            bleState=attension;
+            Serial.println("WRONG");
+            bleState=WRONG;
         }else if(strValue.equals("d")){
-            Serial.println("Connect");
+            Serial.println("CANCEL");
             bleState=connect;
         }else if(strValue.equals("e")){
-            Serial.println("Disconnect");
-            bleState=disconnect;
+            Serial.println("EMERGENCY");
+            bleState=EMERGENCY;
         }else{
             bleState=none;
         }
@@ -120,7 +122,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         Serial.println();
         Serial.println("*********");
       }
-      */
+      
     }
 };
 
@@ -211,7 +213,11 @@ void setLED(uint8_t colorPin,uint8_t turn){
   }
   oldLedStatus.UCHAR_8=currentLedStatus.UCHAR_8;
 }
-
+void clearLed(){
+      setLED(RED_LED, LOW );
+      setLED(GREEN_LED, LOW );
+      setLED(BLUE_LED, LOW );
+}
 void setup() {
   Serial.begin(115200);
   int time;                           // the variable used to set the Timer
@@ -303,6 +309,7 @@ void setup() {
 
 void loop() {
   String strSend;//送信文字列
+  clearLed();
   //LEDランプによるステータス表示
   switch(bleState){
     case connect://青色常時点灯
@@ -320,6 +327,19 @@ void loop() {
           setLED(BLUE_LED, IS_GPIO_POS ? LOW : HIGH  );
           break;
       }
+      break;
+    case ASAP:
+      M5.dis.drawpix(0, dispColor(0, 0, 255));
+      setLED(GREEN_LED, HIGH);
+      break;
+    case WAIT:
+      M5.dis.drawpix(0, dispColor(0, 0, 255));
+      setLED(RED_LED, HIGH );
+      setLED(GREEN_LED, HIGH);
+      break;
+    case WRONG:
+      M5.dis.drawpix(0, dispColor(0, 0, 255));
+      setLED(RED_LED, HIGH);
       break;
   }
         //digitalWrite(BUTTON_LED_PIN, HIGH);
@@ -366,7 +386,10 @@ void loop() {
       Serial.println("PushButton!!");
       pCharacteristic->setValue(valueBleKey, 4);
       pCharacteristic->notify();
-      ledOnOff=!ledOnOff;
+      //ledOnOff=!ledOnOff;
+      if(bleState!=disconnect){
+        bleState=connect;
+      }
       /*
       if(IS_GPIO_POS)
       {

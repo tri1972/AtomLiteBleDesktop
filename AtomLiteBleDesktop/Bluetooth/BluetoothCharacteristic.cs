@@ -20,6 +20,32 @@ namespace AtomLiteBleDesktop.Bluetooth
     public class BluetoothCharacteristic
     {
 
+        public enum TypeStateWaitingSend
+        {
+            /// <summary>
+            /// できるだけ早く
+            /// </summary>
+            ASAP,
+            /// <summary>
+            /// ちょっと待って
+            /// </summary>
+            WAIT,
+            /// <summary>
+            /// 今都合悪い
+            /// </summary>
+            WRONG,
+            /// <summary>
+            /// キャンセル
+            /// </summary>
+            Cancel,
+            /// <summary>
+            /// 該当なし
+            /// </summary>
+            None,
+
+        }
+
+
         private GattCharacteristic characteristic = null;
         /// <summary>
         /// Characteristicsを取得します
@@ -99,6 +125,29 @@ namespace AtomLiteBleDesktop.Bluetooth
             {//Notifyをここで有効とする
                 await this.characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
             }
+        }
+
+        public void WriteCharacterCharacteristic(TypeStateWaitingSend data)
+        {
+            switch (data)
+            {
+                case TypeStateWaitingSend.ASAP:
+                    BluetoothSender.WriteCharacteristic(this.characteristic, "a");
+                    break;
+                case TypeStateWaitingSend.WAIT:
+                    BluetoothSender.WriteCharacteristic(this.characteristic, "b");
+                    break;
+                case TypeStateWaitingSend.WRONG:
+                    BluetoothSender.WriteCharacteristic(this.characteristic, "c");
+                    break;
+                case TypeStateWaitingSend.Cancel:
+                    BluetoothSender.WriteCharacteristic(this.characteristic, "d");
+                    break;
+                default:
+                    break;
+
+            }
+
         }
 
         public static string GetCharacteristicName(GattCharacteristic characteristic)

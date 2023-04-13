@@ -250,6 +250,29 @@ namespace AtomLiteBleDesktop
             });
         }
 
+        /// <summary>
+        /// 指定したデータを送信する
+        /// </summary>
+        /// <param name="serviceUUID"></param>
+        /// <param name="characteristicUUID"></param>
+        public void SendData(string serviceUUID, string characteristicUUID, BluetoothCharacteristic.TypeStateWaitingSend sendData)
+        {
+            foreach (var server in this.bluetoothConnector.Services)
+            {
+                if (server.Service.Uuid == new Guid(serviceUUID))
+                {
+                    foreach (var characteristic in server.Characteristics)
+                    {
+                        if (characteristic.Characteristic.Uuid == new Guid(characteristicUUID))
+                        {
+                            characteristic.WriteCharacterCharacteristic(sendData);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
         public void NotifyReceiveServerCharacteristic(object sender, NotifyReceiveServerCharacteristicEventArgs e)
         {
             if (sender is BluetoothService)

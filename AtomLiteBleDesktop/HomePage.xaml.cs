@@ -21,6 +21,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using static AtomLiteBleDesktop.Bluetooth.BluetoothAccesser;
+using static AtomLiteBleDesktop.Bluetooth.BluetoothCharacteristic;
 using static AtomLiteBleDesktop.BluetoothLEDevice;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=234238 を参照してください
@@ -32,6 +33,8 @@ namespace AtomLiteBleDesktop
     /// </summary>
     public sealed partial class HomePage : Page
     {
+
+
         /// <summary>
         /// Device状態
         /// </summary>
@@ -43,6 +46,7 @@ namespace AtomLiteBleDesktop
             NotFind,
             Find
         }
+
 
         private const string SERVICE_UUID_CALL_UNDER_LEVEL= "e72609f6-2bcb-4fb0-824a-5276ec9e355d";
         private const string CHARACTERISTIC_UUID_CALL_UNDER_LEVEL = "cca99442-dab6-4f69-8bc2-685e2412d178";
@@ -104,9 +108,54 @@ namespace AtomLiteBleDesktop
             bluetoothAccesser.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
             this.resourceGridServer = (Servers)this.HomeGrid.Resources["servers"];
         }
+
+        private  BluetoothLEDevice getDevice(string deviceName)
+        {
+            var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
+
+            foreach (var device in bluetoothAccesser.Devices)
+            {
+                if(device.Name == deviceName)
+                {
+                    return device;
+                }
+            }
+            return null;
+        }
         private void Control_GotFocus(object sender, RoutedEventArgs e)
         {
-            ;
+            if(sender is Button)
+            {
+                var senderButton = sender as Button;
+                if (senderButton.IsPressed)
+                {
+                    if (senderButton.DataContext is Server)
+                    {
+                        TypeStateWaitingSend sendData;
+                        switch (senderButton.Name)
+                        {
+                            case "Button_ASAP":
+                                sendData = TypeStateWaitingSend.ASAP;
+                                break;
+                            case "Button_Wait":
+                                sendData = TypeStateWaitingSend.WAIT;
+                                break;
+                            case "Button_Wrong":
+                                sendData = TypeStateWaitingSend.WRONG;
+                                break;
+                            case "Button_Cancel":
+                                sendData = TypeStateWaitingSend.Cancel;
+                                break;
+                            default:
+                                sendData = TypeStateWaitingSend.None;
+                                break;
+                        }
+                        var serverListview = (sender as Button).DataContext as Server;
+                        getDevice(serverListview.DeviceName).SendData(SERVICE_UUID_CALL_UNDER_LEVEL, CHARACTERISTIC_UUID_CALL_UNDER_LEVEL, sendData);
+
+                    }
+                }
+            }
         }
 
             private void Button_Click(object sender, RoutedEventArgs e)
