@@ -27,6 +27,7 @@ namespace AtomLiteBleDesktop
             public BluetoothService Service;
             public BluetoothCharacteristic Characteristic;
             public string Message;
+            public BluetoothCharacteristic.TypeStateReseive State;
         }
 
         /// <summary>
@@ -291,6 +292,7 @@ namespace AtomLiteBleDesktop
             {
                 var data = new NotifyReceiveLEDeviceCharacteristicEventArgs();
                 data.Message = e.Message;
+                data.State = e.State;
                 data.Characteristic = e.Characteristic;
                 data.Service = sender;
 

@@ -21,6 +21,7 @@ namespace AtomLiteBleDesktop
         {
             public BluetoothCharacteristic Characteristic;
             public string Message;
+            public BluetoothCharacteristic.TypeStateReseive State;
         }
 
         private GattDeviceService service;
@@ -184,6 +185,7 @@ namespace AtomLiteBleDesktop
                 NotifyReceiveServerCharacteristicEventArgs e = new NotifyReceiveServerCharacteristicEventArgs();
                 e.Characteristic = sender as BluetoothCharacteristic;
                 e.Message = eventArgs.Message;
+                e.State = eventArgs.State;
                 this.OnNotifyReceiveCharacteristic(e);
             }
             catch (Exception err)

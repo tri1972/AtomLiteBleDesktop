@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using static AtomLiteBleDesktop.Bluetooth.BluetoothConnector;
@@ -15,6 +16,7 @@ namespace AtomLiteBleDesktop.Bluetooth
     public class NotifyReceiveCharacteristicEventArgs : EventArgs
     {
         public string Message;
+        public BluetoothCharacteristic.TypeStateReseive State;
     }
 
     public class BluetoothCharacteristic
@@ -45,6 +47,14 @@ namespace AtomLiteBleDesktop.Bluetooth
 
         }
 
+        public enum TypeStateReseive
+        {
+            Received,
+            RepeatReceiving,
+            None
+        }
+
+        private const int NUMBER_COUNT_WAIT = 10;
 
         private GattCharacteristic characteristic = null;
         /// <summary>
@@ -187,15 +197,34 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="eventArgs"></param>
-        private void registeredCharacteristicNotify(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
+        private async void  registeredCharacteristicNotify(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
         {
             try
             {
+                var countWait = NUMBER_COUNT_WAIT;
+
+
                 var data = eventArgs.CharacteristicValue.ToArray();
                 var str = Encoding.UTF8.GetString(data);
                 NotifyReceiveCharacteristicEventArgs e = new NotifyReceiveCharacteristicEventArgs();
                 e.Message = str;
-                this.OnNotifyReceiveCharacteristic(e);
+                var task=await  Task.Run<bool>(() =>
+                {
+                    while (countWait>0)
+                    {
+                        e.State = TypeStateReseive.RepeatReceiving;
+                        this.OnNotifyReceiveCharacteristic(e);
+                        Thread.Sleep(1000);
+                        countWait--;
+                    }
+                    return true;
+                });
+                if (task)
+                {
+                    e.State = TypeStateReseive.Received;
+                    this.OnNotifyReceiveCharacteristic(e);
+                }
+                
             }
             catch (Exception err)
             {
