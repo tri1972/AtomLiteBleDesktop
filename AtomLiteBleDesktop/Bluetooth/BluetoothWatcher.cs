@@ -78,48 +78,6 @@ namespace AtomLiteBleDesktop.Bluetooth
             return instance;
         }
 
-        /*
-        /// <summary>
-        /// コンストラクタ
-        /// </summary>
-        /// <param name="dispatcher"></param>
-        public BluetoothWatcher(CoreDispatcher dispatcher)
-        {
-            this.dispatcher = dispatcher;
-            this.pirServer = null;
-        }
-        */
-        
-        /// <summary>
-        /// 指定したサーバ名を探し、存在すればそのサーバ名を返却
-        /// </summary>
-        /// <param name="PIRSERVER"></param>
-        /// <returns></returns>
-        private string findServer(string PIRSERVER)
-        {
-            this.PIRServer = PIRSERVER;
-            this.StartBleDeviceWatcher();
-            //1s待って。接続Server名が取得できなければnullを返す
-            int counter = 500;
-            while (this.PIRServerSearched == null)
-            {
-                if (counter == 0)
-                {
-                    break;
-                }
-                Thread.Sleep(10);
-                counter--;
-            }
-            if (this.PIRServerSearched != null)
-            {
-                return this.PIRServerSearched;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
         /// <summary>
         /// 指定したサーバ名を探し、存在すればDeviceを返却
         /// 存在しなければ、見つからなかったという情報のDeviceを返却
@@ -129,7 +87,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         public BluetoothLEDevice FindServerDevice(string server)
         {
             BluetoothLEDevice output = new BluetoothLEDevice(server);
-            this.StartBleDeviceWatcher();
+            this.startBleDeviceWatcher();
             //1s待って。接続Server名が取得できなければfalseを返す
             int counter = 10;
             while (counter>0)
@@ -152,56 +110,7 @@ namespace AtomLiteBleDesktop.Bluetooth
             return output;
         }
 
-        private volatile bool isScanning;
-        public ObservableCollection<BluetoothLEDevice> StartScanServer()
-        {
-            this.isScanning = true;
-            this.StartBleDeviceWatcher();
-            //1s待って。接続Server名が取得できなければnullを返す
-            int counter = 500*60;
-            while (this.isScanning)
-            {
-                if (counter == 0)
-                {
-                    break;
-                }
-                Thread.Sleep(10);
-                counter--;
-            }
-            return this.knownDevices;
-        }
-
-        public void StopScanServer()
-        {
-            this.isScanning = false;
-        }
-
-        /// <summary>
-        /// 指定したサーバ名を探し、存在すればそのサーバ名を返却：非同期
-        /// </summary>
-        /// <param name="PIRSERVER"></param>
-        /// <returns></returns>
-        public async Task<string> Search(string PIRSERVER)
-        {
-            var task = await Task.Run<string>(() =>
-            {
-                return findServer(PIRSERVER);
-            });
-            return task;
-        }
-
-        /// <summary>
-        /// 指定したサーバ名を探し、存在すればそのサーバ名を返却：同期
-        /// </summary>
-        /// <param name="PIRSERVER"></param>
-        /// <returns></returns>
-        public string SearchSync(string PIRSERVER)
-        {
-            return findServer(PIRSERVER);
-        }
-
-
-        public void StartBleDeviceWatcher()
+        private void startBleDeviceWatcher()
         {
             try
             {
@@ -223,11 +132,11 @@ namespace AtomLiteBleDesktop.Bluetooth
                             );
 
                 // Register event handlers before starting the watcher.
-                deviceWatcher.Added += DeviceWatcher_Added;
-                deviceWatcher.Updated += DeviceWatcher_Updated;
-                deviceWatcher.Removed += DeviceWatcher_Removed;
-                deviceWatcher.EnumerationCompleted += DeviceWatcher_EnumerationCompleted;
-                deviceWatcher.Stopped += DeviceWatcher_Stopped;
+                deviceWatcher.Added += deviceWatcher_Added;
+                deviceWatcher.Updated += deviceWatcher_Updated;
+                deviceWatcher.Removed += deviceWatcher_Removed;
+                deviceWatcher.EnumerationCompleted += deviceWatcher_EnumerationCompleted;
+                deviceWatcher.Stopped += deviceWatcher_Stopped;
 
                 // Start over with an empty collection.
                 knownDevices.Clear();
@@ -252,13 +161,13 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             if (deviceWatcher != null)
             {
-                this.isScanning = false;
+                //this.isScanning = false;
                 // Unregister the event handlers.
-                deviceWatcher.Added -= DeviceWatcher_Added;
-                deviceWatcher.Updated -= DeviceWatcher_Updated;
-                deviceWatcher.Removed -= DeviceWatcher_Removed;
-                deviceWatcher.EnumerationCompleted -= DeviceWatcher_EnumerationCompleted;
-                deviceWatcher.Stopped -= DeviceWatcher_Stopped;
+                deviceWatcher.Added -= deviceWatcher_Added;
+                deviceWatcher.Updated -= deviceWatcher_Updated;
+                deviceWatcher.Removed -= deviceWatcher_Removed;
+                deviceWatcher.EnumerationCompleted -= deviceWatcher_EnumerationCompleted;
+                deviceWatcher.Stopped -= deviceWatcher_Stopped;
 
                 // Stop the watcher.
                 deviceWatcher.Stop();
@@ -271,7 +180,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="deviceInfo"></param>
-        private void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
+        private void deviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
         {
             lock (this)
             {
@@ -283,7 +192,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                     if (sender == deviceWatcher)
                     {
                         // Make sure device isn't already present in the list.
-                        if (FindBluetoothLEDeviceDisplay(deviceInfo.Id) == null)
+                        if (findBluetoothLEDeviceDisplay(deviceInfo.Id) == null)
                         {
                             if (deviceInfo.Name != string.Empty)
                             {
@@ -324,7 +233,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="deviceInfoUpdate"></param>
-        private void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
+        private void deviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
         {
             lock (this)
             {
@@ -333,7 +242,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                 // Protect against race condition if the task runs after the app stopped the deviceWatcher.
                 if (sender == deviceWatcher)
                 {
-                    DeviceInformation deviceInfo = FindUnknownDevices(deviceInfoUpdate.Id);
+                    DeviceInformation deviceInfo = findUnknownDevices(deviceInfoUpdate.Id);
                     if (deviceInfo != null)
                     {
                         deviceInfo.Update(deviceInfoUpdate);
@@ -353,7 +262,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="deviceInfoUpdate"></param>
-        private void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
+        private void deviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
         {
             lock (this)
             {
@@ -363,13 +272,13 @@ namespace AtomLiteBleDesktop.Bluetooth
                 if (sender == deviceWatcher)
                 {
                     // Find the corresponding DeviceInformation in the collection and remove it.
-                    BluetoothLEDevice bleDeviceDisplay = FindBluetoothLEDeviceDisplay(deviceInfoUpdate.Id);
+                    BluetoothLEDevice bleDeviceDisplay = findBluetoothLEDeviceDisplay(deviceInfoUpdate.Id);
                     if (bleDeviceDisplay != null)
                     {
                         knownDevices.Remove(bleDeviceDisplay);
                     }
 
-                    DeviceInformation deviceInfo = FindUnknownDevices(deviceInfoUpdate.Id);
+                    DeviceInformation deviceInfo = findUnknownDevices(deviceInfoUpdate.Id);
                     if (deviceInfo != null)
                     {
                         UnknownDevices.Remove(deviceInfo);
@@ -383,7 +292,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void DeviceWatcher_EnumerationCompleted(DeviceWatcher sender, object e)
+        private void deviceWatcher_EnumerationCompleted(DeviceWatcher sender, object e)
         {
 
             // Protect against race condition if the task runs after the app stopped the deviceWatcher.
@@ -392,7 +301,7 @@ namespace AtomLiteBleDesktop.Bluetooth
             }
         }
 
-        private void DeviceWatcher_Stopped(DeviceWatcher sender, object e)
+        private void deviceWatcher_Stopped(DeviceWatcher sender, object e)
         {
             // Protect against race condition if the task runs after the app stopped the deviceWatcher.
             if (sender == deviceWatcher)
@@ -407,7 +316,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        private BluetoothLEDevice FindBluetoothLEDeviceDisplay(string id)
+        private BluetoothLEDevice findBluetoothLEDeviceDisplay(string id)
         {
             foreach (BluetoothLEDevice bleDeviceDisplay in knownDevices)
             {
@@ -423,7 +332,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        private DeviceInformation FindUnknownDevices(string id)
+        private DeviceInformation findUnknownDevices(string id)
         {
             foreach (DeviceInformation bleDeviceInfo in UnknownDevices)
             {

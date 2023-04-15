@@ -289,27 +289,6 @@ namespace AtomLiteBleDesktop.Bluetooth
         }
 
         /// <summary>
-        /// BleServerからのNotify受信イベントハンドラ
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="eventArgs"></param>
-        private void registeredCharacteristicNotify(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
-        {
-            try
-            {
-                var data = eventArgs.CharacteristicValue.ToArray();
-                var str = Encoding.UTF8.GetString(data);
-                NotifyReceiveCharacteristicEventArgs e = new NotifyReceiveCharacteristicEventArgs();
-                e.Message = str;
-                this.OnNotifyReceiveCharacteristic(e);
-            }
-            catch (Exception err)
-            {
-                throw err;
-            }
-        }
-
-        /// <summary>
         /// Bleサーバー接続状況変化時イベントハンドラ
         /// </summary>
         /// <param name="e"></param>

@@ -225,31 +225,6 @@ namespace AtomLiteBleDesktop
                 }
             }
         }
-
-        /*
-        /// <summary>
-        /// BleServerからのNotify受信イベントハンドラ
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="eventArgs"></param>
-        private async void registeredCharacteristicNotify(object sender, NotifyBluetoothAccesserEventArgs e)
-        {
-            try
-            {
-                //UIスレッド側のオブジェクトに対して書き込むため、UIスレッド側のメソッドを作り実行
-                //参考：https://m-miya.blog.jp/archives/1063899401.html
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    _textData.Text += "\n" + string.Copy(e.Message);
-                });
-                NotificationToast("通知");
-            }
-            catch (Exception err)
-            {
-                throw err;
-            }
-        }
-        */
         private static void NotificationToast(string source)
         {
             //通知の中身を作成
@@ -308,11 +283,6 @@ namespace AtomLiteBleDesktop
             return null;
         }
 
-
-        private async void listBox_PanelBrushDispatcher()
-        {
-
-        }
 
         static BluetoothCharacteristic.TypeStateReseive beforeRxdata = TypeStateReseive.None;
         static bool blink = true;

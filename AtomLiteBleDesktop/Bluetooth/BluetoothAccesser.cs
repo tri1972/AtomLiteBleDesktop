@@ -14,12 +14,6 @@ namespace AtomLiteBleDesktop.Bluetooth
 {
     public class BluetoothAccesser
     {
-        /*
-        /// <summary>
-        /// Connect時の最大リトライ回数
-        /// </summary>
-        private const int MAX_RETRY_CONNECT = 5;
-        */
 
         /// <summary>
         /// BluetoothAccesserのeventハンドラの関数の引数と戻り値を設定
@@ -59,34 +53,6 @@ namespace AtomLiteBleDesktop.Bluetooth
                 set { this.message = value; }
             }
         }
-        /*
-        /// <summary>
-        /// BluetoothWatcherインスタンス
-        /// </summary>
-        private BluetoothWatcher bluetoothWatcher;
-        /// <summary>
-        /// BluetoothConnectorインスタンス
-        /// </summary>
-        private BluetoothConnector bluetoothConnector;
-
-        private GattCharacteristic registeredCharacteristic;
-
-        /// <summary>
-        /// servicesを取得します
-        /// </summary>
-        public List<BluetoothService> Services
-        {
-            get { return this.bluetoothConnector.Services; }
-        }
-
-        /// <summary>
-        /// Characteristicの名前を取得します
-        /// </summary>
-        public List<string> CharacteristicNames
-        {
-            get { return this.bluetoothConnector.CharacteristicNames; }
-        }
-        */
 
         private int numberDevice;
         /// <summary>
@@ -153,39 +119,6 @@ namespace AtomLiteBleDesktop.Bluetooth
                 this.notifyReceiveCharacteristic -= value;
             }
         }
-        /*
-        /// <summary>
-        /// ServerConnect時イベントキック用関数
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnNotifyConnectingServer(string message,　NotifyBluetoothAccesserEventArgs.Status state)
-        {
-            if (this.notifyConnectingServer != null)
-            {
-                var e = new NotifyBluetoothAccesserEventArgs();
-                e.Message = message;
-                e.State = state;
-                this.notifyConnectingServer(this, e);
-            }
-        }
-
-        /// <summary>
-        /// Characteristicにてデータを受信した場合のイベントキック用関数
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnNotifyReceiveCharacteristic(NotifyReceiveCharacteristicEventArgs e)
-        {
-            if (this.notifyReceiveCharacteristic != null)
-            {
-                var data = new NotifyBluetoothAccesserEventArgs();
-                data.Message = e.Message;
-                this.notifyReceiveCharacteristic(this, data);
-            }
-        }
-        */
-
-        //UIスレッドにアクセスするためのDispatcher
-        //private static CoreDispatcher _mDispatcher;
 
         /// <summary>
         /// コンストラクタ:引数なしでないとXamlのResourceDictionnaryに登録できない
@@ -194,49 +127,6 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             this.devices = new List<BluetoothLEDevice>();
         }
-
-        /*
-        public async Task<List<string>> Searches(List<string> servers)
-        {
-            this.bluetoothWatcher = BluetoothWatcher.GetInstance();
-            var task = await Task.Run<List<string>>(() =>
-            {
-                var findServers = new List<string>();
-                foreach (var server in servers)
-                {
-                    findServers.Add(this.bluetoothWatcher.SearchSync(server));
-                }
-                return findServers;
-            });
-            return task;
-        }
-        */
-        /*
-        /// <summary>
-        /// Device名を指定するだけでConnectまで実行
-        /// </summary>
-        /// <param name="deviceNames"></param>
-        public async void Connects(List<string> deviceNames)
-        {
-            foreach (var deviceName in deviceNames)
-            {
-                var task = await SearchDevice(deviceName);
-                if (task != null)
-                {
-                    Debug.WriteLine("取得サーバー名:" + task.Name);
-                    this.devices.Add(task);
-                    task.Connect();
-                }
-                else
-                {
-                    Debug.WriteLine(deviceName + "サーバーは見つかりませんでした:\n");
-                }
-
-            }
-
-        }
-        */
-
 
         public async void SearchDevices(List<string> deviceNames)
         {
@@ -291,105 +181,5 @@ namespace AtomLiteBleDesktop.Bluetooth
             });
             return task;
         }
-        /*
-        /// <summary>
-        /// 指定したサーバ名を探し、存在すればそのサーバ名を返却：非同期
-        /// </summary>
-        /// <param name="PIRSERVER"></param>
-        /// <returns></returns>
-        public async Task<string> Search(string PIRSERVER)
-        {
-            this.bluetoothWatcher = BluetoothWatcher.GetInstance();
-
-            var task = await Task.Run<string>(() =>
-            {
-                return this.bluetoothWatcher.SearchSync(PIRSERVER);
-            });
-            return task;
-        }
-
-        /// <summary>
-        /// Bluetoothデバイスを1minスキャンします
-        /// </summary>
-        /// <returns></returns>
-        public async Task<ObservableCollection<BluetoothLEDevice>> StartScanning()
-        {
-            this.bluetoothWatcher = BluetoothWatcher.GetInstance();
-
-            var task = await Task.Run<ObservableCollection<BluetoothLEDevice>>(() =>
-            {
-                return this.bluetoothWatcher.StartScanServer();
-            });
-            return task;
-        }
-
-        /// <summary>
-        /// Bluetoothデバイススキャンを中止します
-        /// </summary>
-        public void StopScanning()
-        {
-            this.bluetoothWatcher = BluetoothWatcher.GetInstance();
-            this.bluetoothWatcher.StopBleDeviceWatcher();
-            //this.bluetoothWatcher.StopScanServer();
-        }
-        
-        */
-        /*
-        public async void Connect()
-        {
-            int counter = 0;
-            if (this.bluetoothWatcher != null && this.bluetoothWatcher.DeviceInfoSerchedServer != null)
-            {
-                this.bluetoothConnector = new BluetoothConnector(this.bluetoothWatcher.DeviceInfoSerchedServer);
-
-                this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify;
-
-                await Task.Run(async () =>
-                {
-                    counter = MAX_RETRY_CONNECT;
-                    while (counter > 0)
-                    {
-                        var task = await Task.Run(this.bluetoothConnector.Connect);
-                        if (task)
-                        {
-                            this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
-
-                            this.registeredCharacteristic = this.bluetoothConnector.RegisteredCharacteristic;
-
-                            //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
-                            if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
-                            {
-                                await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
-                            }
-                            break;
-                        }
-                        else
-                        {
-                            this.OnNotifyConnectingServer("Connecting...", NotifyBluetoothAccesserEventArgs.Status.Connecting);
-                        }
-                        counter--;
-                    }
-                    if (counter == 0)
-                    {
-                        this.OnNotifyConnectingServer("Server Connecting Aborted", NotifyBluetoothAccesserEventArgs.Status.Abort);
-                    }
-
-                });
-            }
-            else
-            {
-                this.OnNotifyConnectingServer("Disconnection", NotifyBluetoothAccesserEventArgs.Status.NotFound);
-            }
-        }
-        /// <summary>
-        /// Characteristic受信時イベントハンドラ
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void registeredCharacteristicNotify(object sender, NotifyReceiveCharacteristicEventArgs e)
-        {
-            OnNotifyReceiveCharacteristic(e);
-        }
-        */
     }
 }
