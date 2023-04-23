@@ -32,6 +32,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                 NotFound,
                 Connected,
                 Connecting,
+                Disconnected,
                 Abort
             }
             private Status state;

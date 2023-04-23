@@ -44,6 +44,7 @@ namespace AtomLiteBleDesktop
             RxData,
             TxData,
             Connected,
+            DisConnected,
             NotFind,
             Find
         }
@@ -55,7 +56,7 @@ namespace AtomLiteBleDesktop
         private Servers resourceGridServer;
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
 
-
+        private volatile bool isCancelRepeatReceivingBlink;
 
         public HomePage()
         {
@@ -108,6 +109,8 @@ namespace AtomLiteBleDesktop
             //bluetoothAccesser.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
             //bluetoothAccesser.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
             this.resourceGridServer = (Servers)this.HomeGrid.Resources["servers"];
+
+            this.isCancelRepeatReceivingBlink = false;
         }
 
         private  BluetoothLEDevice getDevice(string deviceName)
@@ -152,6 +155,7 @@ namespace AtomLiteBleDesktop
                                 break;
                         }
                         var serverListview = (sender as Button).DataContext as Server;
+                        this.isCancelRepeatReceivingBlink = true;//送信ボタンが押されたら点滅はキャンセルされる
                         getDevice(serverListview.DeviceName).SendData(SERVICE_UUID_CALL_UNDER_LEVEL, CHARACTERISTIC_UUID_CALL_UNDER_LEVEL, sendData);
 
                     }
@@ -186,6 +190,12 @@ namespace AtomLiteBleDesktop
                             }
                         }
                         stringAdd_TextDataDispatcher("\n" + "取得Characteristic名：");
+                    }
+                    break;
+                case NotifyBluetoothAccesserEventArgs.Status.Disconnected:
+                    if (sender != null)
+                    {
+                        listBoxAdd_TextDataDispatcher(sender.Name, typeDeviceStatus.DisConnected, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received);
                     }
                     break;
                 case NotifyBluetoothAccesserEventArgs.Status.Connecting:
@@ -287,6 +297,45 @@ namespace AtomLiteBleDesktop
         static BluetoothCharacteristic.TypeStateReseive beforeRxdata = TypeStateReseive.None;
         static bool blink = true;
 
+        private async void blinkListItem(Server item)
+        {
+            this.isCancelRepeatReceivingBlink = false;
+            await Task.Run(async () =>
+            {//ここで点滅プログラムをかきたい・・・
+                int counter = 10;
+                while (counter > 0)
+                {
+                    if (this.isCancelRepeatReceivingBlink)
+                    {
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                        {
+                            item.PanelListColor = new SolidColorBrush(Colors.PaleGreen);
+                        });
+                        break;
+                    }
+                    Thread.Sleep(1000);
+                    if (blink)
+                    {
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                        {
+                            item.PanelListColor = new SolidColorBrush(Colors.OrangeRed);
+                        });
+                        blink = false;
+                    }
+                    else
+                    {
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                        {
+                            item.PanelListColor = new SolidColorBrush(Colors.PaleGreen);
+                        });
+                        blink = true;
+                    }
+                    counter--;
+                }
+            });
+
+        }
+
         /// <summary>
         /// TextDataにUIスレッド外で書き込みを行う
         /// </summary>
@@ -296,7 +345,8 @@ namespace AtomLiteBleDesktop
             try
             {
                 var item = getListItem(deviceName);
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,  () =>
+                
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,  async () =>
                 {
                     bool hasItem = false;
                     if (item != null)
@@ -315,6 +365,10 @@ namespace AtomLiteBleDesktop
                                 item.RxStatus = "NotFind!";
                                 item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
                                 break;
+                            case typeDeviceStatus.DisConnected:
+                                item.RxStatus = "Disconnected!";
+                                item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
+                                break;
                             case typeDeviceStatus.RxData:
                                 item.ServerName = serverName;
                                 item.RxStatus = "Connected";
@@ -322,23 +376,20 @@ namespace AtomLiteBleDesktop
                                 item.CharacteristicStatus = characteristicStatus;
                                 item.CharacteristicData = CharacteristicData;
                                 item.PanelFrontColor = new SolidColorBrush(Colors.LimeGreen);
-
-                                if (rxStatus == TypeStateReseive.RepeatReceiving)
+                                if (rxStatus == TypeStateReseive.StartReceiving)
                                 {
-                                    if (blink)
-                                    {
-                                        item.PanelListColor = new SolidColorBrush(Colors.OrangeRed);
-                                        blink = false;
-                                    }
-                                    else
-                                    {
-                                        item.PanelListColor = new SolidColorBrush(Colors.PaleGreen);
-                                        blink = true;
-                                    }
                                     if (rxStatus != beforeRxdata)
                                     {
                                         NotificationToast(item.DeviceName);
                                         beforeRxdata = rxStatus;
+                                    }
+                                }
+                                else if (rxStatus == TypeStateReseive.RepeatReceiving)
+                                {
+                                    if (rxStatus != beforeRxdata)
+                                    {
+                                        beforeRxdata = rxStatus;
+                                        blinkListItem(item);
                                     }
                                 }
                                 else if (rxStatus == TypeStateReseive.Received)
@@ -358,7 +409,8 @@ namespace AtomLiteBleDesktop
 
                     }
                 });
-            }catch(Exception err)
+            }
+            catch(Exception err)
             {
                 Debug.WriteLine(err.Message);
             }
@@ -403,10 +455,11 @@ namespace AtomLiteBleDesktop
         }
 
         private Brush panelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));// #FFD19F9F;
-        public Brush PanelFrontColor
+        public  Brush PanelFrontColor
         {
             get { return this.panelFrontColor; }
-            set { 
+            set
+            {
                 this.panelFrontColor = value;
                 NotifyPropertyChanged("PanelFrontColor");
             }

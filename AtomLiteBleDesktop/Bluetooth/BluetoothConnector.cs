@@ -309,10 +309,12 @@ namespace AtomLiteBleDesktop.Bluetooth
                         }
                     }
                 }
+                this.deviceInfoSerchedServer.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
                 this.isConnectService = true;
             }
             else
             {
+                this.deviceInfoSerchedServer.OnNotifyConnectingServer("ServerStatusChange", NotifyBluetoothAccesserEventArgs.Status.Disconnected);
                 this.isConnectService = false;
             }
             //disconnectになった場合、ここで再度イベントハンドラの登録を行うようにしてみる

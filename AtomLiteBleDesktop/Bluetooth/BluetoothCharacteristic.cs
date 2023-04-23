@@ -50,6 +50,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         public enum TypeStateReseive
         {
             Received,
+            StartReceiving,
             RepeatReceiving,
             None
         }
@@ -78,6 +79,15 @@ namespace AtomLiteBleDesktop.Bluetooth
         public GattNativeCharacteristicUuid Type
         {
             get { return this.type; }
+        }
+
+        private volatile bool isCancelRepeatReceiving;
+        /// <summary>
+        /// 受信繰り返しを中断します
+        /// </summary>
+        public  bool IsCancelRepeatReading
+        {
+            get { return this.isCancelRepeatReceiving; }
         }
 
         private event NotifyReceiveCharacteristicEventHandler notifyReceiveCharacteristic;
@@ -114,7 +124,7 @@ namespace AtomLiteBleDesktop.Bluetooth
             this.characteristic.ValueChanged += this.registeredCharacteristicNotify;
             this.name = GetCharacteristicName(characteristic);
             this.type=GetCharacteristicType(characteristic);
-            
+            this.isCancelRepeatReceiving = false;
         }
 
         /// <summary>
@@ -139,6 +149,7 @@ namespace AtomLiteBleDesktop.Bluetooth
 
         public void WriteCharacterCharacteristic(TypeStateWaitingSend data)
         {
+            this.isCancelRepeatReceiving = true;//送信時には受信繰り返しを中断する
             switch (data)
             {
                 case TypeStateWaitingSend.ASAP:
@@ -157,6 +168,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                     break;
 
             }
+            //this.isCancelRepeatReceiving = false;//送信が終われば受信繰り返しを再開
 
         }
 
@@ -208,13 +220,20 @@ namespace AtomLiteBleDesktop.Bluetooth
                 var str = Encoding.UTF8.GetString(data);
                 NotifyReceiveCharacteristicEventArgs e = new NotifyReceiveCharacteristicEventArgs();
                 e.Message = str;
+                this.isCancelRepeatReceiving = false;
                 var task=await  Task.Run<bool>(() =>
                 {
+                    e.State = TypeStateReseive.StartReceiving;
+                    this.OnNotifyReceiveCharacteristic(e);
                     while (countWait>0)
                     {
+                        if (this.isCancelRepeatReceiving)
+                        {
+                            break;
+                        }
+                        Thread.Sleep(1000);
                         e.State = TypeStateReseive.RepeatReceiving;
                         this.OnNotifyReceiveCharacteristic(e);
-                        Thread.Sleep(1000);
                         countWait--;
                     }
                     return true;
