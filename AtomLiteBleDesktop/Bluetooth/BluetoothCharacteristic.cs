@@ -90,6 +90,16 @@ namespace AtomLiteBleDesktop.Bluetooth
             get { return this.isCancelRepeatReceiving; }
         }
 
+        private int numberCounteRx;
+        /// <summary>
+        /// 受信数を取得します
+        /// (ただし、送信動作などで0価となる)
+        /// </summary>
+        public int NumberCounteRx
+        {
+            get { return this.numberCounteRx; }
+        }
+
         private event NotifyReceiveCharacteristicEventHandler notifyReceiveCharacteristic;
         /// <summary>
         /// Characteristic受信イベント
@@ -150,6 +160,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         public void WriteCharacterCharacteristic(TypeStateWaitingSend data)
         {
             this.isCancelRepeatReceiving = true;//送信時には受信繰り返しを中断する
+            this.numberCounteRx = 0;//送信時に受信数をクリアします
             switch (data)
             {
                 case TypeStateWaitingSend.ASAP:
@@ -220,6 +231,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                 var str = Encoding.UTF8.GetString(data);
                 NotifyReceiveCharacteristicEventArgs e = new NotifyReceiveCharacteristicEventArgs();
                 e.Message = str;
+                this.numberCounteRx++;
                 this.isCancelRepeatReceiving = false;
                 var task=await  Task.Run<bool>(() =>
                 {

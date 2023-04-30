@@ -30,7 +30,7 @@
             </Style>
         </Grid.Resources>
 
-        <ListBox ItemsSource="{StaticResource servers}" Grid.Row="0" Grid.Column="1" Margin="0,5,0,10" ItemContainerStyle="{StaticResource ListBoxItemStyle}" SelectionChanged="ListBox_SelectionChanged" >
+        <ListBox ItemsSource="{StaticResource servers}" Grid.Row="0" Grid.Column="1" Margin="0,5,0,10" ItemContainerStyle="{StaticResource ListBoxItemStyle}" >
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid Height="300">

@@ -10,10 +10,12 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Data.Xml.Dom;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
 using Windows.UI.Notifications;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -76,7 +78,7 @@ namespace AtomLiteBleDesktop
                     {
                         try
                         {
-                            listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.Find, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received);
+                            listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.Find, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received,0);
                         }
                         catch (Exception err)
                         {
@@ -87,7 +89,7 @@ namespace AtomLiteBleDesktop
                     {
                         try
                         {
-                            listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.NotFind, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received);
+                            listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.NotFind, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received,0);
                         }
                         catch (Exception err)
                         {
@@ -126,7 +128,7 @@ namespace AtomLiteBleDesktop
             }
             return null;
         }
-        private void Control_GotFocus(object sender, RoutedEventArgs e)
+        private async void Control_GotFocus(object sender, RoutedEventArgs e)
         {
             if(sender is Button)
             {
@@ -156,8 +158,17 @@ namespace AtomLiteBleDesktop
                         }
                         var serverListview = (sender as Button).DataContext as Server;
                         this.isCancelRepeatReceivingBlink = true;//送信ボタンが押されたら点滅はキャンセルされる
-                        getDevice(serverListview.DeviceName).SendData(SERVICE_UUID_CALL_UNDER_LEVEL, CHARACTERISTIC_UUID_CALL_UNDER_LEVEL, sendData);
-
+                        var mDevice = getDevice(serverListview.DeviceName);
+                        if (mDevice.Status== TypeStatus.Coonected)
+                        {
+                            mDevice.SendData(SERVICE_UUID_CALL_UNDER_LEVEL, CHARACTERISTIC_UUID_CALL_UNDER_LEVEL, sendData);
+                        }
+                        else
+                        {
+                            MessageDialog md = new MessageDialog("デバイスに接続されていません");
+                            await md.ShowAsync();
+                        }
+                        batchUpdateBadgeGlyphClear();
                     }
                 }
             }
@@ -176,7 +187,7 @@ namespace AtomLiteBleDesktop
                     stringAdd_TextDataDispatcher("\n" + "取得Service名：");//接続した場合のUIへのBindをおこなう
                     if (sender != null)
                     {
-                        listBoxAdd_TextDataDispatcher(sender.Name, typeDeviceStatus.Connected, null, null, null, null,BluetoothCharacteristic.TypeStateReseive.Received);
+                        listBoxAdd_TextDataDispatcher(sender.Name, typeDeviceStatus.Connected, null, null, null, null,BluetoothCharacteristic.TypeStateReseive.Received,0);
                         foreach (var service in sender.BluetoothConnector.Services)
                         {
                             stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
@@ -195,7 +206,7 @@ namespace AtomLiteBleDesktop
                 case NotifyBluetoothAccesserEventArgs.Status.Disconnected:
                     if (sender != null)
                     {
-                        listBoxAdd_TextDataDispatcher(sender.Name, typeDeviceStatus.DisConnected, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received);
+                        listBoxAdd_TextDataDispatcher(sender.Name, typeDeviceStatus.DisConnected, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received,0);
                     }
                     break;
                 case NotifyBluetoothAccesserEventArgs.Status.Connecting:
@@ -231,7 +242,7 @@ namespace AtomLiteBleDesktop
             {
                 if (e.Characteristic.Characteristic.Uuid.ToString().Equals(CHARACTERISTIC_UUID_CALL_UNDER_LEVEL))
                 {
-                    listBoxAdd_TextDataDispatcher((sender as BluetoothLEDevice).Name, typeDeviceStatus.RxData, e.Service.Service.Uuid.ToString(), e.Characteristic.Characteristic.Uuid.ToString(), "Rx", e.Message, e.State);
+                    listBoxAdd_TextDataDispatcher((sender as BluetoothLEDevice).Name, typeDeviceStatus.RxData, e.Service.Service.Uuid.ToString(), e.Characteristic.Characteristic.Uuid.ToString(), "Rx", e.Message, e.State,e.Characteristic.NumberCounteRx);
                 }
             }
         }
@@ -340,7 +351,7 @@ namespace AtomLiteBleDesktop
         /// TextDataにUIスレッド外で書き込みを行う
         /// </summary>
         /// <param name="text"></param>
-        private async void listBoxAdd_TextDataDispatcher(string deviceName, typeDeviceStatus deviceStatus,string serverName,string characteristicName, string characteristicStatus, string CharacteristicData,BluetoothCharacteristic.TypeStateReseive rxStatus)
+        private async void listBoxAdd_TextDataDispatcher(string deviceName, typeDeviceStatus deviceStatus,string serverName,string characteristicName, string characteristicStatus, string CharacteristicData,BluetoothCharacteristic.TypeStateReseive rxStatus,int? numberRx)
         {
             try
             {
@@ -348,7 +359,7 @@ namespace AtomLiteBleDesktop
                 
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,  async () =>
                 {
-                    bool hasItem = false;
+                    //bool hasItem = false;
                     if (item != null)
                     {
                         switch (deviceStatus)
@@ -381,6 +392,11 @@ namespace AtomLiteBleDesktop
                                     if (rxStatus != beforeRxdata)
                                     {
                                         NotificationToast(item.DeviceName);
+
+                                        batchUpdateBadgeNum(numberRx ?? 0);
+                                        //batchUpdateBadgeGlyphAlert();
+                                        
+                                        
                                         beforeRxdata = rxStatus;
                                     }
                                 }
@@ -418,6 +434,52 @@ namespace AtomLiteBleDesktop
         }
 
         /// <summary>
+        /// Batchをクリアします
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void batchUpdateBadgeGlyphClear()
+        {
+            BadgeUpdateManager.CreateBadgeUpdaterForApplication().Clear();
+        }
+        private void batchUpdateBadgeNum(int num)
+        {
+            batchUpdateBadgeGlyph(num.ToString());
+        }
+
+        /// <summary>
+        /// AleartGlyphBatchを表示します
+        /// </summary>
+        private void batchUpdateBadgeGlyphAlert()
+        {
+            batchUpdateBadgeGlyph("alert");
+        }
+
+        /// <summary>
+        /// GlyphBatchを表示します
+        /// </summary>
+        /// <param name="badgeGlyphValue"></param>
+        private void batchUpdateBadgeGlyph(string badgeGlyphValue)
+        {
+
+            // Get the blank badge XML payload for a badge glyph
+            XmlDocument badgeXml = BadgeUpdateManager.GetTemplateContent(BadgeTemplateType.BadgeGlyph);
+
+            // Set the value of the badge in the XML to our glyph value
+            XmlElement badgeElement = badgeXml.SelectSingleNode("/badge") as XmlElement;
+            badgeElement.SetAttribute("value", badgeGlyphValue);
+
+            // Create the badge notification
+            BadgeNotification badge = new BadgeNotification(badgeXml);
+
+            // Create the badge updater for the application
+            BadgeUpdater badgeUpdater = BadgeUpdateManager.CreateBadgeUpdaterForApplication();
+
+            // And update the badge
+            badgeUpdater.Update(badge);
+        }
+
+        /// <summary>
         /// HogehogeDataのTextプロパティにUIスレッド外から書き込みを行う
         /// </summary>
         /// <param name="text"></param>
@@ -429,16 +491,6 @@ namespace AtomLiteBleDesktop
                 hogehogeData.StatusText = text;
                 hogehogeData.StatusTextBackground = new SolidColorBrush(Colors.Red);
             });
-        }
-
-        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void Button_ASAP_Click(object sender, RoutedEventArgs e)
-        {
-
         }
     }
     public class Server : INotifyPropertyChanged

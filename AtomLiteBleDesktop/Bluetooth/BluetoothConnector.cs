@@ -295,6 +295,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// <param name="sender"></param>
         private void eventConnectionStatusChanged(Windows.Devices.Bluetooth.BluetoothLEDevice e,  object sender)
         {
+#warning この関数はBluetoothLEDeviceクラスへ移動すべき
             if (e.ConnectionStatus == BluetoothConnectionStatus.Connected)
             {//初回Connect関数実行時にConnectできなければthis.services.Count=0のため再接続動作ができない
                 //→Characteristicクラスのコンストラクタにてnotifyイベントを受けるようにする
@@ -314,6 +315,7 @@ namespace AtomLiteBleDesktop.Bluetooth
             }
             else
             {
+                this.deviceInfoSerchedServer.Status = BluetoothLEDevice.TypeStatus.Disconnect;
                 this.deviceInfoSerchedServer.OnNotifyConnectingServer("ServerStatusChange", NotifyBluetoothAccesserEventArgs.Status.Disconnected);
                 this.isConnectService = false;
             }

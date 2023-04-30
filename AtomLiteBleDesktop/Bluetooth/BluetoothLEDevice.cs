@@ -31,6 +31,20 @@ namespace AtomLiteBleDesktop
         }
 
         /// <summary>
+        /// このデバイスの現状のステータスを示すタイプ
+        /// </summary>
+        public enum TypeStatus
+        {
+            Disconnect,
+            Coonected,
+            Connecting,
+            Abort,
+            Sending,
+            None
+        }
+
+
+        /// <summary>
         /// Connect時の最大リトライ回数
         /// </summary>
         private const int MAX_RETRY_CONNECT = 5;
@@ -43,18 +57,7 @@ namespace AtomLiteBleDesktop
         {
             get { return this.bluetoothConnector; }
         }
-        /*
-        /// <summary>
-        /// Characteristicの名前を取得します
-        /// </summary>
-        public List<string> CharacteristicNames
-        {
-            get { return this.bluetoothConnector.CharacteristicNames; }
-        }
-        */
-        /*
-        private GattCharacteristic registeredCharacteristic;
-        */
+
         public DeviceInformation DeviceInformation { get; private set; }
 
         private bool isFindDevice;
@@ -75,19 +78,40 @@ namespace AtomLiteBleDesktop
             get { return this.name; }
         }
         private bool isPaired;
+        /// <summary>
+        /// 現状のペアリングの有無を取得します
+        /// </summary>
         public bool IsPaired
         {
             get { return this.isPaired; }
         }
+
         private bool isConnected;
+        /// <summary>
+        /// デバイスがシステムに接続されているか否かを取得します
+        /// </summary>
         public bool IsConnected
         {
             get { return this.isConnected; }
         }
+
         private bool isConnectable;
+        /// <summary>
+        /// デバイスが現状アドバタイズしているか否かを取得します
+        /// </summary>
         public bool IsConnectable
         {
             get { return this.isConnectable; }
+        }
+
+        private TypeStatus status;
+        /// <summary>
+        /// デバイスの現状の接続状態を取得します
+        /// </summary>
+        public TypeStatus Status
+        {
+            set { this.status = value; }
+            get { return this.status; }
         }
 
         /// <summary>
@@ -144,12 +168,6 @@ namespace AtomLiteBleDesktop
             }
         }
 
-        private IReadOnlyDictionary<string, object> properties;
-        public IReadOnlyDictionary<string, object> Properties
-        {
-            get { return this.properties; }
-        }
-
         /// <summary>
         /// コンストラクタ
         /// Deviceが見つかった場合
@@ -157,15 +175,24 @@ namespace AtomLiteBleDesktop
         /// <param name="deviceInfoIn"></param>
         public BluetoothLEDevice(DeviceInformation deviceInfoIn)
         {
+            this.status = TypeStatus.Disconnect;
             DeviceInformation = deviceInfoIn;
             this.id = DeviceInformation.Id;
-            this.name= DeviceInformation.Name;
+            this.name = DeviceInformation.Name;
             this.isFindDevice = true;
             this.isPaired = DeviceInformation.Pairing.IsPaired;
+            setStatusConnection();
+        }
+
+        /// <summary>
+        /// Windows プロパティ システムよりDeviceの状態を取得します
+        /// </summary>
+        private void setStatusConnection()
+        {
             try
             {
                 if ((bool?)DeviceInformation.Properties["System.Devices.Aep.IsConnected"] == true)
-                {
+                {//デバイスが現在システムに接続されているかどうかを判定
                     this.isConnected = true;
                 }
                 else
@@ -173,7 +200,7 @@ namespace AtomLiteBleDesktop
                     this.isConnected = false;
                 }
                 if ((bool?)DeviceInformation.Properties["System.Devices.Aep.Bluetooth.Le.IsConnectable"] == true)
-                {
+                {//Bluetooth LE デバイスが現在、接続可能なアドバタイズをアドバタイズしているかどうかを判定
                     this.isConnectable = true;
 
                 }
@@ -181,12 +208,11 @@ namespace AtomLiteBleDesktop
                 {
                     this.isConnectable = false;
                 }
-            }catch(Exception err)
+            }
+            catch (Exception err)
             {
                 Debug.WriteLine(err.Message);
             }
-
-                this.properties = DeviceInformation.Properties;
         }
 
         /// <summary>
@@ -201,7 +227,6 @@ namespace AtomLiteBleDesktop
             this.isPaired = false;
             this.isConnected = false;
             this.isConnectable = false;
-            this.properties = null;
         }
 
         public async void Connect()
@@ -211,42 +236,34 @@ namespace AtomLiteBleDesktop
             {
                 this.bluetoothConnector = new BluetoothConnector(this);
 
-                //this.bluetoothConnector.NotifyReceiveCharacteristic += this.registeredCharacteristicNotify;
-
                 counter = MAX_RETRY_CONNECT;
                 while (counter > 0)
                 {
                     var task = await Task.Run(this.bluetoothConnector.Connect);
                     if (task)
                     {
+                        this.status = TypeStatus.Coonected;
                         this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
-
 
                         foreach(var server in this.bluetoothConnector.Services)
                         {
                             server.NotifyReceiveCharacteristic += NotifyReceiveServerCharacteristic;
                         }
-                        /*
-                        this.registeredCharacteristic = this.bluetoothConnector.RegisteredCharacteristic;
-
-                        //Notify受信イベントハンドラの登録とデバイスから ValueChanged イベントを受信できるようにします。
-                        if (this.registeredCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
-                        {
-                            await this.registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
-                        }
-                        */
                         break;
                     }
                     else
                     {
+                        this.status = TypeStatus.Connecting;
                         this.OnNotifyConnectingServer("Connecting...", NotifyBluetoothAccesserEventArgs.Status.Connecting);
                     }
                     counter--;
                 }
                 if (counter == 0)
                 {
+                    this.status = TypeStatus.Abort;
                     this.OnNotifyConnectingServer("Server Connecting Aborted", NotifyBluetoothAccesserEventArgs.Status.Abort);
                 }
+                setStatusConnection();
 
             });
         }
@@ -258,6 +275,8 @@ namespace AtomLiteBleDesktop
         /// <param name="characteristicUUID"></param>
         public void SendData(string serviceUUID, string characteristicUUID, BluetoothCharacteristic.TypeStateWaitingSend sendData)
         {
+            var beforeStatus = this.status;
+            this.status = TypeStatus.Sending;
             foreach (var server in this.bluetoothConnector.Services)
             {
                 if (server.Service.Uuid == new Guid(serviceUUID))
@@ -267,6 +286,7 @@ namespace AtomLiteBleDesktop
                         if (characteristic.Characteristic.Uuid == new Guid(characteristicUUID))
                         {
                             characteristic.WriteCharacterCharacteristic(sendData);
+                            this.status = beforeStatus;
                         }
                     }
                     break;
@@ -274,6 +294,11 @@ namespace AtomLiteBleDesktop
             }
         }
 
+        /// <summary>
+        /// Characteristic受信のイベントハンドラ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void NotifyReceiveServerCharacteristic(object sender, NotifyReceiveServerCharacteristicEventArgs e)
         {
             if (sender is BluetoothService)
@@ -314,18 +339,5 @@ namespace AtomLiteBleDesktop
                 this.notifyConnectingServer(this, e);
             }
         }
-
-        /*
-        /// <summary>
-        /// Characteristic受信時イベントハンドラ
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void registeredCharacteristicNotify(object sender, NotifyReceiveCharacteristicEventArgs e)
-        {
-            OnNotifyReceiveCharacteristic(e);
-        }
-        */
-        //public event PropertyChangedEventHandler PropertyChanged=null;
     }
 }
