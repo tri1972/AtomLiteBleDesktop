@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
-using static AtomLiteBleDesktop.Bluetooth.BluetoothConnector;
+using static AtomLiteBleDesktop.Bluetooth.BluetoothUuidDefine;
 
 namespace AtomLiteBleDesktop.Bluetooth
 {

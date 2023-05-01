@@ -186,7 +186,7 @@ namespace AtomLiteBleDesktop
                     case NotifyBluetoothAccesserEventArgs.Status.Connected:
                         foreach (var device in (sender as BluetoothAccesser).Devices)
                         {
-                            foreach (var service in device.BluetoothConnector.Services)
+                            foreach (var service in device.Services)
                             {
                                 stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
 

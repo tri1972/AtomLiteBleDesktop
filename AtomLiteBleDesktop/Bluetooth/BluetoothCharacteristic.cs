@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
-using static AtomLiteBleDesktop.Bluetooth.BluetoothConnector;
+using static AtomLiteBleDesktop.Bluetooth.BluetoothUuidDefine;
 
 namespace AtomLiteBleDesktop.Bluetooth
 {
@@ -99,7 +99,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             get { return this.numberCounteRx; }
         }
-
+        public delegate void NotifyReceiveCharacteristicEventHandler(object sender, NotifyReceiveCharacteristicEventArgs e);
         private event NotifyReceiveCharacteristicEventHandler notifyReceiveCharacteristic;
         /// <summary>
         /// Characteristic受信イベント

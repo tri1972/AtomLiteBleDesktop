@@ -121,8 +121,8 @@
     </Compile>
     <Compile Include="Bluetooth\BluetoothAccesser.cs" />
     <Compile Include="Bluetooth\BluetoothCharacteristic.cs" />
-    <Compile Include="Bluetooth\BluetoothConnector.cs" />
     <Compile Include="Bluetooth\BluetoothHelper.cs" />
+    <Compile Include="Bluetooth\BluetoothUuidDefine.cs" />
     <Compile Include="Bluetooth\BluetoothWatcher.cs" />
     <Compile Include="Bluetooth\BluetoothLEDevice.cs" />
     <Compile Include="Bluetooth\BluetoothReceiver.cs" />

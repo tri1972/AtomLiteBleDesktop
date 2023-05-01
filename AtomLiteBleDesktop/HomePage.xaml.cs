@@ -96,9 +96,9 @@ namespace AtomLiteBleDesktop
                             Debug.WriteLine(err.Message);
                         }
                     }
-                    if (device.BluetoothConnector != null)
+                    if (device != null)
                     {
-                        if (device.BluetoothConnector.IsConnectService)
+                        if (device.IsConnectService)
                         {
                             AccesserStatusChange(NotifyBluetoothAccesserEventArgs.Status.Connected, null);
                         }
@@ -188,7 +188,7 @@ namespace AtomLiteBleDesktop
                     if (sender != null)
                     {
                         listBoxAdd_TextDataDispatcher(sender.Name, typeDeviceStatus.Connected, null, null, null, null,BluetoothCharacteristic.TypeStateReseive.Received,0);
-                        foreach (var service in sender.BluetoothConnector.Services)
+                        foreach (var service in sender.Services)
                         {
                             stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
                             if (service.CharacteristicNames != null)

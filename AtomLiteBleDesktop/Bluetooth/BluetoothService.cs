@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
-using static AtomLiteBleDesktop.Bluetooth.BluetoothConnector;
+using static AtomLiteBleDesktop.Bluetooth.BluetoothUuidDefine;
 using static AtomLiteBleDesktop.MainPage;
 
 namespace AtomLiteBleDesktop
