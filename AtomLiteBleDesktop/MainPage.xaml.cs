@@ -77,8 +77,8 @@ namespace AtomLiteBleDesktop
         private void NavView_Loaded(object sender, RoutedEventArgs e)
         {
             // MainPage.xaml で書いた MenuItems の下にさらにコードで MenuItems を追加したり...
-            NavView.MenuItems.Add(new NavigationViewItemSeparator());
-            NavView.MenuItems.Add(new NavigationViewItem() { Content = "My content", Icon = new SymbolIcon(Symbol.Folder), Tag = "my-content" });
+            //NavView.MenuItems.Add(new NavigationViewItemSeparator());
+            //NavView.MenuItems.Add(new NavigationViewItem() { Content = "My content", Icon = new SymbolIcon(Symbol.Folder), Tag = "my-content" });
 
             // home を選択
             var item = GetNavigationViewItem("home");

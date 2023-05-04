@@ -25,7 +25,6 @@
                 <NavigationViewItemSeparator/>
                 <NavigationViewItemHeader Content="Main pages"/>
                 <NavigationViewItem x:Uid="AppsNavItem" Icon="AllApps" Content="Control" Tag="Control"/>
-                <NavigationViewItem x:Uid="GamesNavItem" Icon="Video" Content="Dummy" Tag="Dummy"/>
                 <NavigationViewItem x:Uid="MusicNavItem" Icon="Audio" Content="Log" Tag="Log"/>
             </NavigationView.MenuItems>
 
