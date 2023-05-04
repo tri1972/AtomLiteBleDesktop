@@ -36,6 +36,7 @@ namespace AtomLiteBleDesktop
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            this.Resuming += new EventHandler<Object>(App_Resuming); ;
             servers = new List<string>();
             servers.Add(PIRSERVER);
             servers.Add(dummySERVER1);
@@ -108,6 +109,11 @@ namespace AtomLiteBleDesktop
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: アプリケーションの状態を保存してバックグラウンドの動作があれば停止します
             deferral.Complete();
+        }
+
+        async protected void App_Resuming(Object sender, Object e)
+        {
+            ;
         }
     }
 }
