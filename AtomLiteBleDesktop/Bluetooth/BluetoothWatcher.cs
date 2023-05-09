@@ -100,7 +100,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                         break;
                     }
                 }
-                if (output.IsFindDevice)
+                if (output.Status== BluetoothLEDevice.TypeStatus.Finded)
                 {
                     break;
                 }

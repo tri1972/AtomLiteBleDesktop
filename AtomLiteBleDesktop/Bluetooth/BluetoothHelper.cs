@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
+using Windows.Devices.Enumeration;
 using static AtomLiteBleDesktop.Bluetooth.BluetoothUuidDefine;
 
 namespace AtomLiteBleDesktop.Bluetooth
@@ -73,6 +75,53 @@ namespace AtomLiteBleDesktop.Bluetooth
             bytes[1] = 0;
             var baseUuid = new Guid(bytes);
             return baseUuid == bluetoothBaseUuid;
+        }
+
+        /// <summary>
+        /// Windows プロパティ システムよりDeviceの接続状態を取得します
+        /// </summary>
+        public static bool IsConnected(DeviceInformation DeviceInformation)
+        {
+            try
+            {
+                if ((bool?)DeviceInformation.Properties["System.Devices.Aep.IsConnected"] == true)
+                {//デバイスが現在システムに接続されているかどうかを判定
+                   return  true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception err)
+            {
+                Debug.WriteLine(err.Message);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Windows プロパティ システムよりDeviceのアドバタイズ状態を取得します
+        /// </summary>
+        public static bool IsConnectable(DeviceInformation DeviceInformation)
+        {
+            try
+            {
+                if ((bool?)DeviceInformation.Properties["System.Devices.Aep.Bluetooth.Le.IsConnectable"] == true)
+                {//Bluetooth LE デバイスが現在、接続可能なアドバタイズをアドバタイズしているかどうかを判定
+                    return true;
+
+                }
+                else
+                {
+                    return  false;
+                }
+            }
+            catch (Exception err)
+            {
+                Debug.WriteLine(err.Message);
+            }
+            return false;
         }
     }
 }

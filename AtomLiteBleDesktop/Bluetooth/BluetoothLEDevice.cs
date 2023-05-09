@@ -42,7 +42,7 @@ namespace AtomLiteBleDesktop
             Connecting,
             Abort,
             Sending,
-            Finding,
+            Finded,
             NoFinded,
             None
         }
@@ -69,14 +69,7 @@ namespace AtomLiteBleDesktop
             get { return this.services; }
         }
 
-
         public DeviceInformation DeviceInformation { get; private set; }
-
-        private bool isFindDevice;
-        public bool IsFindDevice
-        {
-            get { return this.isFindDevice; }
-        }
 
         private string id;
         public string Id
@@ -97,32 +90,6 @@ namespace AtomLiteBleDesktop
         {
             get { return this.isPaired; }
         }
-
-        private bool isConnected;
-        /// <summary>
-        /// デバイスがシステムに接続されているか否かを取得します
-        /// </summary>
-        public bool IsConnected
-        {
-            get { return this.isConnected; }
-        }
-
-        private bool isConnectable;
-        /// <summary>
-        /// デバイスが現状アドバタイズしているか否かを取得します
-        /// </summary>
-        public bool IsConnectable
-        {
-            get { return this.isConnectable; }
-        }
-        /// <summary>
-        /// Serviceに接続されているか否かを取得します
-        /// </summary>
-        public bool IsConnectService
-        {
-            get { return this.isConnectService; }
-        }
-        private bool isConnectService;
 
         private TypeStatus status;
         /// <summary>
@@ -201,44 +168,12 @@ namespace AtomLiteBleDesktop
             DeviceInformation = deviceInfoIn;
             this.id = DeviceInformation.Id;
             this.name = DeviceInformation.Name;
-            this.isFindDevice = true;
-            this.status = TypeStatus.Finding;
+            this.status = TypeStatus.Finded;
             this.isPaired = DeviceInformation.Pairing.IsPaired;
             this.services = new List<BluetoothService>();
-            setStatusConnection();
+            //setStatusConnection();
         }
-
-        /// <summary>
-        /// Windows プロパティ システムよりDeviceの状態を取得します
-        /// </summary>
-        private void setStatusConnection()
-        {
-            try
-            {
-                if ((bool?)DeviceInformation.Properties["System.Devices.Aep.IsConnected"] == true)
-                {//デバイスが現在システムに接続されているかどうかを判定
-                    this.isConnected = true;
-                }
-                else
-                {
-                    this.isConnected = false;
-                }
-                if ((bool?)DeviceInformation.Properties["System.Devices.Aep.Bluetooth.Le.IsConnectable"] == true)
-                {//Bluetooth LE デバイスが現在、接続可能なアドバタイズをアドバタイズしているかどうかを判定
-                    this.isConnectable = true;
-
-                }
-                else
-                {
-                    this.isConnectable = false;
-                }
-            }
-            catch (Exception err)
-            {
-                Debug.WriteLine(err.Message);
-            }
-        }
-
+        
         /// <summary>
         /// コンストラクタ
         /// Deviceが見つからなかった場合
@@ -248,10 +183,7 @@ namespace AtomLiteBleDesktop
             this.id = null;
             this.name = name;
             this.status = TypeStatus.NoFinded;
-            this.isFindDevice = false;
             this.isPaired = false;
-            this.isConnected = false;
-            this.isConnectable = false;
         }
 
         public async void Connect()
@@ -287,7 +219,7 @@ namespace AtomLiteBleDesktop
                     this.status = TypeStatus.Abort;
                     this.OnNotifyConnectingServer("Server Connecting Aborted", NotifyBluetoothAccesserEventArgs.Status.Abort);
                 }
-                setStatusConnection();
+                //setStatusConnection();
 
             });
         }
@@ -459,13 +391,13 @@ namespace AtomLiteBleDesktop
                     }
                 }
                 this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
-                this.isConnectService = true;
+                this.Status = TypeStatus.Coonected;
             }
             else
             {
                 this.Status = BluetoothLEDevice.TypeStatus.Disconnect;
                 this.OnNotifyConnectingServer("ServerStatusChange", NotifyBluetoothAccesserEventArgs.Status.Disconnected);
-                this.isConnectService = false;
+                this.Status = TypeStatus.Disconnect;
             }
             //disconnectになった場合、ここで再度イベントハンドラの登録を行うようにしてみる
         }

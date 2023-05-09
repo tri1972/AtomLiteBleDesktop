@@ -139,7 +139,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                     var task = await this.SearchDevice(deviceName);
                     if (task != null)
                     {
-                        if (task.IsFindDevice)
+                        if (task.Status== BluetoothLEDevice.TypeStatus.Finded)
                         {
                             Debug.WriteLine("取得サーバー名:" + task.Name);
                             task.Connect();
