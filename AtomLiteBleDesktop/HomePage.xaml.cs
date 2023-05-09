@@ -74,7 +74,8 @@ namespace AtomLiteBleDesktop
                 while (bluetoothAccesser.NumberDevice != bluetoothAccesser.Devices.Count) ;//取得要求Serverがすべて処理されるまで待ち
                 foreach (var device in bluetoothAccesser.Devices)
                 {
-                    if (device.IsFindDevice)
+                    if (device.Status== TypeStatus.Finding)
+                    //if (device.IsFindDevice)
                     {
                         try
                         {
@@ -84,6 +85,10 @@ namespace AtomLiteBleDesktop
                         {
                             Debug.WriteLine(err.Message);
                         }
+                    }
+                    if (device.Status == TypeStatus.Coonected)
+                    {
+                        ;
                     }
                     else
                     {

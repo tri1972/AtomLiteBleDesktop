@@ -42,6 +42,8 @@ namespace AtomLiteBleDesktop
             Connecting,
             Abort,
             Sending,
+            Finding,
+            NoFinded,
             None
         }
 
@@ -200,6 +202,7 @@ namespace AtomLiteBleDesktop
             this.id = DeviceInformation.Id;
             this.name = DeviceInformation.Name;
             this.isFindDevice = true;
+            this.status = TypeStatus.Finding;
             this.isPaired = DeviceInformation.Pairing.IsPaired;
             this.services = new List<BluetoothService>();
             setStatusConnection();
@@ -244,6 +247,7 @@ namespace AtomLiteBleDesktop
         {
             this.id = null;
             this.name = name;
+            this.status = TypeStatus.NoFinded;
             this.isFindDevice = false;
             this.isPaired = false;
             this.isConnected = false;

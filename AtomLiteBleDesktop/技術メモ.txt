@@ -36,3 +36,6 @@ https://social.msdn.microsoft.com/Forums/ja-JP/65112e0a-72c1-48d9-9953-9437e7c4c
 
 ListBox中のButtonControlなどのイベントを取得したい場合
 https://atmarkit.itmedia.co.jp/ait/articles/1711/15/news032.html
+
+画面状態を保持したい場合
+https://atmarkit.itmedia.co.jp/ait/articles/1209/13/news143.html
