@@ -63,6 +63,7 @@ namespace AtomLiteBleDesktop
         public HomePage()
         {
             this.InitializeComponent();
+            batchUpdateBadgeGlyphClear();
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
@@ -234,7 +235,6 @@ namespace AtomLiteBleDesktop
         /// <param name="e"></param>
         private void NotifyConnectServerBluetoothEventHandler(object sender, NotifyBluetoothAccesserEventArgs e)
         {
-#warning BLEがDisConnectになった場合はこのイベントハンドラには来ないのを修正する
             if (sender is BluetoothLEDevice)
             {
                 AccesserStatusChange(e.State,sender as BluetoothLEDevice);
