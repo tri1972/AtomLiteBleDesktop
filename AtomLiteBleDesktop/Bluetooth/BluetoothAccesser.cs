@@ -55,6 +55,7 @@ namespace AtomLiteBleDesktop.Bluetooth
             }
         }
 
+
         private int numberDevice;
         /// <summary>
         /// BluetoothDevice数

@@ -13,6 +13,7 @@ using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using static AtomLiteBleDesktop.BluetoothService;
 using Windows.Devices.Bluetooth;
 using static AtomLiteBleDesktop.Bluetooth.BluetoothUuidDefine;
+using Windows.Storage;
 
 namespace AtomLiteBleDesktop
 {
@@ -47,13 +48,17 @@ namespace AtomLiteBleDesktop
             None
         }
 
+        /// <summary>
+        /// log4net用インスタンス
+        /// </summary>
+        private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         #region Error Codes
         //readonly int E_BLUETOOTH_ATT_WRITE_NOT_PERMITTED = unchecked((int)0x80650003);
         //readonly int E_BLUETOOTH_ATT_INVALID_PDU = unchecked((int)0x80650004);
         //readonly int E_ACCESSDENIED = unchecked((int)0x80070005);
         readonly int E_DEVICE_NOT_AVAILABLE = unchecked((int)0x800710df); // HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE)
         #endregion
-
 
         /// <summary>
         /// Connect時の最大リトライ回数
@@ -205,6 +210,10 @@ namespace AtomLiteBleDesktop
                         {
                             server.NotifyReceiveCharacteristic += NotifyReceiveServerCharacteristic;
                         }
+#if DEBUG
+                        logger.Info("Connect Server");
+#else
+#endif
                         break;
                     }
                     else

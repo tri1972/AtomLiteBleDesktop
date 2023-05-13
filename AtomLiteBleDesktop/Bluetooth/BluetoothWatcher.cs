@@ -13,6 +13,12 @@ namespace AtomLiteBleDesktop.Bluetooth
 {
     public class BluetoothWatcher
     {
+
+        /// <summary>
+        /// log4net用インスタンス
+        /// </summary>
+        private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
         /// 接続対象PIRサーバー名
         /// </summary>
@@ -102,6 +108,9 @@ namespace AtomLiteBleDesktop.Bluetooth
                 }
                 if (output.Status== BluetoothLEDevice.TypeStatus.Finded)
                 {
+#if DEBUG
+                    logger.Info( "Finded " + server);
+#endif
                     break;
                 }
                 Thread.Sleep(10);

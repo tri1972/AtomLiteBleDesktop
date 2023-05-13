@@ -39,3 +39,11 @@ https://atmarkit.itmedia.co.jp/ait/articles/1711/15/news032.html
 
 画面状態を保持したい場合
 https://atmarkit.itmedia.co.jp/ait/articles/1209/13/news143.html
+
+
+log4net実装について
+・UWPの場合、書き込む場所は制限されている。したがって、書き込めるパスを実行中にsystemより取得し割り当てる方法を取る
+書き込めるファイルのパスについては以下を参考
+https://learn.microsoft.com/ja-jp/windows/uwp/files/file-access-permissions
+動的実装については以下を参考
+https://garafu.blogspot.com/2014/05/log4net_26.html
