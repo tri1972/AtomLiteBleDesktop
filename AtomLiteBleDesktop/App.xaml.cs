@@ -28,6 +28,12 @@ namespace AtomLiteBleDesktop
         private const string PIRSERVER = "ESP32PIRTRI";
         private const string dummySERVER1 = "dummy1";
         private const string dummySERVER2 = "dummy2";
+        
+        /// <summary>
+        /// log4net用インスタンス
+        /// </summary>
+        private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
         ///単一アプリケーション オブジェクトを初期化します。これは、実行される作成したコードの
         ///最初の行であるため、論理的には main() または WinMain() と等価です。
@@ -82,6 +88,9 @@ namespace AtomLiteBleDesktop
                 // 現在のウィンドウがアクティブであることを確認します
                 Window.Current.Activate();
             }
+#if DEBUG
+            logger.Info("On launched");
+#endif
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
             bluetoothAccesser.SearchDevices(servers);

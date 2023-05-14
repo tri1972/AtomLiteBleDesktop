@@ -197,6 +197,7 @@ namespace AtomLiteBleDesktop
             await Task.Run(async () =>
             {
 
+                logger.Info("Connecting Start :"+this.name);
                 counter = MAX_RETRY_CONNECT;
                 while (counter > 0)
                 {
@@ -211,7 +212,7 @@ namespace AtomLiteBleDesktop
                             server.NotifyReceiveCharacteristic += NotifyReceiveServerCharacteristic;
                         }
 #if DEBUG
-                        logger.Info("Connect Server");
+                        logger.Info("Connect Server" + this.name);
 #else
 #endif
                         break;
@@ -227,8 +228,11 @@ namespace AtomLiteBleDesktop
                 {
                     this.status = TypeStatus.Abort;
                     this.OnNotifyConnectingServer("Server Connecting Aborted", NotifyBluetoothAccesserEventArgs.Status.Abort);
+#if DEBUG
+                    logger.Info("Connecting Aborted");
+#else
+#endif
                 }
-                //setStatusConnection();
 
             });
         }
@@ -313,20 +317,34 @@ namespace AtomLiteBleDesktop
             Task<GattCharacteristic> task = null;
             try
             {
+                logger.Info("Getting Server device:" + this.name);
                 // BT_Code: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
                 this.bluetoothLeDevice = await Windows.Devices.Bluetooth.BluetoothLEDevice.FromIdAsync(this.Id);
                 if (bluetoothLeDevice == null)
                 {
+#if DEBUG
+                    logger.Error("Failed to connect to device.:" + this.Id.ToString());
                     Debug.WriteLine("Failed to connect to device.");
+#endif
+                }
+                else
+                {
+                    logger.Info("Gat Server device!!:" + this.name);
                 }
             }
             catch (Exception ex) when (ex.HResult == E_DEVICE_NOT_AVAILABLE)
             {
+#if DEBUG
                 Debug.WriteLine("Bluetooth radio is not on.");
+                logger.Error("Bluetooth radio is not on.:" + this.Id.ToString());
+#endif
             }
 
             if (bluetoothLeDevice != null)
             {
+#if DEBUG
+                logger.Info("Get device of ConnectServer:" + this.name);
+#endif
                 bluetoothLeDevice.ConnectionStatusChanged += eventConnectionStatusChanged;
                 bluetoothLeDevice.GattServicesChanged += eventGattServicesChanged;
                 // Note: BluetoothLEDevice.GattServices property will return an empty list for unpaired devices. For all uses we recommend using the GetGattServicesAsync method.
@@ -339,6 +357,9 @@ namespace AtomLiteBleDesktop
                     GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached);
                     if (result.Status == GattCommunicationStatus.Success)
                     {
+#if DEBUG
+                        logger.Info("Success geting GattServices:" + this.name);
+#endif
                         var services = result.Services;
                         foreach (var service in services)
                         {
@@ -371,8 +392,12 @@ namespace AtomLiteBleDesktop
             }
             else
             {
+#if DEBUG
+                logger.Info("Can not get device of ConnectServer:" + this.name);
+#endif
                 return false;
             }
+            logger.Info("ConnectServer End:" + this.name);
             //task= this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
             //this.registeredCharacteristic = task.Result;
         }

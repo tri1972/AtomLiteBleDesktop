@@ -16,6 +16,11 @@ namespace AtomLiteBleDesktop.Bluetooth
     {
 
         /// <summary>
+        /// log4net用インスタンス
+        /// </summary>
+        private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
         /// BluetoothAccesserのeventハンドラの関数の引数と戻り値を設定
         /// </summary>
         /// <param name="sender"></param>
@@ -137,6 +142,8 @@ namespace AtomLiteBleDesktop.Bluetooth
                 this.numberDevice = deviceNames.Count;
                 foreach (var deviceName in deviceNames)
                 {
+
+                    logger.Info("Finding: " + deviceName);
                     var task = await this.SearchDevice(deviceName);
                     if (task != null)
                     {
