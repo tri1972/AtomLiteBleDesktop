@@ -24,11 +24,13 @@ namespace AtomLiteBleDesktop
     /// </summary>
     sealed partial class App : Application
     {
+        /*
         List<string> servers;
         private const string PIRSERVER = "ESP32PIRTRI";
         private const string dummySERVER1 = "dummy1";
         private const string dummySERVER2 = "dummy2";
-        
+        */
+
         /// <summary>
         /// log4net用インスタンス
         /// </summary>
@@ -42,11 +44,13 @@ namespace AtomLiteBleDesktop
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
-            this.Resuming += new EventHandler<Object>(App_Resuming); ;
+            this.Resuming += new EventHandler<Object>(App_Resuming);
+            /*
             servers = new List<string>();
             servers.Add(PIRSERVER);
             servers.Add(dummySERVER1);
             servers.Add(dummySERVER2);
+            */
         }
 
         /// <summary>
@@ -91,9 +95,10 @@ namespace AtomLiteBleDesktop
 #if DEBUG
             logger.Info("On launched");
 #endif
-
+            /*
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
             bluetoothAccesser.SearchDevices(servers);
+            */
         }
 
         /// <summary>

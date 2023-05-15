@@ -44,6 +44,8 @@ namespace AtomLiteBleDesktop
     {
 
         private const string PIRSERVER = "ESP32PIRTRI";
+        private const string dummySERVER1 = "dummy1";
+        private const string dummySERVER2 = "dummy2";
 
 
 
@@ -54,6 +56,8 @@ namespace AtomLiteBleDesktop
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
 
         //private BluetoothConnector bluetoothConnector;
+
+        List<string> servers;
 
         public MainPage()
         {
@@ -66,6 +70,14 @@ namespace AtomLiteBleDesktop
 
         private async void PageLoaded(FrameworkElement sender, object args)
         {
+            servers = new List<string>();
+            servers.Add(PIRSERVER);
+            servers.Add(dummySERVER1);
+            servers.Add(dummySERVER2);
+
+            var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
+            bluetoothAccesser.SearchDevices(servers);
+
             //画面を起動時に最小にする方法
             //参考：https://social.msdn.microsoft.com/Forums/vstudio/ja-JP/fe39e1b6-e891-43a8-8bb2-01e4550a4b64/uwpmain?forum=winstoreapp
             IList<Windows.System.AppDiagnosticInfo> infos = await AppDiagnosticInfo.RequestInfoForAppAsync();

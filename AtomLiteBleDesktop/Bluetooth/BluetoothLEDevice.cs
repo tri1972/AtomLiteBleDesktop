@@ -14,6 +14,7 @@ using static AtomLiteBleDesktop.BluetoothService;
 using Windows.Devices.Bluetooth;
 using static AtomLiteBleDesktop.Bluetooth.BluetoothUuidDefine;
 using Windows.Storage;
+using Windows.UI.Core;
 
 namespace AtomLiteBleDesktop
 {
@@ -318,18 +319,71 @@ namespace AtomLiteBleDesktop
             try
             {
                 logger.Info("Getting Server device:" + this.name);
+
+
                 // BT_Code: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
+#warning このメソッドについてはUIスレッドで実行する必要があり
+
                 this.bluetoothLeDevice = await Windows.Devices.Bluetooth.BluetoothLEDevice.FromIdAsync(this.Id);
+
+
+
                 if (bluetoothLeDevice == null)
                 {
 #if DEBUG
-                    logger.Error("Failed to connect to device.:" + this.Id.ToString());
-                    Debug.WriteLine("Failed to connect to device.");
+                    logger.Info("Can not get device of ConnectServer:" + this.name);
 #endif
+                    return false;
                 }
                 else
                 {
-                    logger.Info("Gat Server device!!:" + this.name);
+#if DEBUG
+                    logger.Info("Get device of ConnectServer!!:" + this.name);
+#endif
+                    bluetoothLeDevice.ConnectionStatusChanged += eventConnectionStatusChanged;
+                    bluetoothLeDevice.GattServicesChanged += eventGattServicesChanged;
+                    // Note: BluetoothLEDevice.GattServices property will return an empty list for unpaired devices. For all uses we recommend using the GetGattServicesAsync method.
+                    // BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
+                    // If the services supported by the device are expected to change during BT usage, subscribe to the GattServicesChanged event.
+
+                    var tasksub = Task.Run(async () =>
+                    {
+
+                        GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached);
+                        if (result.Status == GattCommunicationStatus.Success)
+                        {
+#if DEBUG
+                            logger.Info("Success geting GattServices:" + this.name);
+#endif
+                            var services = result.Services;
+                            foreach (var service in services)
+                            {
+                                this.services.Add(new BluetoothService()
+                                {
+                                    Service = service,
+                                    ServiceGattNativeServiceUuid = BluetoothHelper.GetGattNativeServiceUuid(service),
+                                    ServiceGattNativeServiceUuidString = BluetoothHelper.GetServiceName(service)
+                                });
+                            }
+                            task = this.getUserCustomService(this.services).GetRegisteredCharacteristic();
+                            //this.registeredCharacteristic = task.Result;
+                            //this.registeredCharacteristic.ValueChanged += this.registeredCharacteristicNotify;
+                            return true;
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Device unreachable");
+                            return false;
+                        }
+                    });
+                    if (tasksub.Result)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
             }
             catch (Exception ex) when (ex.HResult == E_DEVICE_NOT_AVAILABLE)
@@ -338,68 +392,9 @@ namespace AtomLiteBleDesktop
                 Debug.WriteLine("Bluetooth radio is not on.");
                 logger.Error("Bluetooth radio is not on.:" + this.Id.ToString());
 #endif
-            }
-
-            if (bluetoothLeDevice != null)
-            {
-#if DEBUG
-                logger.Info("Get device of ConnectServer:" + this.name);
-#endif
-                bluetoothLeDevice.ConnectionStatusChanged += eventConnectionStatusChanged;
-                bluetoothLeDevice.GattServicesChanged += eventGattServicesChanged;
-                // Note: BluetoothLEDevice.GattServices property will return an empty list for unpaired devices. For all uses we recommend using the GetGattServicesAsync method.
-                // BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
-                // If the services supported by the device are expected to change during BT usage, subscribe to the GattServicesChanged event.
-
-                var tasksub = Task.Run(async () =>
-                {
-
-                    GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached);
-                    if (result.Status == GattCommunicationStatus.Success)
-                    {
-#if DEBUG
-                        logger.Info("Success geting GattServices:" + this.name);
-#endif
-                        var services = result.Services;
-                        foreach (var service in services)
-                        {
-                            this.services.Add(new BluetoothService()
-                            {
-                                Service = service,
-                                ServiceGattNativeServiceUuid = BluetoothHelper.GetGattNativeServiceUuid(service),
-                                ServiceGattNativeServiceUuidString = BluetoothHelper.GetServiceName(service)
-                            });
-                        }
-                        task = this.getUserCustomService(this.services).GetRegisteredCharacteristic();
-                        //this.registeredCharacteristic = task.Result;
-                        //this.registeredCharacteristic.ValueChanged += this.registeredCharacteristicNotify;
-                        return true;
-                    }
-                    else
-                    {
-                        Debug.WriteLine("Device unreachable");
-                        return false;
-                    }
-                });
-                if (tasksub.Result)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-#if DEBUG
-                logger.Info("Can not get device of ConnectServer:" + this.name);
-#endif
                 return false;
             }
             logger.Info("ConnectServer End:" + this.name);
-            //task= this.getRegisteredCharacteristic(this.getUserCustomService(this.services));
-            //this.registeredCharacteristic = task.Result;
         }
 
         /// <summary>
