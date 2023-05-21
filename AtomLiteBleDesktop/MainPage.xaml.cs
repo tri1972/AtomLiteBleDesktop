@@ -42,6 +42,10 @@ namespace AtomLiteBleDesktop
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        /// <summary>
+        /// log4net用インスタンス
+        /// </summary>
+        private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private const string PIRSERVER = "ESP32PIRTRI";
         private const string dummySERVER1 = "dummy1";
@@ -70,19 +74,28 @@ namespace AtomLiteBleDesktop
 
         private async void PageLoaded(FrameworkElement sender, object args)
         {
+
+            logger.Info("Page Loaded :" + "MainPage");
             servers = new List<string>();
             servers.Add(PIRSERVER);
             servers.Add(dummySERVER1);
             servers.Add(dummySERVER2);
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
-            bluetoothAccesser.SearchDevices(servers);
 
-            //画面を起動時に最小にする方法
-            //参考：https://social.msdn.microsoft.com/Forums/vstudio/ja-JP/fe39e1b6-e891-43a8-8bb2-01e4550a4b64/uwpmain?forum=winstoreapp
-            IList<Windows.System.AppDiagnosticInfo> infos = await AppDiagnosticInfo.RequestInfoForAppAsync();
-            IList<AppResourceGroupInfo> resourceInfos = infos[0].GetResourceGroups();
-            await resourceInfos[0].StartSuspendAsync();
+            var result= await bluetoothAccesser.SearchDevices(servers,Dispatcher);
+            if (result)
+            {
+                //ここで画面が小さくなってしまうと、UIスレッドが止まってしまうため、Connectがじっこうされない・・・
+
+                //画面を起動時に最小にする方法
+                //参考：https://social.msdn.microsoft.com/Forums/vstudio/ja-JP/fe39e1b6-e891-43a8-8bb2-01e4550a4b64/uwpmain?forum=winstoreapp
+                IList<Windows.System.AppDiagnosticInfo> infos = await AppDiagnosticInfo.RequestInfoForAppAsync();
+                IList<AppResourceGroupInfo> resourceInfos = infos[0].GetResourceGroups();
+                await resourceInfos[0].StartSuspendAsync();
+            }
+
+
         }
 
 

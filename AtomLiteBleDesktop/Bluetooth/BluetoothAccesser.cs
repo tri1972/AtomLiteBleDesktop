@@ -134,8 +134,8 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
             this.devices = new List<BluetoothLEDevice>();
         }
-
-        public async void SearchDevices(List<string> deviceNames)
+        /*
+        public async void SearchDevices(List<string> deviceNames, CoreDispatcher dispatcher)
         {
             try
             {
@@ -147,10 +147,10 @@ namespace AtomLiteBleDesktop.Bluetooth
                     var task = await this.SearchDevice(deviceName);
                     if (task != null)
                     {
-                        if (task.Status== BluetoothLEDevice.TypeStatus.Finded)
+                        if (task.Status == BluetoothLEDevice.TypeStatus.Finded)
                         {
                             Debug.WriteLine("取得サーバー名:" + task.Name);
-                            task.Connect();
+                            task.Connect(dispatcher);
                             //bluetoothAccesser.Connect();
                         }
                         else
@@ -171,8 +171,57 @@ namespace AtomLiteBleDesktop.Bluetooth
                 Debug.WriteLine(err.Message);
 
             }
-        }
+        }*/
+        
+        public async Task<bool> SearchDevices(List<string> deviceNames,CoreDispatcher dispatcher)
+        {
+            bool output = false;
+            try
+            {
+                this.numberDevice = deviceNames.Count;
+                foreach (var deviceName in deviceNames)
+                {
 
+                    logger.Info("Finding: " + deviceName);
+                    BluetoothLEDevice task = await this.SearchDevice(deviceName);
+                    //1s待って。接続Server名が取得できなければfalseを返す
+                    int counter = 10;
+                    while (counter > 0)
+                    {
+                        Thread.Sleep(10);
+                        counter--;
+
+                        if (task != null)
+                        {
+                            if (task.Status == BluetoothLEDevice.TypeStatus.Finded)
+                            {
+                                Debug.WriteLine("取得サーバー名:" + task.Name);
+                                task.Connect(dispatcher);
+                                //bluetoothAccesser.Connect();
+                            }
+                            else
+                            {
+                                Debug.WriteLine(deviceName + "サーバーは見つかりませんでした:\n");
+                            }
+                            break;
+                        }
+                        else
+                        {
+                            Debug.WriteLine(deviceName + "SearchDeviceでnullが返りました:\n");
+                        }
+                    }
+
+                }
+                output = true;
+            }
+            catch (Exception err)
+            {
+                Debug.WriteLine(err.Message);
+                output= false;
+            }
+            return output;
+        }
+        
         /// <summary>
         /// ペアリングができているデバイスを探す 
         /// </summary>

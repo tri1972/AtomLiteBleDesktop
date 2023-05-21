@@ -15,6 +15,12 @@ namespace AtomLiteBleDesktop
 {
     public class BluetoothService
     {
+
+        /// <summary>
+        /// log4net用インスタンス
+        /// </summary>
+        private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         //NotifyReceiveCharacteristicイベントで返されるデータ
         //ここではstring型のひとつのデータのみ返すものとする
         public class NotifyReceiveServerCharacteristicEventArgs : EventArgs
@@ -123,24 +129,32 @@ namespace AtomLiteBleDesktop
 
             try
             {
+
+                logger.Info("ここまで到達7");
                 // Ensure we have access to the device.
                 var accessStatus = await service.RequestAccessAsync();
+                logger.Info("ここまで到達8");
                 if (accessStatus == DeviceAccessStatus.Allowed)
                 {
+                    logger.Info("ここまで到達9:Allowed");
                     // BT_Code: Get all the child characteristics of a service. Use the cache mode to specify uncached characterstics only 
                     // and the new Async functions to get the characteristics of unpaired devices as well. 
-                    var result = await service.GetCharacteristicsAsync(BluetoothCacheMode.Uncached);
+                    var result = await service.GetCharacteristicsAsync(BluetoothCacheMode.Cached);
+                    logger.Info("ここまで到達10:");
                     if (result.Status == GattCommunicationStatus.Success)
                     {
-                        foreach(var characteristic in result.Characteristics)
+                        logger.Info("ここまで到達11:Success");
+                        foreach (var characteristic in result.Characteristics)
                         {
                             var bluetoothCharacteristic = new BluetoothCharacteristic(characteristic);
                             bluetoothCharacteristic.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
                             characteristics.Add(bluetoothCharacteristic);
+                            logger.Info("set EventHandler:" + bluetoothCharacteristic.Name);
                         }
                     }
                     else
                     {
+                        logger.Info("ここまで到達11:"+result.Status.ToString());
                         foreach (var characteristic in result.Characteristics)
                         {
                             // On error, act as if there are no characteristics.
@@ -150,6 +164,7 @@ namespace AtomLiteBleDesktop
                 }
                 else
                 {
+                    logger.Info("ここまで到達9:"+ accessStatus.ToString());
                     // On error, act as if there are no characteristics.
                     characteristics.Add(new BluetoothCharacteristic());
 
@@ -186,6 +201,9 @@ namespace AtomLiteBleDesktop
                 e.Characteristic = sender as BluetoothCharacteristic;
                 e.Message = eventArgs.Message;
                 e.State = eventArgs.State;
+#if DEBUG
+                logger.Info("ReceiveCharacteristic Name :" + e.Characteristic.Name + " ReceiveData:"+e.Message);
+#endif                
                 this.OnNotifyReceiveCharacteristic(e);
             }
             catch (Exception err)

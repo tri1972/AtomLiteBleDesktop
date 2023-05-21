@@ -192,7 +192,7 @@ namespace AtomLiteBleDesktop
             this.isPaired = false;
         }
 
-        public async void Connect()
+        public async void Connect(CoreDispatcher dispatcher)
         {
             int counter = 0;
             await Task.Run(async () =>
@@ -202,7 +202,7 @@ namespace AtomLiteBleDesktop
                 counter = MAX_RETRY_CONNECT;
                 while (counter > 0)
                 {
-                    var task = await Task.Run(ConnectServer);
+                    var task = await Task.Run(()=>ConnectServer(dispatcher));
                     if (task)
                     {
                         this.status = TypeStatus.Coonected;
@@ -313,21 +313,29 @@ namespace AtomLiteBleDesktop
         /// 非同期BLE接続処理を実行します
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> ConnectServer()
+        public async Task<bool> ConnectServer(CoreDispatcher dispatcher)
         {
             Task<GattCharacteristic> task = null;
             try
             {
                 logger.Info("Getting Server device:" + this.name);
 
+                TaskCompletionSource<Windows.Devices.Bluetooth.BluetoothLEDevice> taskCompletionSource =
+                    new TaskCompletionSource<Windows.Devices.Bluetooth.BluetoothLEDevice>();
 
                 // BT_Code: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
 #warning このメソッドについてはUIスレッドで実行する必要があり
+                await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.High, async () =>
+                {
+                    logger.Info("ここまで到達1" + this.name);
+                    taskCompletionSource.SetResult(await Windows.Devices.Bluetooth.BluetoothLEDevice.FromIdAsync(this.Id));
+                    //this.bluetoothLeDevice = await Windows.Devices.Bluetooth.BluetoothLEDevice.FromIdAsync(this.Id);
+                });
 
-                this.bluetoothLeDevice = await Windows.Devices.Bluetooth.BluetoothLEDevice.FromIdAsync(this.Id);
+                logger.Info("ここまで到達2" + this.name);
+                bluetoothLeDevice = taskCompletionSource.Task.Result;
 
-
-
+                logger.Info("ここまで到達3" + this.name);
                 if (bluetoothLeDevice == null)
                 {
 #if DEBUG
@@ -337,6 +345,7 @@ namespace AtomLiteBleDesktop
                 }
                 else
                 {
+                    logger.Info("ここまで到達4" + this.name);
 #if DEBUG
                     logger.Info("Get device of ConnectServer!!:" + this.name);
 #endif
@@ -346,10 +355,12 @@ namespace AtomLiteBleDesktop
                     // BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
                     // If the services supported by the device are expected to change during BT usage, subscribe to the GattServicesChanged event.
 
-                    var tasksub = Task.Run(async () =>
+                    var tasksub = await Task.Run(async () =>
                     {
 
-                        GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached);
+                        logger.Info("ここまで到達5" + this.name);
+                        GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Cached);
+                        logger.Info("ここまで到達6" + this.name);
                         if (result.Status == GattCommunicationStatus.Success)
                         {
 #if DEBUG
@@ -376,7 +387,7 @@ namespace AtomLiteBleDesktop
                             return false;
                         }
                     });
-                    if (tasksub.Result)
+                    if (tasksub)
                     {
                         return true;
                     }
