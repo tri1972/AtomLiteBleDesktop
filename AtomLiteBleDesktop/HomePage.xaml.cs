@@ -10,10 +10,12 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.ExtendedExecution;
 using Windows.Data.Xml.Dom;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
@@ -37,6 +39,7 @@ namespace AtomLiteBleDesktop
     public sealed partial class HomePage : Page
     {
 
+        public static HomePage Current;
 
         /// <summary>
         /// Device状態
@@ -64,10 +67,33 @@ namespace AtomLiteBleDesktop
         {
             this.InitializeComponent();
             batchUpdateBadgeGlyphClear();
+            Current = this;
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
+
+
+
+            BeginExtendedExecution();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
             var task = Task.Run(() =>
@@ -120,6 +146,133 @@ namespace AtomLiteBleDesktop
 
             this.isCancelRepeatReceivingBlink = false;
         }
+
+        private HomePage rootPage =HomePage.Current;
+        private ExtendedExecutionSession session = null;
+        private Timer periodicTimer = null;
+        private async void BeginExtendedExecution()
+        {
+            // The previous Extended Execution must be closed before a new one can be requested.
+            // This code is redundant here because the sample doesn't allow a new extended
+            // execution to begin until the previous one ends, but we leave it here for illustration.
+            ClearExtendedExecution();
+
+            var newSession = new ExtendedExecutionSession();
+            newSession.Reason = ExtendedExecutionReason.Unspecified;
+            newSession.Description = "Raising periodic toasts";
+            newSession.Revoked += SessionRevoked;
+            ExtendedExecutionResult result = await newSession.RequestExtensionAsync();
+
+            switch (result)
+            {
+                case ExtendedExecutionResult.Allowed:
+                    //rootPage.NotifyUser("Extended execution allowed.", NotifyType.StatusMessage);
+                    session = newSession;
+                    //periodicTimer = new Timer(OnTimer, DateTime.Now, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(10));
+                    break;
+
+                default:
+                case ExtendedExecutionResult.Denied:
+                    rootPage.NotifyUser("Extended execution denied.", NotifyType.ErrorMessage);
+                    newSession.Dispose();
+                    break;
+            }
+            UpdateUI();
+        }
+
+
+        void ClearExtendedExecution()
+        {
+            if (session != null)
+            {
+                session.Revoked -= SessionRevoked;
+                session.Dispose();
+                session = null;
+            }
+
+            if (periodicTimer != null)
+            {
+                periodicTimer.Dispose();
+                periodicTimer = null;
+            }
+        }
+
+        private void UpdateUI()
+        {
+            if (session == null)
+            {
+                //Status.Text = "Not requested";
+                //RequestButton.IsEnabled = true;
+                //CloseButton.IsEnabled = false;
+            }
+            else
+            {
+                //Status.Text = "Requested";
+                //RequestButton.IsEnabled = false;
+                //CloseButton.IsEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// Display a message to the user.
+        /// This method may be called from any thread.
+        /// </summary>
+        /// <param name="strMessage"></param>
+        /// <param name="type"></param>
+        public void NotifyUser(string strMessage, NotifyType type)
+        {
+            // If called from the UI thread, then update immediately.
+            // Otherwise, schedule a task on the UI thread to perform the update.
+            if (Dispatcher.HasThreadAccess)
+            {
+                //UpdateStatus(strMessage, type);
+            }
+            else
+            {
+                var task = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => UpdateStatus(strMessage, type));
+            }
+        }
+        private void UpdateStatus(string strMessage, NotifyType type)
+        {
+        }
+
+            private async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                switch (args.Reason)
+                {
+                    case ExtendedExecutionRevokedReason.Resumed:
+                        rootPage.NotifyUser("Extended execution revoked due to returning to foreground.", NotifyType.StatusMessage);
+                        break;
+
+                    case ExtendedExecutionRevokedReason.SystemPolicy:
+                        rootPage.NotifyUser("Extended execution revoked due to system policy.", NotifyType.StatusMessage);
+                        break;
+                }
+
+                EndExtendedExecution();
+            });
+        }
+        private void EndExtendedExecution()
+        {
+            ClearExtendedExecution();
+            UpdateUI();
+        }
+        public enum NotifyType
+        {
+            StatusMessage,
+            ErrorMessage
+        };
+
+
+        private void OnTimer(object state)
+        {
+            var startTime = (DateTime)state;
+            var runningTime = Math.Round((DateTime.Now - startTime).TotalSeconds, 0);
+           HomePage.NotificationToast($"Extended execution has been active for {runningTime} seconds");
+        }
+
 
         private  BluetoothLEDevice getDevice(string deviceName)
         {

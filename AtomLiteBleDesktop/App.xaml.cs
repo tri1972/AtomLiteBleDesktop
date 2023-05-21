@@ -99,6 +99,7 @@ namespace AtomLiteBleDesktop
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
             bluetoothAccesser.SearchDevices(servers);
             */
+
         }
 
         /// <summary>

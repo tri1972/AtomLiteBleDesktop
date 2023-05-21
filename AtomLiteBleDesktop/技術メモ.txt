@@ -47,3 +47,21 @@ log4net実装について
 https://learn.microsoft.com/ja-jp/windows/uwp/files/file-access-permissions
 動的実装については以下を参考
 https://garafu.blogspot.com/2014/05/log4net_26.html
+
+
+
+
+GattServer,Deviceの取得に失敗する場合、
+ bluetoothLeDevice.GetGattServicesAsync関数の引数をCashedとしたほうがよいかも
+https://learn.microsoft.com/ja-jp/uwp/api/windows.devices.bluetooth.bluetoothcachemode?view=winrt-22621
+またこの関数はUIスレッドになければいけない
+https://learn.microsoft.com/ja-jp/uwp/api/windows.devices.bluetooth.bluetoothledevice.fromidasync?view=winrt-19041
+
+UIスレッドの実行を待つ方法。
+あまりうまくいっていないように見える
+https://learn.microsoft.com/ja-jp/uwp/api/windows.ui.core.coredispatcher.runasync?view=winrt-22621#windows-ui-core-coredispatcher-runasync(windows-ui-core-coredispatcherpriority-windows-ui-core-dispatchedhandler)
+
+
+アプリの実行延長を行う
+https://learn.microsoft.com/ja-jp/windows/uwp/launch-resume/run-minimized-with-extended-execution
+
