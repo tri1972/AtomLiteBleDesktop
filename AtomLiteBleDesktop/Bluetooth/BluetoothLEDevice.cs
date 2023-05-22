@@ -327,15 +327,12 @@ namespace AtomLiteBleDesktop
 #warning このメソッドについてはUIスレッドで実行する必要があり
                 await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.High, async () =>
                 {
-                    logger.Info("ここまで到達1" + this.name);
                     taskCompletionSource.SetResult(await Windows.Devices.Bluetooth.BluetoothLEDevice.FromIdAsync(this.Id));
                     //this.bluetoothLeDevice = await Windows.Devices.Bluetooth.BluetoothLEDevice.FromIdAsync(this.Id);
                 });
 
-                logger.Info("ここまで到達2" + this.name);
                 bluetoothLeDevice = taskCompletionSource.Task.Result;
 
-                logger.Info("ここまで到達3" + this.name);
                 if (bluetoothLeDevice == null)
                 {
 #if DEBUG
@@ -345,7 +342,6 @@ namespace AtomLiteBleDesktop
                 }
                 else
                 {
-                    logger.Info("ここまで到達4" + this.name);
 #if DEBUG
                     logger.Info("Get device of ConnectServer!!:" + this.name);
 #endif
@@ -357,10 +353,7 @@ namespace AtomLiteBleDesktop
 
                     var tasksub = await Task.Run(async () =>
                     {
-
-                        logger.Info("ここまで到達5" + this.name);
                         GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Cached);
-                        logger.Info("ここまで到達6" + this.name);
                         if (result.Status == GattCommunicationStatus.Success)
                         {
 #if DEBUG

@@ -38,9 +38,6 @@ namespace AtomLiteBleDesktop
     /// </summary>
     public sealed partial class HomePage : Page
     {
-
-        public static HomePage Current;
-
         /// <summary>
         /// Device状態
         /// </summary>
@@ -54,6 +51,10 @@ namespace AtomLiteBleDesktop
             Find
         }
 
+        /// <summary>
+        /// log4net用インスタンス
+        /// </summary>
+        private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private const string SERVICE_UUID_CALL_UNDER_LEVEL= "e72609f6-2bcb-4fb0-824a-5276ec9e355d";
         private const string CHARACTERISTIC_UUID_CALL_UNDER_LEVEL = "cca99442-dab6-4f69-8bc2-685e2412d178";
@@ -67,34 +68,12 @@ namespace AtomLiteBleDesktop
         {
             this.InitializeComponent();
             batchUpdateBadgeGlyphClear();
-            Current = this;
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-
-
-
             BeginExtendedExecution();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
             var task = Task.Run(() =>
             {
@@ -147,9 +126,7 @@ namespace AtomLiteBleDesktop
             this.isCancelRepeatReceivingBlink = false;
         }
 
-        private HomePage rootPage =HomePage.Current;
         private ExtendedExecutionSession session = null;
-        private Timer periodicTimer = null;
         private async void BeginExtendedExecution()
         {
             // The previous Extended Execution must be closed before a new one can be requested.
@@ -166,18 +143,17 @@ namespace AtomLiteBleDesktop
             switch (result)
             {
                 case ExtendedExecutionResult.Allowed:
-                    //rootPage.NotifyUser("Extended execution allowed.", NotifyType.StatusMessage);
                     session = newSession;
-                    //periodicTimer = new Timer(OnTimer, DateTime.Now, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(10));
                     break;
 
                 default:
                 case ExtendedExecutionResult.Denied:
-                    rootPage.NotifyUser("Extended execution denied.", NotifyType.ErrorMessage);
+#if DEBUG
+                    logger.Error("Extended execution denied.");
+#endif
                     newSession.Dispose();
                     break;
             }
-            UpdateUI();
         }
 
 
@@ -189,65 +165,24 @@ namespace AtomLiteBleDesktop
                 session.Dispose();
                 session = null;
             }
-
-            if (periodicTimer != null)
-            {
-                periodicTimer.Dispose();
-                periodicTimer = null;
-            }
         }
 
-        private void UpdateUI()
-        {
-            if (session == null)
-            {
-                //Status.Text = "Not requested";
-                //RequestButton.IsEnabled = true;
-                //CloseButton.IsEnabled = false;
-            }
-            else
-            {
-                //Status.Text = "Requested";
-                //RequestButton.IsEnabled = false;
-                //CloseButton.IsEnabled = true;
-            }
-        }
-
-        /// <summary>
-        /// Display a message to the user.
-        /// This method may be called from any thread.
-        /// </summary>
-        /// <param name="strMessage"></param>
-        /// <param name="type"></param>
-        public void NotifyUser(string strMessage, NotifyType type)
-        {
-            // If called from the UI thread, then update immediately.
-            // Otherwise, schedule a task on the UI thread to perform the update.
-            if (Dispatcher.HasThreadAccess)
-            {
-                //UpdateStatus(strMessage, type);
-            }
-            else
-            {
-                var task = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => UpdateStatus(strMessage, type));
-            }
-        }
-        private void UpdateStatus(string strMessage, NotifyType type)
-        {
-        }
-
-            private async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
+        private async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 switch (args.Reason)
                 {
                     case ExtendedExecutionRevokedReason.Resumed:
-                        rootPage.NotifyUser("Extended execution revoked due to returning to foreground.", NotifyType.StatusMessage);
+#if DEBUG
+                        logger.Info("Extended execution revoked due to returning to foreground.");
+#endif
                         break;
 
                     case ExtendedExecutionRevokedReason.SystemPolicy:
-                        rootPage.NotifyUser("Extended execution revoked due to system policy.", NotifyType.StatusMessage);
+#if DEBUG
+                        logger.Info("Extended execution revoked due to system policy.");
+#endif
                         break;
                 }
 
@@ -257,22 +192,7 @@ namespace AtomLiteBleDesktop
         private void EndExtendedExecution()
         {
             ClearExtendedExecution();
-            UpdateUI();
         }
-        public enum NotifyType
-        {
-            StatusMessage,
-            ErrorMessage
-        };
-
-
-        private void OnTimer(object state)
-        {
-            var startTime = (DateTime)state;
-            var runningTime = Math.Round((DateTime.Now - startTime).TotalSeconds, 0);
-           HomePage.NotificationToast($"Extended execution has been active for {runningTime} seconds");
-        }
-
 
         private  BluetoothLEDevice getDevice(string deviceName)
         {

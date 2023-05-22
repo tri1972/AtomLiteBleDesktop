@@ -129,21 +129,15 @@ namespace AtomLiteBleDesktop
 
             try
             {
-
-                logger.Info("ここまで到達7");
                 // Ensure we have access to the device.
                 var accessStatus = await service.RequestAccessAsync();
-                logger.Info("ここまで到達8");
                 if (accessStatus == DeviceAccessStatus.Allowed)
                 {
-                    logger.Info("ここまで到達9:Allowed");
                     // BT_Code: Get all the child characteristics of a service. Use the cache mode to specify uncached characterstics only 
                     // and the new Async functions to get the characteristics of unpaired devices as well. 
                     var result = await service.GetCharacteristicsAsync(BluetoothCacheMode.Cached);
-                    logger.Info("ここまで到達10:");
                     if (result.Status == GattCommunicationStatus.Success)
                     {
-                        logger.Info("ここまで到達11:Success");
                         foreach (var characteristic in result.Characteristics)
                         {
                             var bluetoothCharacteristic = new BluetoothCharacteristic(characteristic);
@@ -154,7 +148,6 @@ namespace AtomLiteBleDesktop
                     }
                     else
                     {
-                        logger.Info("ここまで到達11:"+result.Status.ToString());
                         foreach (var characteristic in result.Characteristics)
                         {
                             // On error, act as if there are no characteristics.
@@ -164,7 +157,6 @@ namespace AtomLiteBleDesktop
                 }
                 else
                 {
-                    logger.Info("ここまで到達9:"+ accessStatus.ToString());
                     // On error, act as if there are no characteristics.
                     characteristics.Add(new BluetoothCharacteristic());
 
