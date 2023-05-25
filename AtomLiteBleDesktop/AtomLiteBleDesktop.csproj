@@ -132,6 +132,7 @@
     <Compile Include="ControlPage.xaml.cs">
       <DependentUpon>ControlPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ExtendedExecutionHelper.cs" />
     <Compile Include="HomePage.xaml.cs">
       <DependentUpon>HomePage.xaml</DependentUpon>
     </Compile>

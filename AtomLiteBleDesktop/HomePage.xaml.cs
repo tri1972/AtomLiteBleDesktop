@@ -72,7 +72,7 @@ namespace AtomLiteBleDesktop
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            BeginExtendedExecution();
+            ExtendedExecutionHelper.GetInstance().BeginExtendedExecution();
         
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
             var task = Task.Run(() =>
@@ -126,73 +126,6 @@ namespace AtomLiteBleDesktop
             this.isCancelRepeatReceivingBlink = false;
         }
 
-        private ExtendedExecutionSession session = null;
-        private async void BeginExtendedExecution()
-        {
-            // The previous Extended Execution must be closed before a new one can be requested.
-            // This code is redundant here because the sample doesn't allow a new extended
-            // execution to begin until the previous one ends, but we leave it here for illustration.
-            ClearExtendedExecution();
-
-            var newSession = new ExtendedExecutionSession();
-            newSession.Reason = ExtendedExecutionReason.Unspecified;
-            newSession.Description = "Raising periodic toasts";
-            newSession.Revoked += SessionRevoked;
-            ExtendedExecutionResult result = await newSession.RequestExtensionAsync();
-
-            switch (result)
-            {
-                case ExtendedExecutionResult.Allowed:
-                    session = newSession;
-                    break;
-
-                default:
-                case ExtendedExecutionResult.Denied:
-#if DEBUG
-                    logger.Error("Extended execution denied.");
-#endif
-                    newSession.Dispose();
-                    break;
-            }
-        }
-
-
-        void ClearExtendedExecution()
-        {
-            if (session != null)
-            {
-                session.Revoked -= SessionRevoked;
-                session.Dispose();
-                session = null;
-            }
-        }
-
-        private async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
-        {
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                switch (args.Reason)
-                {
-                    case ExtendedExecutionRevokedReason.Resumed:
-#if DEBUG
-                        logger.Info("Extended execution revoked due to returning to foreground.");
-#endif
-                        break;
-
-                    case ExtendedExecutionRevokedReason.SystemPolicy:
-#if DEBUG
-                        logger.Info("Extended execution revoked due to system policy.");
-#endif
-                        break;
-                }
-
-                EndExtendedExecution();
-            });
-        }
-        private void EndExtendedExecution()
-        {
-            ClearExtendedExecution();
-        }
 
         private  BluetoothLEDevice getDevice(string deviceName)
         {
@@ -539,22 +472,68 @@ namespace AtomLiteBleDesktop
         /// <param name="badgeGlyphValue"></param>
         private void batchUpdateBadgeGlyph(string badgeGlyphValue)
         {
-
+            /*
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml(GetContent(10));
+            BadgeNotification badge = new BadgeNotification(xmlDoc);
+            */
+            
             // Get the blank badge XML payload for a badge glyph
             XmlDocument badgeXml = BadgeUpdateManager.GetTemplateContent(BadgeTemplateType.BadgeGlyph);
-
             // Set the value of the badge in the XML to our glyph value
             XmlElement badgeElement = badgeXml.SelectSingleNode("/badge") as XmlElement;
-            badgeElement.SetAttribute("value", badgeGlyphValue);
 
+            badgeElement.SetAttribute("value", "busy");//赤〇警告で表示する場合
+           // badgeElement.SetAttribute("value", badgeGlyphValue );//着信数を表示する場合
+            
             // Create the badge notification
             BadgeNotification badge = new BadgeNotification(badgeXml);
+
 
             // Create the badge updater for the application
             BadgeUpdater badgeUpdater = BadgeUpdateManager.CreateBadgeUpdaterForApplication();
 
             // And update the badge
             badgeUpdater.Update(badge);
+            
+            /*
+            string badgeContent = "10";
+            string badgeTextColor = "#00b2f0";
+            // バッジのXMLテンプレートを作成
+            string badgeXmlString = $@"
+        <badge value=""{badgeGlyphValue}"" 
+               xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+               xmlns:badge=""http://schemas.microsoft.com/windows/notifications/1.0"">
+            <badge:BadgeContent 
+               BadgeForeground='#{badgeTextColor}'/>
+        </badge>";
+            // XML文字列をパースしてBadgeNotificationオブジェクトを作成
+            XmlDocument badgeXml = new XmlDocument();
+            badgeXml.LoadXml(badgeXmlString);
+            BadgeNotification badge = new BadgeNotification(badgeXml);
+
+            // Badgeを更新
+            BadgeUpdater badgeUpdater = BadgeUpdateManager.CreateBadgeUpdaterForApplication();
+            badgeUpdater.Update(badge);
+            */
+        }
+
+
+        /// <summary>
+        /// Retrieves the notification Xml content as a WinRT Xml document.
+        /// </summary>
+        /// <returns>The notification Xml content as a WinRT Xml document.</returns>
+        public XmlDocument GetXml(int number)
+        {
+            XmlDocument xml = new XmlDocument();
+            xml.LoadXml(GetContent(number));
+            return xml;
+        }
+
+        public const int NOTIFICATION_CONTENT_VERSION = 1;
+        public string GetContent(int m_Number)
+        {
+            return String.Format("<badge version='{0}' value='{1}' Style='{ ThemeResource AttentionIconInfoBadgeStyle}'/>", NOTIFICATION_CONTENT_VERSION, m_Number);
         }
 
         /// <summary>
