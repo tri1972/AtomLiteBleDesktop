@@ -80,6 +80,7 @@ namespace AtomLiteBleDesktop
             servers.Add(PIRSERVER);
             servers.Add(dummySERVER1);
             servers.Add(dummySERVER2);
+            
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
 

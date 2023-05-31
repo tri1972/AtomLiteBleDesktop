@@ -14,6 +14,7 @@ using Windows.ApplicationModel.ExtendedExecution;
 using Windows.Data.Xml.Dom;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
@@ -73,7 +74,8 @@ namespace AtomLiteBleDesktop
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             ExtendedExecutionHelper.GetInstance().BeginExtendedExecution();
-        
+            
+
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
             var task = Task.Run(() =>
             {
@@ -331,7 +333,8 @@ namespace AtomLiteBleDesktop
                     {
                         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                         {
-                            item.PanelListColor = new SolidColorBrush(Colors.PaleGreen);
+                            item.PanelListColor = (SolidColorBrush)this.Resources["ListNoticePanelBackground"];
+                            //item.PanelListColor = new SolidColorBrush( Colors.PaleGreen);
                         });
                         break;
                     }
@@ -340,7 +343,8 @@ namespace AtomLiteBleDesktop
                     {
                         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                         {
-                            item.PanelListColor = new SolidColorBrush(Colors.OrangeRed);
+                            item.PanelListColor = (SolidColorBrush)this.Resources["ListWarningPanelBackground"];
+                            //item.PanelListColor = new SolidColorBrush(Colors.OrangeRed);
                         });
                         blink = false;
                     }
@@ -348,7 +352,8 @@ namespace AtomLiteBleDesktop
                     {
                         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                         {
-                            item.PanelListColor = new SolidColorBrush(Colors.PaleGreen);
+                            item.PanelListColor = (SolidColorBrush)this.Resources["ListNoticePanelBackground"];
+                            //item.PanelListColor = new SolidColorBrush(Colors.PaleGreen);
                         });
                         blink = true;
                     }
@@ -377,19 +382,19 @@ namespace AtomLiteBleDesktop
                         {
                             case typeDeviceStatus.Connected:
                                 item.RxStatus = "Connected";
-                                item.PanelFrontColor = new SolidColorBrush(Colors.LimeGreen);
+                                //item.PanelFrontColor = new SolidColorBrush(Colors.LimeGreen);
                                 break;
                             case typeDeviceStatus.Find:
                                 item.RxStatus = "Find!";
-                                item.PanelFrontColor = new SolidColorBrush(Colors.AliceBlue);
+                                //item.PanelFrontColor = new SolidColorBrush(Colors.AliceBlue);
                                 break;
                             case typeDeviceStatus.NotFind:
                                 item.RxStatus = "NotFind!";
-                                item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
+                                //item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
                                 break;
                             case typeDeviceStatus.DisConnected:
                                 item.RxStatus = "Disconnected!";
-                                item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
+                                //item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
                                 break;
                             case typeDeviceStatus.RxData:
                                 item.ServerName = serverName;
@@ -397,7 +402,7 @@ namespace AtomLiteBleDesktop
                                 item.CharacteristicName = characteristicName;
                                 item.CharacteristicStatus = characteristicStatus;
                                 item.CharacteristicData = CharacteristicData;
-                                item.PanelFrontColor = new SolidColorBrush(Colors.LimeGreen);
+                                //item.PanelFrontColor = new SolidColorBrush(Colors.LimeGreen);
                                 if (rxStatus == TypeStateReseive.StartReceiving)
                                 {
                                     if (rxStatus != beforeRxdata)
@@ -421,7 +426,8 @@ namespace AtomLiteBleDesktop
                                 }
                                 else if (rxStatus == TypeStateReseive.Received)
                                 {
-                                    item.PanelListColor = new SolidColorBrush(Colors.PaleGreen);
+                                    item.PanelListColor = (SolidColorBrush)this.Resources["ListNoticePanelBackground"];
+                                    //item.PanelListColor = new SolidColorBrush(Colors.PaleGreen);
                                 }
                                 else
                                 {
@@ -432,8 +438,7 @@ namespace AtomLiteBleDesktop
                     }
                     else
                     {
-                        resourceGridServer.Add(new Server(deviceName, "NotFind!"));
-
+                        resourceGridServer.Add(new Server(deviceName, "NotFind!",Resources));
                     }
                 });
             }
@@ -552,29 +557,11 @@ namespace AtomLiteBleDesktop
     }
     public class Server : INotifyPropertyChanged
     {
+        private ResourceDictionary resource;
 
-        private Brush panelBackColor = new SolidColorBrush(Color.FromArgb(0xff, 0xa0, 0x90, 0x90));//#FFA09090
-        public Brush PanelBackColor
-        {
-            get { return this.panelBackColor; }
-            set { 
-                this.panelBackColor = value;
-                NotifyPropertyChanged("PanelBackColor");
-            }
-        }
 
-        private Brush panelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));// #FFD19F9F;
-        public  Brush PanelFrontColor
-        {
-            get { return this.panelFrontColor; }
-            set
-            {
-                this.panelFrontColor = value;
-                NotifyPropertyChanged("PanelFrontColor");
-            }
-        }
-
-        private Brush panelListColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));// #FFD19F9F;
+        private Brush panelListColor;
+        //private Brush panelListColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));// #FFD19F9F;
         public Brush PanelListColor
         {
             get { return this.panelListColor; }
@@ -660,10 +647,12 @@ namespace AtomLiteBleDesktop
             }
         }
 
-        public Server(String deviceName, String rxStatus)
+        public Server(String deviceName, String rxStatus,ResourceDictionary resource)
         {
             this.DeviceName = deviceName;
             this.RxStatus = rxStatus;
+            this.resource = resource;
+            this.PanelListColor = (SolidColorBrush)resource["ListNoticePanelBackground"];
         }
 
     }
@@ -671,8 +660,9 @@ namespace AtomLiteBleDesktop
     {
         public Servers()
         {
-            //以下の実装については静的にxamlに結合されるため、表示テストの為に残す（実際に使用する場合はコメントアウトすること
             /*
+            //以下の実装については静的にxamlに結合されるため、表示テストの為に残す（実際に使用する場合はコメントアウトすること
+            
             Add(new Server("Michael", "Connected")
             {
                 ServerName = "test",
@@ -682,6 +672,7 @@ namespace AtomLiteBleDesktop
             Add(new Server("Seo-yun", "Find!!"));
             Add(new Server("Guido", "COnnecting"));
             */
+            
         }
 
     }
