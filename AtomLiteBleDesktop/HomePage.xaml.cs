@@ -151,30 +151,46 @@ namespace AtomLiteBleDesktop
                 {
                     if (senderButton.DataContext is Server)
                     {
-                        TypeStateWaitingSend sendData;
-                        switch (senderButton.Name)
-                        {
-                            case "Button_ASAP":
-                                sendData = TypeStateWaitingSend.ASAP;
-                                break;
-                            case "Button_Wait":
-                                sendData = TypeStateWaitingSend.WAIT;
-                                break;
-                            case "Button_Wrong":
-                                sendData = TypeStateWaitingSend.WRONG;
-                                break;
-                            case "Button_Cancel":
-                                sendData = TypeStateWaitingSend.Cancel;
-                                break;
-                            default:
-                                sendData = TypeStateWaitingSend.None;
-                                break;
-                        }
                         var serverListview = (sender as Button).DataContext as Server;
-                        this.isCancelRepeatReceivingBlink = true;//送信ボタンが押されたら点滅はキャンセルされる
                         var mDevice = getDevice(serverListview.DeviceName);
                         if (mDevice.Status== TypeStatus.Coonected)
                         {
+                            TypeStateWaitingSend sendData;
+                            switch (senderButton.Name)
+                            {
+                                case "Button_ASAP":
+                                    sendData = TypeStateWaitingSend.ASAP;
+                                    serverListview.StringGreenLamp = "●";
+                                    serverListview.StringYellowLamp = "〇";
+                                    serverListview.StringRedLamp = "〇";
+                                    serverListview.StringBlueLamp = "〇";
+                                    break;
+                                case "Button_Wait":
+                                    sendData = TypeStateWaitingSend.WAIT;
+                                    serverListview.StringGreenLamp = "〇";
+                                    serverListview.StringYellowLamp = "●";
+                                    serverListview.StringRedLamp = "〇";
+                                    serverListview.StringBlueLamp = "〇";
+                                    break;
+                                case "Button_Wrong":
+                                    sendData = TypeStateWaitingSend.WRONG;
+                                    serverListview.StringGreenLamp = "〇";
+                                    serverListview.StringYellowLamp = "〇";
+                                    serverListview.StringRedLamp = "●";
+                                    serverListview.StringBlueLamp = "〇";
+                                    break;
+                                case "Button_Cancel":
+                                    sendData = TypeStateWaitingSend.Cancel;
+                                    serverListview.StringGreenLamp = "〇";
+                                    serverListview.StringYellowLamp = "〇";
+                                    serverListview.StringRedLamp = "〇";
+                                    serverListview.StringBlueLamp = "●";
+                                    break;
+                                default:
+                                    sendData = TypeStateWaitingSend.None;
+                                    break;
+                            }
+                            this.isCancelRepeatReceivingBlink = true;//送信ボタンが押されたら点滅はキャンセルされる
                             mDevice.SendData(SERVICE_UUID_CALL_UNDER_LEVEL, CHARACTERISTIC_UUID_CALL_UNDER_LEVEL, sendData);
                         }
                         else
@@ -554,6 +570,11 @@ namespace AtomLiteBleDesktop
                 hogehogeData.StatusTextBackground = new SolidColorBrush(Colors.Red);
             });
         }
+
+        private void ListBox_SelectionChanged()
+        {
+
+        }
     }
     public class Server : INotifyPropertyChanged
     {
@@ -637,6 +658,54 @@ namespace AtomLiteBleDesktop
             }
         }
 
+        private String stringGreenLamp;
+        public String StringGreenLamp
+        {
+            get { return this.stringGreenLamp; }
+            set
+            {
+                this.stringGreenLamp = value;
+                NotifyPropertyChanged("StringGreenLamp");
+            }
+
+        }
+
+        private String stringYellowLamp;
+        public String StringYellowLamp
+        {
+            get { return this.stringYellowLamp; }
+            set
+            {
+                this.stringYellowLamp = value;
+                NotifyPropertyChanged("StringYellowLamp");
+            }
+
+        }
+
+        private String stringRedLamp;
+        public String StringRedLamp
+        {
+            get { return this.stringRedLamp; }
+            set
+            {
+                this.stringRedLamp = value;
+                NotifyPropertyChanged("StringRedLamp");
+            }
+
+        }
+
+        private String stringBlueLamp;
+        public String StringBlueLamp
+        {
+            get { return this.stringBlueLamp; }
+            set
+            {
+                this.stringBlueLamp = value;
+                NotifyPropertyChanged("StringBlueLamp");
+            }
+
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         void NotifyPropertyChanged(string info)
@@ -652,7 +721,14 @@ namespace AtomLiteBleDesktop
             this.DeviceName = deviceName;
             this.RxStatus = rxStatus;
             this.resource = resource;
-            this.PanelListColor = (SolidColorBrush)resource["ListNoticePanelBackground"];
+            this.stringGreenLamp = "〇";
+            this.stringYellowLamp = "〇";
+            this.stringRedLamp = "〇";
+            this.stringBlueLamp = "〇";
+            if (resource != null)
+            {
+                this.PanelListColor = (SolidColorBrush)resource["ListNoticePanelBackground"];
+            }
         }
 
     }
@@ -660,17 +736,17 @@ namespace AtomLiteBleDesktop
     {
         public Servers()
         {
-            /*
-            //以下の実装については静的にxamlに結合されるため、表示テストの為に残す（実際に使用する場合はコメントアウトすること
             
-            Add(new Server("Michael", "Connected")
+            //以下の実装については静的にxamlに結合されるため、表示テストの為に残す（実際に使用する場合はコメントアウトすること
+            /*
+            Add(new Server("Michael", "Connected",null)
             {
                 ServerName = "test",
             });
             ;
-            Add(new Server("Chris", "NotFind"));
-            Add(new Server("Seo-yun", "Find!!"));
-            Add(new Server("Guido", "COnnecting"));
+            Add(new Server("Chris", "NotFind", null));
+            Add(new Server("Seo-yun", "Find!!", null));
+            Add(new Server("Guido", "COnnecting", null));
             */
             
         }
