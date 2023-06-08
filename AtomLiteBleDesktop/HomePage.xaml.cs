@@ -51,7 +51,7 @@ namespace AtomLiteBleDesktop
             NotFind,
             Find
         }
-
+        
         /// <summary>
         /// log4net用インスタンス
         /// </summary>
@@ -262,6 +262,28 @@ namespace AtomLiteBleDesktop
             if (sender is BluetoothLEDevice)
             {
                 AccesserStatusChange(e.State,sender as BluetoothLEDevice);
+                typeDeviceStatus deviceStatus;
+                switch ((sender as BluetoothLEDevice).Status)
+                {
+                    case TypeStatus.Coonected:
+                    case TypeStatus.Connecting:
+                        deviceStatus = typeDeviceStatus.Connected;
+                        break;
+                    case TypeStatus.Disconnect:
+                        deviceStatus = typeDeviceStatus.DisConnected;
+                        break;
+                    case TypeStatus.Finded:
+                        deviceStatus = typeDeviceStatus.Find;
+                        break;
+                    case TypeStatus.NoFinded:
+                        deviceStatus = typeDeviceStatus.NotFind;
+                        break;
+                    default:
+                        deviceStatus = typeDeviceStatus.RxData;
+                        break;
+                }
+                var item = getListItem((sender as BluetoothLEDevice).Name);
+                listBoxChange_TextDataDispatcher(item, deviceStatus, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received, 0);
             }
         }
         
@@ -379,84 +401,117 @@ namespace AtomLiteBleDesktop
 
         }
 
+
+        private async void listBoxChange_TextDataDispatcher
+            (
+            Server item,
+            typeDeviceStatus deviceStatus,
+            string serverName,
+            string characteristicName,
+            string characteristicStatus,
+            string CharacteristicData,
+            BluetoothCharacteristic.TypeStateReseive rxStatus,
+            int? numberRx)
+        {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            {
+                switch (deviceStatus)
+                {
+                    case typeDeviceStatus.Connected:
+                        item.RxStatus = "Connected";
+                        //item.PanelFrontColor = new SolidColorBrush(Colors.LimeGreen);
+                        break;
+                    case typeDeviceStatus.Find:
+                        item.RxStatus = "Find!";
+                        //item.PanelFrontColor = new SolidColorBrush(Colors.AliceBlue);
+                        break;
+                    case typeDeviceStatus.NotFind:
+                        item.RxStatus = "NotFind!";
+                        //item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
+                        break;
+                    case typeDeviceStatus.DisConnected:
+                        item.RxStatus = "Disconnected!";
+                        //item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
+                        break;
+                    case typeDeviceStatus.RxData:
+                        item.ServerName = serverName;
+                        item.RxStatus = "Connected";
+                        item.CharacteristicName = characteristicName;
+                        item.CharacteristicStatus = characteristicStatus;
+                        item.CharacteristicData = CharacteristicData;
+                        //item.PanelFrontColor = new SolidColorBrush(Colors.LimeGreen);
+                        if (rxStatus == TypeStateReseive.StartReceiving)
+                        {
+                            if (rxStatus != beforeRxdata)
+                            {
+                                NotificationToast(item.DeviceName);
+
+                                batchUpdateBadgeNum(numberRx ?? 0);
+                                //batchUpdateBadgeGlyphAlert();
+
+
+                                beforeRxdata = rxStatus;
+                            }
+                        }
+                        else if (rxStatus == TypeStateReseive.RepeatReceiving)
+                        {
+                            if (rxStatus != beforeRxdata)
+                            {
+                                beforeRxdata = rxStatus;
+                                blinkListItem(item);
+                            }
+                        }
+                        else if (rxStatus == TypeStateReseive.Received)
+                        {
+                            item.PanelListColor = (SolidColorBrush)this.Resources["ListNoticePanelBackground"];
+                            //item.PanelListColor = new SolidColorBrush(Colors.PaleGreen);
+                        }
+                        else
+                        {
+
+                        }
+                        break;
+                }
+            });
+         }
+
+
         /// <summary>
         /// TextDataにUIスレッド外で書き込みを行う
         /// </summary>
-        /// <param name="text"></param>
-        private async void listBoxAdd_TextDataDispatcher(string deviceName, typeDeviceStatus deviceStatus,string serverName,string characteristicName, string characteristicStatus, string CharacteristicData,BluetoothCharacteristic.TypeStateReseive rxStatus,int? numberRx)
+        /// <param name="deviceName">デバイス名</param>
+        /// <param name="deviceStatus">ステータス</param>
+        /// <param name="serverName">サーバー名</param>
+        /// <param name="characteristicName">characteristic名</param>
+        /// <param name="characteristicStatus">characteristicステータス</param>
+        /// <param name="CharacteristicData">characteristic</param>
+        /// <param name="rxStatus"></param>
+        /// <param name="numberRx"></param>
+        private async void listBoxAdd_TextDataDispatcher
+            (string deviceName, 
+            typeDeviceStatus deviceStatus,
+            string serverName,
+            string characteristicName, 
+            string characteristicStatus, 
+            string CharacteristicData,
+            BluetoothCharacteristic.TypeStateReseive rxStatus,
+            int? numberRx)
         {
             try
             {
                 var item = getListItem(deviceName);
-                
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,  async () =>
+                //bool hasItem = false;
+                if (item != null)
                 {
-                    //bool hasItem = false;
-                    if (item != null)
+                    listBoxChange_TextDataDispatcher(item, deviceStatus, serverName, characteristicName, CharacteristicData, characteristicStatus, rxStatus, numberRx);
+                }
+                else
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                     {
-                        switch (deviceStatus)
-                        {
-                            case typeDeviceStatus.Connected:
-                                item.RxStatus = "Connected";
-                                //item.PanelFrontColor = new SolidColorBrush(Colors.LimeGreen);
-                                break;
-                            case typeDeviceStatus.Find:
-                                item.RxStatus = "Find!";
-                                //item.PanelFrontColor = new SolidColorBrush(Colors.AliceBlue);
-                                break;
-                            case typeDeviceStatus.NotFind:
-                                item.RxStatus = "NotFind!";
-                                //item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
-                                break;
-                            case typeDeviceStatus.DisConnected:
-                                item.RxStatus = "Disconnected!";
-                                //item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
-                                break;
-                            case typeDeviceStatus.RxData:
-                                item.ServerName = serverName;
-                                item.RxStatus = "Connected";
-                                item.CharacteristicName = characteristicName;
-                                item.CharacteristicStatus = characteristicStatus;
-                                item.CharacteristicData = CharacteristicData;
-                                //item.PanelFrontColor = new SolidColorBrush(Colors.LimeGreen);
-                                if (rxStatus == TypeStateReseive.StartReceiving)
-                                {
-                                    if (rxStatus != beforeRxdata)
-                                    {
-                                        NotificationToast(item.DeviceName);
-
-                                        batchUpdateBadgeNum(numberRx ?? 0);
-                                        //batchUpdateBadgeGlyphAlert();
-                                        
-                                        
-                                        beforeRxdata = rxStatus;
-                                    }
-                                }
-                                else if (rxStatus == TypeStateReseive.RepeatReceiving)
-                                {
-                                    if (rxStatus != beforeRxdata)
-                                    {
-                                        beforeRxdata = rxStatus;
-                                        blinkListItem(item);
-                                    }
-                                }
-                                else if (rxStatus == TypeStateReseive.Received)
-                                {
-                                    item.PanelListColor = (SolidColorBrush)this.Resources["ListNoticePanelBackground"];
-                                    //item.PanelListColor = new SolidColorBrush(Colors.PaleGreen);
-                                }
-                                else
-                                {
-
-                                }
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        resourceGridServer.Add(new Server(deviceName, "NotFind!",Resources));
-                    }
-                });
+                        resourceGridServer.Add(new Server(deviceName, "NotFind!", Resources));
+                    });
+                }
             }
             catch(Exception err)
             {
@@ -736,9 +791,9 @@ namespace AtomLiteBleDesktop
     {
         public Servers()
         {
-            
-            //以下の実装については静的にxamlに結合されるため、表示テストの為に残す（実際に使用する場合はコメントアウトすること
             /*
+            //以下の実装については静的にxamlに結合されるため、表示テストの為に残す（実際に使用する場合はコメントアウトすること
+            
             Add(new Server("Michael", "Connected",null)
             {
                 ServerName = "test",
