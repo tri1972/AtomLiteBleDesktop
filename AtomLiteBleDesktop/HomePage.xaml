@@ -76,7 +76,14 @@
                                         <RowDefinition Height="1*" />
                                         <RowDefinition Height="1*" />
                                     </Grid.RowDefinitions>
-                                    <TextBlock x:Name="ServerStatus" Grid.Column="0"  Grid.Row="0" Text="{Binding DeviceName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                    <Grid  HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" Grid.Column="0"  Grid.Row="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="7*" />
+                                        </Grid.ColumnDefinitions>
+                                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE702;"  Grid.Column="0"  Grid.Row="0" />
+                                        <TextBlock x:Name="ServerStatus" Grid.Column="1"  Grid.Row="0" Text="{Binding DeviceName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                    </Grid>
                                     <TextBlock x:Name="ServerName" Grid.Column="0"  Grid.Row="1" Text="{Binding ServerName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                                     <TextBlock x:Name="RxStatus" Grid.Column="0"  Grid.Row="2" Text="{Binding RxStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                                 </Grid>
