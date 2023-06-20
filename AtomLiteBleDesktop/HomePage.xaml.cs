@@ -42,7 +42,7 @@ namespace AtomLiteBleDesktop
         /// <summary>
         /// Device状態
         /// </summary>
-        enum typeDeviceStatus
+        public enum typeDeviceStatus
         {
             RxData,
             TxData,
@@ -192,6 +192,9 @@ namespace AtomLiteBleDesktop
                             }
                             this.isCancelRepeatReceivingBlink = true;//送信ボタンが押されたら点滅はキャンセルされる
                             mDevice.SendData(SERVICE_UUID_CALL_UNDER_LEVEL, CHARACTERISTIC_UUID_CALL_UNDER_LEVEL, sendData);
+                            var listItem = getListItem(serverListview.DeviceName);
+                            listItem.NumberCall ="";
+                            listItem.IconCallNumber = "";
                         }
                         else
                         {
@@ -217,7 +220,7 @@ namespace AtomLiteBleDesktop
                     stringAdd_TextDataDispatcher("\n" + "取得Service名：");//接続した場合のUIへのBindをおこなう
                     if (sender != null)
                     {
-                        listBoxAdd_TextDataDispatcher(sender.Name, typeDeviceStatus.Connected, null, null, null, null,BluetoothCharacteristic.TypeStateReseive.Received,0);
+                        listBoxAdd_TextDataDispatcher(sender.Name, typeDeviceStatus.Connected, null, null, null, null,BluetoothCharacteristic.TypeStateReseive.Received,0);//ここでデバイス名のアイテムが登録されていなければ追加、登録されていればデバイスのステータスを変更
                         foreach (var service in sender.Services)
                         {
                             stringAdd_TextDataDispatcher("\n" + string.Copy(service.ServiceGattNativeServiceUuidString));
@@ -261,7 +264,8 @@ namespace AtomLiteBleDesktop
         {
             if (sender is BluetoothLEDevice)
             {
-                AccesserStatusChange(e.State,sender as BluetoothLEDevice);
+                AccesserStatusChange(e.State, sender as BluetoothLEDevice);//①ここでsenderのデバイスがnullなら新規アイテムとして登録される.nullでなければListBoxのステータスを変更
+                /*
                 typeDeviceStatus deviceStatus;
                 switch ((sender as BluetoothLEDevice).Status)
                 {
@@ -282,8 +286,9 @@ namespace AtomLiteBleDesktop
                         deviceStatus = typeDeviceStatus.RxData;
                         break;
                 }
-                var item = getListItem((sender as BluetoothLEDevice).Name);
-                listBoxChange_TextDataDispatcher(item, deviceStatus, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received, 0);
+                var item = getListItem((sender as BluetoothLEDevice).Name);//①で新規アイテムが登録される前にここに到達する（非同期のためそういう場合もあり）と、COnnectedなのにアイテムが見つからない
+                listBoxChange_TextDataDispatcher(item, deviceStatus, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received, 0);//ここでもitemuのステータスを変更しているのは二度手間
+                */
             }
         }
         
@@ -415,27 +420,28 @@ namespace AtomLiteBleDesktop
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
+
+                item.Status = deviceStatus;
                 switch (deviceStatus)
                 {
                     case typeDeviceStatus.Connected:
-                        item.RxStatus = "Connected";
+                        item.IconStatus = "\xE702";
+                        item.IconSignalBars = "\xE870";
                         //item.PanelFrontColor = new SolidColorBrush(Colors.LimeGreen);
                         break;
                     case typeDeviceStatus.Find:
-                        item.RxStatus = "Find!";
                         //item.PanelFrontColor = new SolidColorBrush(Colors.AliceBlue);
                         break;
                     case typeDeviceStatus.NotFind:
-                        item.RxStatus = "NotFind!";
                         //item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
                         break;
                     case typeDeviceStatus.DisConnected:
-                        item.RxStatus = "Disconnected!";
+                        item.IconStatus = "\xE871";
+                        item.IconSignalBars = "\xE870";
                         //item.PanelFrontColor = new SolidColorBrush(Color.FromArgb(0xff, 0xd1, 0x9f, 0x9f));
                         break;
                     case typeDeviceStatus.RxData:
                         item.ServerName = serverName;
-                        item.RxStatus = "Connected";
                         item.CharacteristicName = characteristicName;
                         item.CharacteristicStatus = characteristicStatus;
                         item.CharacteristicData = CharacteristicData;
@@ -445,7 +451,8 @@ namespace AtomLiteBleDesktop
                             if (rxStatus != beforeRxdata)
                             {
                                 NotificationToast(item.DeviceName);
-
+                                item.IconCallNumber = "\xE717";
+                                item.NumberCall = numberRx.ToString();
                                 batchUpdateBadgeNum(numberRx ?? 0);
                                 //batchUpdateBadgeGlyphAlert();
 
@@ -509,7 +516,7 @@ namespace AtomLiteBleDesktop
                 {
                     await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                     {
-                        resourceGridServer.Add(new Server(deviceName, "NotFind!", Resources));
+                        resourceGridServer.Add(new Server(deviceName, deviceStatus, Resources));
                     });
                 }
             }
@@ -659,6 +666,38 @@ namespace AtomLiteBleDesktop
             }
         }
 
+        private String iconStatus;
+        public String IconStatus
+        {
+            get { return this.iconStatus; }
+            set
+            {
+                this.iconStatus = value;
+                NotifyPropertyChanged("IconStatus");
+            }
+        }
+        private String iconSignalBars;
+        public String IconSignalBars
+        {
+            get { return this.iconSignalBars; }
+            set
+            {
+                this.iconSignalBars = value;
+                NotifyPropertyChanged("IconSignalBars");
+            }
+        }
+
+        private String iconCallNumber;
+        public String IconCallNumber
+        {
+            get { return this.iconCallNumber; }
+            set
+            {
+                this.iconCallNumber = value;
+                NotifyPropertyChanged("IconCallNumber");
+            }
+        }
+
         private String serverName;
         public String ServerName
         {
@@ -669,14 +708,51 @@ namespace AtomLiteBleDesktop
                 NotifyPropertyChanged("ServerName");
             }
         }
-
         private String rxStatus;
         public String RxStatus
         {
             get { return this.rxStatus; }
-            set { 
+            set
+            {
                 this.rxStatus = value;
                 NotifyPropertyChanged("RxStatus");
+            }
+        }
+
+        private HomePage.typeDeviceStatus status;
+        public HomePage.typeDeviceStatus Status
+        {
+            get { return this.status; }
+            set {
+                switch (value)
+                {
+                    case HomePage.typeDeviceStatus.Connected:
+                        this.RxStatus = "Connected";
+                        break;
+                    case HomePage.typeDeviceStatus.Find:
+                        this.RxStatus = "Find!";
+                        break;
+                    case HomePage.typeDeviceStatus.NotFind:
+                        this.RxStatus = "NotFind!";
+                        break;
+                    case HomePage.typeDeviceStatus.DisConnected:
+                        this.RxStatus = "Disconnected!";
+                        break;
+                    case HomePage.typeDeviceStatus.RxData:
+                        this.RxStatus = "Connected";
+                        break;
+                }
+            }
+        }
+
+        private String numberCall;
+        public String NumberCall
+        {
+            get { return this.numberCall; }
+            set
+            {
+                this.numberCall = value;
+                NotifyPropertyChanged("NumberCall");
             }
         }
 
@@ -771,10 +847,13 @@ namespace AtomLiteBleDesktop
             }
         }
 
-        public Server(String deviceName, String rxStatus,ResourceDictionary resource)
+        public Server(String deviceName, HomePage.typeDeviceStatus status,ResourceDictionary resource)
         {
             this.DeviceName = deviceName;
-            this.RxStatus = rxStatus;
+            this.IconStatus = "\xE702";
+            this.IconSignalBars = "\xE870";
+            this.Status = status;
+            this.IconCallNumber = "";
             this.resource = resource;
             this.stringGreenLamp = "〇";
             this.stringYellowLamp = "〇";
@@ -791,19 +870,17 @@ namespace AtomLiteBleDesktop
     {
         public Servers()
         {
-            /*
             //以下の実装については静的にxamlに結合されるため、表示テストの為に残す（実際に使用する場合はコメントアウトすること
-            
-            Add(new Server("Michael", "Connected",null)
+            /*
+            Add(new Server("Michael", HomePage.typeDeviceStatus.Connected,null)
             {
                 ServerName = "test",
             });
             ;
-            Add(new Server("Chris", "NotFind", null));
-            Add(new Server("Seo-yun", "Find!!", null));
-            Add(new Server("Guido", "COnnecting", null));
+            Add(new Server("Chris", HomePage.typeDeviceStatus.NotFind, null));
+            Add(new Server("Seo-yun", HomePage.typeDeviceStatus.Find, null));
+            Add(new Server("Guido", HomePage.typeDeviceStatus.DisConnected, null));
             */
-            
         }
 
     }
