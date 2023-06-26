@@ -123,6 +123,7 @@ namespace AtomLiteBleDesktop
         /// serviceの中から未定義のCharacteristicをRegistedCharacteristicとして取得する
         /// </summary>
         /// <param name="bleService"></param>
+        [Obsolete]
         public async Task<GattCharacteristic> GetRegisteredCharacteristic()
         {
             var service = this.Service;
@@ -135,15 +136,22 @@ namespace AtomLiteBleDesktop
                 {
                     // BT_Code: Get all the child characteristics of a service. Use the cache mode to specify uncached characterstics only 
                     // and the new Async functions to get the characteristics of unpaired devices as well. 
-                    var result = await service.GetCharacteristicsAsync(BluetoothCacheMode.Cached);
+                    var result = await service.GetCharacteristicsAsync(BluetoothCacheMode.Cached);//この関数でDevice.ConnectionStatusがSuccessかUnSuccessかが決まる。よって実際に接続できたかはこの関数が実行されたのちにConnectionStausを調べなくてはいけない
                     if (result.Status == GattCommunicationStatus.Success)
                     {
-                        foreach (var characteristic in result.Characteristics)
+                        if (service.Device.ConnectionStatus == BluetoothConnectionStatus.Connected)
                         {
-                            var bluetoothCharacteristic = new BluetoothCharacteristic(characteristic);
-                            bluetoothCharacteristic.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
-                            characteristics.Add(bluetoothCharacteristic);
-                            logger.Info("set EventHandler:" + bluetoothCharacteristic.Name);
+                            foreach (var characteristic in result.Characteristics)
+                            {
+                                var bluetoothCharacteristic = new BluetoothCharacteristic(characteristic);
+                                bluetoothCharacteristic.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
+                                characteristics.Add(bluetoothCharacteristic);
+                                logger.Info("set EventHandler:" + bluetoothCharacteristic.Name);
+                            }
+                        }
+                        else
+                        {
+                            return null;
                         }
                     }
                     else

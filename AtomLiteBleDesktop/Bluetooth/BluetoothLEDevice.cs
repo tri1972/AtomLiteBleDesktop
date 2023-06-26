@@ -315,7 +315,7 @@ namespace AtomLiteBleDesktop
         /// <returns></returns>
         public async Task<bool> ConnectServer(CoreDispatcher dispatcher)
         {
-            Task<GattCharacteristic> task = null;
+            //Task<GattCharacteristic> task = null;
             try
             {
                 logger.Info("Getting Server device:" + this.name);
@@ -342,6 +342,7 @@ namespace AtomLiteBleDesktop
                 }
                 else
                 {
+
 #if DEBUG
                     logger.Info("Get device of ConnectServer!!:" + this.name);
 #endif
@@ -369,10 +370,17 @@ namespace AtomLiteBleDesktop
                                     ServiceGattNativeServiceUuidString = BluetoothHelper.GetServiceName(service)
                                 });
                             }
-                            task = this.getUserCustomService(this.services).GetRegisteredCharacteristic();
+                            var task = await this.getUserCustomService(this.services).GetRegisteredCharacteristic();
                             //this.registeredCharacteristic = task.Result;
                             //this.registeredCharacteristic.ValueChanged += this.registeredCharacteristicNotify;
-                            return true;
+                            if (task != null)
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
                         }
                         else
                         {

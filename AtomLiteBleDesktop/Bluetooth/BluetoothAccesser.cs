@@ -195,22 +195,20 @@ namespace AtomLiteBleDesktop.Bluetooth
                         {
                             if (task.Status == BluetoothLEDevice.TypeStatus.Finded)
                             {
-                                Debug.WriteLine("取得サーバー名:" + task.Name);
+                                logger.Info("Finded device : " + task.Name);
                                 task.Connect(dispatcher);
-                                //bluetoothAccesser.Connect();
                             }
                             else
                             {
-                                Debug.WriteLine(deviceName + "サーバーは見つかりませんでした:\n");
+                                logger.Info("Cannot find device : " + deviceName);
                             }
                             break;
                         }
-                        else
-                        {
-                            Debug.WriteLine(deviceName + "SearchDeviceでnullが返りました:\n");
-                        }
                     }
-
+                    if (task == null)
+                    {
+                        logger.Info("Timeout finding device : " + deviceName);
+                    }
                 }
                 output = true;
             }
