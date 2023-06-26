@@ -48,8 +48,9 @@ namespace AtomLiteBleDesktop
         private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private const string PIRSERVER = "ESP32PIRTRI";
-        private const string dummySERVER1 = "dummy1";
-        private const string dummySERVER2 = "dummy2";
+        private const string M5STACKSERVER = "M5STACKTRI";
+        //private const string dummySERVER1 = "dummy1";
+        //private const string dummySERVER2 = "dummy2";
 
 
 
@@ -79,8 +80,7 @@ namespace AtomLiteBleDesktop
             logger.Info("Page Loaded :" + "MainPage");
             servers = new List<string>();
             servers.Add(PIRSERVER);
-            servers.Add(dummySERVER1);
-            servers.Add(dummySERVER2);
+            servers.Add(M5STACKSERVER);
             
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
