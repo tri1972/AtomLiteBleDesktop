@@ -514,16 +514,131 @@ namespace AtomLiteBleDesktop
                 }
                 else
                 {
-                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
-                    {
-                        resourceGridServer.Add(new Server(deviceName, deviceStatus, Resources));
+                    /*
+                    var taskCompletionSource =
+                        new TaskCompletionSource<bool>();
+                    */
+                    bool isRet = false;
+                    isRet = await Task.Run<bool>(async () => {
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                        {
+                            resourceGridServer.Add(new Server(deviceName, deviceStatus, Resources));
+                            //taskCompletionSource.SetResult(true);
+                        });
+                        return true; 
                     });
+                    if (isRet)
+                    {
+                        ;
+                    }
+                    /*
+                    var retTask =taskCompletionSource.Task;
+                    if (retTask.Result)
+                    {
+                        ;
+                    }
+                    */
                 }
+                addRegistedServer(deviceName);
             }
             catch(Exception err)
             {
                 Debug.WriteLine(err.Message);
             }
+
+        }
+        private int tmpTestCounter = 0;
+        private List<string> registedServer = new List<string>();
+        private volatile int currentQueHash = -999999;
+        Queue<Action<string>> que;
+        private async void addRegistedServer(string serverName)
+        {
+            if (que == null)
+            {
+                que = new Queue<Action<string>>();
+
+            }
+            Debug.WriteLine("StartAdd Server:" + serverName);
+            /*
+            if (que.Count>0)
+            {
+                Debug.WriteLine("currentQueHash2:" + currentQueHash + "  que.Peek().GetHashCode():" + que.Peek().GetHashCode());
+            }
+            */
+            await Task.Run(() =>
+            {
+                que.Enqueue((str) =>
+                {//実行すべき関数をキューに保存
+                    try
+                    {
+                        Debug.WriteLine("Start Server:" + str + ":" + currentQueHash);
+                        /*
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                        {
+                            //resourceGridServer.Add(new Server(deviceName, deviceStatus, Resources));
+                        });
+                        */
+                        //時間がかかる処理
+                        Thread.Sleep(1000);
+
+
+                        tmpTestCounter++;
+                        
+                        
+                        
+                        registedServer.Add(serverName);
+                        Debug.WriteLine("End Server:" + serverName + ":" + currentQueHash);
+                    }
+                    catch (System.InvalidOperationException err)
+                    {
+                        throw err;
+                    }
+                });
+                //var tmpFunc = que.Peek(); //キューの先頭の要素を取得かつキューから削除
+                //Debug.WriteLine("currentQueHash:" + currentQueHash + "  que.Peek().GetHashCode():" + que.Peek().GetHashCode());
+                while (currentQueHash == que.Peek().GetHashCode())//キューの先頭と現状実行中のハッシュが一致していると、先に進まない
+                {
+                    //Debug.WriteLine("Wait Server:" + serverName + ":" + currentQueHash);
+                }
+                var tmpFunc = que.Peek(); //キューの先頭の要素を取得かつキューから削除
+                currentQueHash = tmpFunc.GetHashCode();//取り出した要素を現状実行中のハッシュとして保存
+                tmpFunc(serverName);//取り出した要素を実行
+                if (que.Count() > 0) {
+
+                    var tmpFunc2 = que.Dequeue();//現状の要素が終了したら、キューから次に実行する要素をとりだし（削除はしない）
+                    currentQueHash = tmpFunc2.GetHashCode();//次に実行する要素のハッシュを現状実行中のハッシュとして保存
+                }
+                else
+                {
+
+                    if (tmpTestCounter == 2)
+                    {
+                        ;
+                    }
+
+
+                    currentQueHash = -999999;
+                }
+            });
+            /*
+            //以下、時間がかかる処理にはisListBoxWaitがfalseになるまで入れない
+            if (registedServer.FindAll((str) => {
+                 if (str == serverName)
+                {
+                     return true;
+                }
+                return false;
+            }).Count > 0)
+            {
+                ;
+            }
+            else
+            {
+                var func= que.Peek();
+                func(serverName);
+                func = que.Dequeue();
+                currentQueHash = func.GetHashCode();
+            }*/
 
         }
 
