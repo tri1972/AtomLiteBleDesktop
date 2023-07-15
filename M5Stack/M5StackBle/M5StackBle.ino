@@ -32,6 +32,7 @@ BLECharacteristic* pCharacteristic = NULL;
 volatile statusBLEState bleState=disconnect;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
+bool beforeStateSwitch=LOW;
 
 int volume = 1;
 
@@ -233,16 +234,26 @@ void loop() {
     // notify changed value
 
   if (deviceConnected) {
-    if(M5.BtnA.wasPressed()) {
-      M5.Speaker.tone(659, 200);
-      delay(200);
-      M5.Speaker.tone(523, 200);
-      strSend = "PIR_ON";
-    }else{
-      strSend = "PIR_OFF";
+    if (M5.BtnA.isPressed()) {
+      if (beforeStateSwitch == LOW) {//スイッチがOff→onにてデータを送る
+        Serial.println("PUSH_BUTTON ON");
+        strSend = "PUSH_ON";
+        pCharacteristic->setValue(strSend.c_str());
+        pCharacteristic->notify();
+        beforeStateSwitch = HIGH;
+      }
+    } else {
+      if (beforeStateSwitch == HIGH) {//スイッチがon→Offにてデータを送る
+        M5.Speaker.tone(659, 200);
+        delay(200);
+        M5.Speaker.tone(523, 200);
+        Serial.println("PUSH_BUTTON OFF");
+        strSend = "PUSH_OFF";
+        pCharacteristic->setValue(strSend.c_str());
+        pCharacteristic->notify();
+        beforeStateSwitch = LOW;
+      }
     }
-    pCharacteristic->setValue(strSend.c_str());
-    pCharacteristic->notify();
   }else{
   }
 
@@ -256,6 +267,13 @@ void loop() {
     M5.Speaker.mute();
     delay(100);
     M5.Speaker.tone(440, 100);
+
+      int key=BLE_PASSKEY;
+      uint8_t* valueBleKey=(uint8_t*)(&key);
+      
+      Serial.println("PushButtonC Pearing!!");
+      pCharacteristic->setValue(valueBleKey, 4);
+      pCharacteristic->notify();
   }
 
 }
