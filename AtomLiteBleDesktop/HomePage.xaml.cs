@@ -64,37 +64,45 @@ namespace AtomLiteBleDesktop
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
 
         private volatile bool isCancelRepeatReceivingBlink;
+        private BluetoothAccesser bluetoothAccesser;
+
+        private bool isRegistedListItem = false;
+
+        private bool isInitialized = false;
 
         public HomePage()
         {
             this.InitializeComponent();
             batchUpdateBadgeGlyphClear();
+
+            //initializePage();
+
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private async void initializePage()
         {
-            ExtendedExecutionHelper.GetInstance().BeginExtendedExecution();
-            
+            this.bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
+            this.resourceGridServer = (Servers)this.HomeGrid.Resources["servers"];
 
-            var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
-            var task = Task.Run(() =>
+            var taskResult = await Task.Run<bool>(() =>
             {
                 while (bluetoothAccesser.NumberDevice != bluetoothAccesser.Devices.Count) ;//取得要求Serverがすべて処理されるまで待ち
                 foreach (var device in bluetoothAccesser.Devices)
                 {
-                    if (device.Status== TypeStatus.Finded)
+                    if (device.Status == TypeStatus.Finded)
                     //if (device.IsFindDevice)
                     {
                         try
                         {
-                            listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.Find, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received,0);
+                            listBoxInitialize_TextDataDispatcher(device.Name, typeDeviceStatus.Find);
+                            //listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.Find, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received, 0);
                         }
                         catch (Exception err)
                         {
                             Debug.WriteLine(err.Message);
                         }
                     }
-                    if (device.Status == TypeStatus.Coonected)
+                    else if (device.Status == TypeStatus.Coonected)
                     {
                         ;
                     }
@@ -102,7 +110,8 @@ namespace AtomLiteBleDesktop
                     {
                         try
                         {
-                            listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.NotFind, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received,0);
+                            listBoxInitialize_TextDataDispatcher(device.Name, typeDeviceStatus.NotFind);
+                            //listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.NotFind, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received, 0);
                         }
                         catch (Exception err)
                         {
@@ -111,7 +120,7 @@ namespace AtomLiteBleDesktop
                     }
                     if (device != null)
                     {
-                        if (device.Status== TypeStatus.Coonected)
+                        if (device.Status == TypeStatus.Coonected)
                         {
                             AccesserStatusChange(NotifyBluetoothAccesserEventArgs.Status.Connected, null);
                         }
@@ -119,11 +128,24 @@ namespace AtomLiteBleDesktop
                         device.NotifyReceiveCharacteristic += NotifyBluetoothLEDeviceCharacteristicEvent;
                     }
                 }
+                return true;
             });
-            
-            //bluetoothAccesser.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
-            //bluetoothAccesser.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
-            this.resourceGridServer = (Servers)this.HomeGrid.Resources["servers"];
+            if (taskResult)
+            {
+                isRegistedListItem = true;
+            }
+
+        }
+
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            ExtendedExecutionHelper.GetInstance().BeginExtendedExecution();
+
+            if (!this.isInitialized)
+            {
+                initializePage();
+                this.isInitialized = true;
+            }
 
             this.isCancelRepeatReceivingBlink = false;
         }
@@ -294,13 +316,15 @@ namespace AtomLiteBleDesktop
         
         void NotifyBluetoothLEDeviceCharacteristicEvent(object sender, NotifyReceiveLEDeviceCharacteristicEventArgs e)
         {
+            listBoxAdd_TextDataDispatcher((sender as BluetoothLEDevice).Name, typeDeviceStatus.RxData, e.Service.Service.Uuid.ToString(), e.Characteristic.Characteristic.Uuid.ToString(), "Rx", e.Message, e.State, e.Characteristic.NumberCounteRx);
+            /*
             if (e.Service.Service.Uuid.ToString().Equals(SERVICE_UUID_CALL_UNDER_LEVEL))
             {
                 if (e.Characteristic.Characteristic.Uuid.ToString().Equals(CHARACTERISTIC_UUID_CALL_UNDER_LEVEL))
                 {
                     listBoxAdd_TextDataDispatcher((sender as BluetoothLEDevice).Name, typeDeviceStatus.RxData, e.Service.Service.Uuid.ToString(), e.Characteristic.Characteristic.Uuid.ToString(), "Rx", e.Message, e.State,e.Characteristic.NumberCounteRx);
                 }
-            }
+            }*/
         }
         private static void NotificationToast(string source)
         {
@@ -350,6 +374,10 @@ namespace AtomLiteBleDesktop
         /// <returns></returns>
         private Server getListItem(string deviceName)
         {
+            while(isRegistedListItem==false)
+            {
+                ;
+            }
             foreach (var item in resourceGridServer)
             {
                 if (item.DeviceName == deviceName)
@@ -482,6 +510,35 @@ namespace AtomLiteBleDesktop
             });
          }
 
+        private async void listBoxInitialize_TextDataDispatcher
+            (string deviceName,
+            typeDeviceStatus deviceStatus)
+        {
+            /*
+            var taskCompletionSource =
+                new TaskCompletionSource<bool>();
+            */
+            bool isRet;
+            isRet = await Task.Run<bool>(() => {
+                _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    resourceGridServer.Add(new Server(deviceName, deviceStatus, Resources));
+                    //taskCompletionSource.SetResult(true);
+                });
+                return true;
+            });
+            if (isRet)
+            {
+                ;
+            }
+            /*
+            var retTask =taskCompletionSource.Task;
+            if (retTask.Result)
+            {
+                ;
+            }
+            */
+        }
 
         /// <summary>
         /// TextDataにUIスレッド外で書き込みを行う
@@ -514,32 +571,10 @@ namespace AtomLiteBleDesktop
                 }
                 else
                 {
-                    /*
-                    var taskCompletionSource =
-                        new TaskCompletionSource<bool>();
-                    */
-                    bool isRet = false;
-                    isRet = await Task.Run<bool>(async () => {
-                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
-                        {
-                            resourceGridServer.Add(new Server(deviceName, deviceStatus, Resources));
-                            //taskCompletionSource.SetResult(true);
-                        });
-                        return true; 
-                    });
-                    if (isRet)
-                    {
-                        ;
-                    }
-                    /*
-                    var retTask =taskCompletionSource.Task;
-                    if (retTask.Result)
-                    {
-                        ;
-                    }
-                    */
+                    listBoxInitialize_TextDataDispatcher(deviceName, deviceStatus);
+
                 }
-                addRegistedServer(deviceName);
+                //addRegistedServer(deviceName);
             }
             catch(Exception err)
             {
@@ -550,12 +585,14 @@ namespace AtomLiteBleDesktop
         private int tmpTestCounter = 0;
         private List<string> registedServer = new List<string>();
         private volatile int currentQueHash = -999999;
-        Queue<Action<string>> que;
+        private volatile int beforeQueHash ;
+        private volatile string currentServerName;
+        Queue<Action<string,int>> que;
         private async void addRegistedServer(string serverName)
         {
             if (que == null)
             {
-                que = new Queue<Action<string>>();
+                que = new Queue<Action<string,int>>();
 
             }
             Debug.WriteLine("StartAdd Server:" + serverName);
@@ -567,11 +604,12 @@ namespace AtomLiteBleDesktop
             */
             await Task.Run(() =>
             {
-                que.Enqueue((str) =>
+                que.Enqueue((str,currentHashNum) =>
                 {//実行すべき関数をキューに保存
                     try
                     {
-                        Debug.WriteLine("Start Server:" + str + ":" + currentQueHash);
+                        currentServerName = str;
+                        Debug.WriteLine("Start Server:" + str + ":" + currentHashNum);
                         /*
                         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                         {
@@ -586,8 +624,8 @@ namespace AtomLiteBleDesktop
                         
                         
                         
-                        registedServer.Add(serverName);
-                        Debug.WriteLine("End Server:" + serverName + ":" + currentQueHash);
+                        registedServer.Add(str);
+                        Debug.WriteLine("End Server:" + str + ":" + currentHashNum);
                     }
                     catch (System.InvalidOperationException err)
                     {
@@ -596,17 +634,22 @@ namespace AtomLiteBleDesktop
                 });
                 //var tmpFunc = que.Peek(); //キューの先頭の要素を取得かつキューから削除
                 //Debug.WriteLine("currentQueHash:" + currentQueHash + "  que.Peek().GetHashCode():" + que.Peek().GetHashCode());
-                while (currentQueHash == que.Peek().GetHashCode())//キューの先頭と現状実行中のハッシュが一致していると、先に進まない
-                {
-                    //Debug.WriteLine("Wait Server:" + serverName + ":" + currentQueHash);
+                if (que.Count > 1) {
+                    while (currentQueHash != beforeQueHash)//キューの先頭と現状実行中のハッシュが一致していると、先に進まない
+                    {
+                        Debug.WriteLine("Wait Server:" + currentServerName + ":" + currentQueHash);
+                    }
                 }
-                var tmpFunc = que.Peek(); //キューの先頭の要素を取得かつキューから削除
+                beforeQueHash = que.Peek().GetHashCode();
+                var tmpFunc =que.Peek();
+                tmpFunc(serverName, currentQueHash);//取り出した要素を実行
+                tmpFunc = que.Dequeue(); //キューの先頭の要素を取得かつキューから削除(削除しないと次のキューがWhileを抜けてしまうので、削除するのはマスト)
+                //var tmpFunc = que.Peek(); //キューの先頭の要素を取得かつキューから削除
                 currentQueHash = tmpFunc.GetHashCode();//取り出した要素を現状実行中のハッシュとして保存
-                tmpFunc(serverName);//取り出した要素を実行
                 if (que.Count() > 0) {
 
-                    var tmpFunc2 = que.Dequeue();//現状の要素が終了したら、キューから次に実行する要素をとりだし（削除はしない）
-                    currentQueHash = tmpFunc2.GetHashCode();//次に実行する要素のハッシュを現状実行中のハッシュとして保存
+                    var tmpFunc2 = que.Peek();//現状の要素が終了したら、キューから次に実行する要素をとりだし（削除はしない）
+                    currentQueHash = tmpFunc2.GetHashCode();//次に実行する要素のハッシュを現状実行中のハッシュとして保存→whileを抜けてくるようになる
                 }
                 else
                 {
