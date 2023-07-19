@@ -1,4 +1,5 @@
 ﻿using AtomLiteBleDesktop.Bluetooth;
+using AtomLiteBleDesktop.Database;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
@@ -56,9 +57,6 @@ namespace AtomLiteBleDesktop
         /// log4net用インスタンス
         /// </summary>
         private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-        private const string SERVICE_UUID_CALL_UNDER_LEVEL= "e72609f6-2bcb-4fb0-824a-5276ec9e355d";
-        private const string CHARACTERISTIC_UUID_CALL_UNDER_LEVEL = "cca99442-dab6-4f69-8bc2-685e2412d178";
 
         private Servers resourceGridServer;
         private SettingsPagePropertyChanged _textData = new SettingsPagePropertyChanged();
@@ -164,6 +162,7 @@ namespace AtomLiteBleDesktop
             }
             return null;
         }
+
         private async void Control_GotFocus(object sender, RoutedEventArgs e)
         {
             if(sender is Button)
@@ -213,7 +212,17 @@ namespace AtomLiteBleDesktop
                                     break;
                             }
                             this.isCancelRepeatReceivingBlink = true;//送信ボタンが押されたら点滅はキャンセルされる
-                            mDevice.SendData(SERVICE_UUID_CALL_UNDER_LEVEL, CHARACTERISTIC_UUID_CALL_UNDER_LEVEL, sendData);
+                            var server = BleContext.GetServerPosts(serverListview.DeviceName);
+                            if (server != null)
+                            {
+                                mDevice.SendData(server.ServiceUUID, server.CharacteristicUUID, sendData);
+                            }
+                            else
+                            {
+                                MessageDialog md = new MessageDialog("該当のService、Characteristicが登録されていません");
+                                await md.ShowAsync();
+
+                            }
                             var listItem = getListItem(serverListview.DeviceName);
                             listItem.NumberCall ="";
                             listItem.IconCallNumber = "";
@@ -316,8 +325,8 @@ namespace AtomLiteBleDesktop
         
         void NotifyBluetoothLEDeviceCharacteristicEvent(object sender, NotifyReceiveLEDeviceCharacteristicEventArgs e)
         {
-            //listBoxAdd_TextDataDispatcher((sender as BluetoothLEDevice).Name, typeDeviceStatus.RxData, e.Service.Service.Uuid.ToString(), e.Characteristic.Characteristic.Uuid.ToString(), "Rx", e.Message, e.State, e.Characteristic.NumberCounteRx);
-            
+            listBoxAdd_TextDataDispatcher((sender as BluetoothLEDevice).Name, typeDeviceStatus.RxData, e.Service.Service.Uuid.ToString(), e.Characteristic.Characteristic.Uuid.ToString(), "Rx", e.Message, e.State, e.Characteristic.NumberCounteRx);
+            /*
             if (e.Service.Service.Uuid.ToString().Equals(SERVICE_UUID_CALL_UNDER_LEVEL))
             {
                 if (e.Characteristic.Characteristic.Uuid.ToString().Equals(CHARACTERISTIC_UUID_CALL_UNDER_LEVEL))
@@ -325,6 +334,7 @@ namespace AtomLiteBleDesktop
                     listBoxAdd_TextDataDispatcher((sender as BluetoothLEDevice).Name, typeDeviceStatus.RxData, e.Service.Service.Uuid.ToString(), e.Characteristic.Characteristic.Uuid.ToString(), "Rx", e.Message, e.State,e.Characteristic.NumberCounteRx);
                 }
             }
+            */
         }
         private static void NotificationToast(string source)
         {

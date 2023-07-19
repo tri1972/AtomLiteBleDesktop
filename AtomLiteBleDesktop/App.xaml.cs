@@ -1,4 +1,7 @@
-﻿using System;
+﻿using AtomLiteBleDesktop.Database;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
@@ -12,13 +15,6 @@ namespace AtomLiteBleDesktop
     /// </summary>
     sealed partial class App : Application
     {
-        /*
-        List<string> servers;
-        private const string PIRSERVER = "ESP32PIRTRI";
-        private const string dummySERVER1 = "dummy1";
-        private const string dummySERVER2 = "dummy2";
-        */
-
         /// <summary>
         /// log4net用インスタンス
         /// </summary>
@@ -33,6 +29,13 @@ namespace AtomLiteBleDesktop
             this.InitializeComponent();
             this.Suspending += OnSuspending;
             this.Resuming += new EventHandler<Object>(App_Resuming);
+
+            using (var db = new BleContext())
+            {
+                db.Database.EnsureCreated();
+            }
+            //BleContext.DbInitRecord();//Dbに新規にデータを追加したい場合はこれを実行する
+
             /*
             servers = new List<string>();
             servers.Add(PIRSERVER);

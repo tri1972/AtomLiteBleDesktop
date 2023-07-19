@@ -29,6 +29,7 @@ using AtomLiteBleDesktop.Bluetooth;
 using Windows.UI.Popups;
 using Windows.System;
 using AtomLiteBleDesktop;
+using AtomLiteBleDesktop.Database;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x411 を参照してください
 
@@ -46,9 +47,10 @@ namespace AtomLiteBleDesktop
         /// log4net用インスタンス
         /// </summary>
         private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
+        /*
         private const string PIRSERVER = "ESP32PIRTRI";
         private const string M5STACKSERVER = "M5STACKTRI";
+        */
         //private const string dummySERVER1 = "dummy1";
         //private const string dummySERVER2 = "dummy2";
 
@@ -78,10 +80,8 @@ namespace AtomLiteBleDesktop
         {
 
             logger.Info("Page Loaded :" + "MainPage");
-            servers = new List<string>();
-            servers.Add(PIRSERVER);
-            servers.Add(M5STACKSERVER);
-            
+
+            servers = BleContext.GetServerNames();
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
             

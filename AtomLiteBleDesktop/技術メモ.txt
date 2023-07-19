@@ -65,3 +65,19 @@ https://learn.microsoft.com/ja-jp/uwp/api/windows.ui.core.coredispatcher.runasyn
 アプリの実行延長を行う
 https://learn.microsoft.com/ja-jp/windows/uwp/launch-resume/run-minimized-with-extended-execution
 
+UWPにて.EntityFrameworkCore.Sqliteを使う方法（DBを使いやすくする）
+https://blog.okazuki.jp/entry/2020/02/09/131750
+https://blog.okazuki.jp/entry/2016/03/10/083746
+
+
+UWPアプリケーションで静的な設定をファイルに記述する方法
+https://www.typea.info/blog/index.php/2017/08/06/uwp_1/
+
+UWPでBLEのアドバタイジングパケットを拾ってみよう
+https://blog.okazuki.jp/entry/2016/02/15/202110
+
+UWPのアイコンの使い方
+https://learn.microsoft.com/ja-jp/windows/apps/design/style/segoe-ui-symbol-font#pua-e700-e900
+
+【C#/UWP】{x:Bind} と {Binding} の違い
+https://qiita.com/nemutas/items/1656b7b5328353eeb1d1

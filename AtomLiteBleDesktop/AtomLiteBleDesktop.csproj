@@ -132,6 +132,7 @@
     <Compile Include="ControlPage.xaml.cs">
       <DependentUpon>ControlPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Database\BleContext.cs" />
     <Compile Include="ExtendedExecutionHelper.cs" />
     <Compile Include="HomePage.xaml.cs">
       <DependentUpon>HomePage.xaml</DependentUpon>
@@ -248,6 +249,9 @@
   <ItemGroup>
     <PackageReference Include="log4net">
       <Version>2.0.15</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite">
+      <Version>3.1.32</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.10</Version>
