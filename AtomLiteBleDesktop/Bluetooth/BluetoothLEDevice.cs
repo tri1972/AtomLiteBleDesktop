@@ -64,7 +64,7 @@ namespace AtomLiteBleDesktop
         /// <summary>
         /// Connect時の最大リトライ回数
         /// </summary>
-        private const int MAX_RETRY_CONNECT = 5;
+        private const int MAX_RETRY_CONNECT = 20;
 
         private List<BluetoothService> services;
         /// <summary>
@@ -225,12 +225,18 @@ namespace AtomLiteBleDesktop
                     }
                     counter--;
                 }
+#if DEBUG
+                if(counter != MAX_RETRY_CONNECT)
+                {
+                    logger.Info("Number connecting retry "+(MAX_RETRY_CONNECT-counter).ToString()+" Server :" + this.name);
+                }
+#endif
                 if (counter == 0)
                 {
                     this.status = TypeStatus.Abort;
                     this.OnNotifyConnectingServer("Server Connecting Aborted", NotifyBluetoothAccesserEventArgs.Status.Abort);
 #if DEBUG
-                    logger.Info("Connecting Aborted");
+                    logger.Info("Connecting Aborted"+ this.name);
 #else
 #endif
                 }
