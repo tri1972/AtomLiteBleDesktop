@@ -3,16 +3,21 @@
 //#include <BLEUtils.h>
 #include <BLE2902.h>
 #include <M5Stack.h>
-//#include "efont.h"                                          // Unicode表示用ライブラリ
-//#include "efontESP32.h"                                     // Unicode表示用ライブラリ　
-//#include "efontEnableJa.h"                                  //漢字すべて(サイズが大きすぎる)
-//#include "efontEnableJaMini.h"                              //常用漢字＋α
+
+
+
+
+#include <sdfonts.h>
+#define SD_PN 4
+
 
 /*定義部分*/
 #define DEVICE_NAME "M5STACKTRI" //Bluetoothデバイス名設定
 #define SERVICE_UUID        "ee007086-0dc9-4a48-b381-0f9e56d8c597"
 #define CHARACTERISTIC_UUID "245c84dc-9422-41fb-bbf9-ddcd7da28120"
 #define BLE_PASSKEY 123456 //ペアリング時のパスコード値設定
+
+#define PIR_PIN   21  //PIR出力PINを指定
 
 /*列挙型*/
 enum statusBLEState{
@@ -35,6 +40,54 @@ bool oldDeviceConnected = false;
 bool beforeStateSwitch=LOW;
 
 int volume = 1;
+
+
+// フォントデータの表示
+// buf(in) : フォント格納アドレス
+// ビットパターン表示
+// d: 8ビットパターンデータ
+void fontDisp(uint16_t x, uint16_t y, uint8_t* buf) {
+  uint32_t txt_color = TFT_WHITE;
+  uint32_t bg_color = TFT_BLACK;
+
+  uint8_t bn = SDfonts.getRowLength();               // 1行当たりのバイト数取得
+  Serial.print(SDfonts.getWidth(), DEC);            // フォントの幅の取得
+  Serial.print("x");
+  Serial.print(SDfonts.getHeight(), DEC);           // フォントの高さの取得
+  Serial.print(" ");
+  Serial.println((uint16_t)SDfonts.getCode(), HEX); // 直前し処理したフォントのUTF16コード表示
+
+  for (uint8_t i = 0; i < SDfonts.getLength(); i += bn ) {
+    for (uint8_t j = 0; j < bn; j++) {
+      for (uint8_t k = 0; k < 8; k++) {
+        if (buf[i + j] & 0x80 >> k) {
+          M5.Lcd.drawPixel(x + 8 * j + k , y + i / bn, txt_color);
+        } else {
+          M5.Lcd.drawPixel(x + 8 * j + k , y + i / bn, bg_color);
+        }
+      }
+    }
+  }
+}
+
+
+// 指定した文字列を指定したサイズで表示する
+// pUTF8(in) UTF8文字列
+// sz(in)    フォントサイズ(8,10,12,14,16,20,24)
+void fontDump(uint16_t x, uint16_t y, char* pUTF8, uint8_t sz) {
+  uint8_t buf[MAXFONTLEN]; // フォントデータ格納アドレス(最大24x24/8 = 72バイト)
+  SDfonts.open();                                   // フォントのオープン
+  SDfonts.setFontSize(sz);                          // フォントサイズの設定
+  uint16_t mojisu = 0;
+  while ( pUTF8 = SDfonts.getFontData(buf, pUTF8) ) { // フォントの取得
+    fontDisp(x + mojisu * sz, y, buf);                 // フォントパターンの表示
+    ++mojisu;
+  }
+
+  SDfonts.close();                                  // フォントのクローズ
+}
+
+
 
 /*コールバック関数用クラス*/
 
@@ -183,7 +236,18 @@ void setup() {
   M5.Lcd.setCursor(10, 120); // カーソル位置の指定
   M5.Lcd.print("START!!"); // Hello Worldのディスプレイ表示
 
+  pinMode(PIR_PIN,INPUT_PULLUP);//PIRの出力ピンを設定
+
   M5.Speaker.setVolume(10);
+
+  SDfonts.init(SD_PN);
+  Serial.println(F("sdfonts liblary"));
+
+  fontDump(50, 10, "Bluetooth通信を行います", 16);
+  fontDump(50, 40, "Windowsと接続します", 20);
+  fontDump(50, 80, "M5StauckBle!!", 24);
+
+
 }
 
 void loop() {
@@ -228,11 +292,8 @@ void loop() {
     // do stuff here on connecting
     oldDeviceConnected = deviceConnected;
   }
+
   M5.update();  // ボタン状態更新
-
-
-    // notify changed value
-
   if (deviceConnected) {
     if (M5.BtnA.isPressed()) {
       if (beforeStateSwitch == LOW) {//スイッチがOff→onにてデータを送る
@@ -276,4 +337,15 @@ void loop() {
       pCharacteristic->notify();
   }
 
+  if(digitalRead(PIR_PIN)){
+    M5.Lcd.setCursor(10, 100); // カーソル位置の指定
+    //printEfont("切断しました!", 0, 16*1); 
+    M5.Lcd.clear(BLACK);//Lcd画面消去
+    M5.Lcd.print("PIR ON!!"); // Hello Worldのディスプレイ表示
+  }else{
+    M5.Lcd.setCursor(10, 100); // カーソル位置の指定
+    //printEfont("切断しました!", 0, 16*1); 
+    M5.Lcd.clear(BLACK);//Lcd画面消去
+    M5.Lcd.print("PIR OFF!!"); // Hello Worldのディスプレイ表示
+  }
 }
