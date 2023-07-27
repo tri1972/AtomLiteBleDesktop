@@ -4,8 +4,13 @@
 #include <BLE2902.h>
 #include <M5Stack.h>
 
-
-
+#define LGFX_AUTODETECT // 自動認識(D-duino-32 XS, PyBadgeはパネルID読取れないため自動認識の対象から外れているそうです)
+#define LGFX_USE_V1     // v1.0.0を有効に(v0からの移行期間の特別措置とのこと。書かない場合は旧v0系で動作)
+#include <LovyanGFX.hpp>
+#include <LGFX_AUTODETECT.hpp> // クラス"LGFX"を用意します
+// #include <lgfx_user/LGFX_ESP32_sample.hpp> // またはユーザ自身が用意したLGFXクラスを準備します
+static LGFX lcd; // LGFXのインスタンスを作成。
+static LGFX_Sprite canvas(&lcd);  // スプライトを使う場合はLGFX_Spriteのインスタンスを作成
 
 #include <sdfonts.h>
 #define SD_PN 4
@@ -61,9 +66,9 @@ void fontDisp(uint16_t x, uint16_t y, uint8_t* buf) {
     for (uint8_t j = 0; j < bn; j++) {
       for (uint8_t k = 0; k < 8; k++) {
         if (buf[i + j] & 0x80 >> k) {
-          M5.Lcd.drawPixel(x + 8 * j + k , y + i / bn, txt_color);
+          canvas.drawPixel(x + 8 * j + k , y + i / bn, txt_color);
         } else {
-          M5.Lcd.drawPixel(x + 8 * j + k , y + i / bn, bg_color);
+          canvas.drawPixel(x + 8 * j + k , y + i / bn, bg_color);
         }
       }
     }
@@ -179,7 +184,7 @@ class MySecurity : public BLESecurityCallbacks {
 void setup() {
   // put your setup code here, to run once:
   M5.begin(); // M5 Coreの初期化
-  M5.Power.begin(); // Power.moduleの初期化
+  //M5.Power.begin(); // Power.moduleの初期化
 
   Serial.begin(115200); // シリアル接続の開始
   delay(500);
@@ -243,41 +248,51 @@ void setup() {
   SDfonts.init(SD_PN);
   Serial.println(F("sdfonts liblary"));
 
-  fontDump(50, 10, "Bluetooth通信を行います", 16);
-  fontDump(50, 40, "Windowsと接続します", 20);
-  fontDump(50, 80, "M5StauckBle!!", 24);
 
+  
+  lcd.init();  
+  lcd.setRotation(1);         // 画面向き設定（0～3で設定、4～7は反転)　※CORE2、GRAYの場合
+  canvas.setColorDepth(8);                             // CORE2 GRAY のスプライトは16bit以上で表示されないため8bitに設定
+                              /*
+  canvas.setTextWrap(false);  // 改行をしない（画面をはみ出す時自動改行する場合はtrue）
+  canvas.setTextSize(1);      // 文字サイズ（倍率）
+  */
+  canvas.createSprite(lcd.width(), lcd.height());
 
+  fontDump(10, 210, "呼び出し", 16);
+  //fontDump(50, 40, "Windowsと接続します", 20);
+  //fontDump(50, 80, "M5StauckBle!!", 24);
 }
 
 void loop() {
   String strSend;//送信文字列
   M5.update();  // ボタン状態更新
+  canvas.setTextSize(2);            // 文字倍率変更
   //LEDランプによるステータス表示
   switch(bleState){
     case connect://青色常時点灯
-      M5.Lcd.setCursor(10, 120); // カーソル位置の指定
+      canvas.setCursor(10, 10); // カーソル位置の指定
       //printEfont("接続しました!", 0, 16*1); 
-      M5.Lcd.clear(BLACK);//Lcd画面消去
-      M5.Lcd.print("Connect!!"); // Hello Worldのディスプレイ表示
+      //M5.Lcd.clear(BLACK);//Lcd画面消去
+      canvas.print("Connect!!"); // Hello Worldのディスプレイ表示
       break;
     case disconnect://青色点滅
-      M5.Lcd.setCursor(10, 120); // カーソル位置の指定
+      canvas.setCursor(10, 10); // カーソル位置の指定
       //printEfont("切断しました!", 0, 16*1); 
-      M5.Lcd.clear(BLACK);//Lcd画面消去
-      M5.Lcd.print("DisConnect!!"); // Hello Worldのディスプレイ表示
+      //M5.Lcd.clear(BLACK);//Lcd画面消去
+      canvas.print("DisConnect!!"); // Hello Worldのディスプレイ表示
       break;
     case ASAP:
-      M5.Lcd.setCursor(10, 120); // カーソル位置の指定
-      M5.Lcd.print("ASAP"); // Hello Worldのディスプレイ表示
+      canvas.setCursor(10, 10); // カーソル位置の指定
+      canvas.print("ASAP"); // Hello Worldのディスプレイ表示
       break;
     case WAIT:
-      M5.Lcd.setCursor(10, 120); // カーソル位置の指定
-      M5.Lcd.print("WAIT"); // Hello Worldのディスプレイ表示
+      canvas.setCursor(10, 10); // カーソル位置の指定
+      canvas.print("WAIT"); // Hello Worldのディスプレイ表示
       break;
     case WRONG:
-      M5.Lcd.setCursor(10, 120); // カーソル位置の指定
-      M5.Lcd.print("WRONG"); // Hello Worldのディスプレイ表示
+      canvas.setCursor(10, 10); // カーソル位置の指定
+      canvas.print("WRONG"); // Hello Worldのディスプレイ表示
       break;
   }
   // disconnecting
@@ -296,7 +311,7 @@ void loop() {
   M5.update();  // ボタン状態更新
   if (deviceConnected) {
     if (M5.BtnA.isPressed()) {
-      if (beforeStateSwitch == LOW) {//スイッチがOff→onにてデータを送る
+      if (beforeStateSwitch == LOW) {  //スイッチがOff→onにてデータを送る
         Serial.println("PUSH_BUTTON ON");
         strSend = "PUSH_ON";
         pCharacteristic->setValue(strSend.c_str());
@@ -304,7 +319,7 @@ void loop() {
         beforeStateSwitch = HIGH;
       }
     } else {
-      if (beforeStateSwitch == HIGH) {//スイッチがon→Offにてデータを送る
+      if (beforeStateSwitch == HIGH) {  //スイッチがon→Offにてデータを送る
         M5.Speaker.tone(659, 200);
         delay(200);
         M5.Speaker.tone(523, 200);
@@ -315,7 +330,7 @@ void loop() {
         beforeStateSwitch = LOW;
       }
     }
-  }else{
+  } else {
   }
 
   if(M5.BtnC.wasPressed()) {
@@ -337,15 +352,29 @@ void loop() {
       pCharacteristic->notify();
   }
 
+  //canvas.fillScreen(BLACK);         // 背景塗り潰し
   if(digitalRead(PIR_PIN)){
-    M5.Lcd.setCursor(10, 100); // カーソル位置の指定
-    //printEfont("切断しました!", 0, 16*1); 
-    M5.Lcd.clear(BLACK);//Lcd画面消去
-    M5.Lcd.print("PIR ON!!"); // Hello Worldのディスプレイ表示
+    canvas.fillCircle(305, 15, 15, RED);
+    canvas.setCursor(100, 15); // カーソル位置の指定
+    //M5.Lcd.clear(BLACK);//Lcd画面消去
+    canvas.print("        ");
+    canvas.print("PIR ON!!"); // Hello Worldのディスプレイ表示
   }else{
-    M5.Lcd.setCursor(10, 100); // カーソル位置の指定
-    //printEfont("切断しました!", 0, 16*1); 
-    M5.Lcd.clear(BLACK);//Lcd画面消去
-    M5.Lcd.print("PIR OFF!!"); // Hello Worldのディスプレイ表示
+    canvas.fillCircle(305, 15, 15, BLACK);
+    canvas.drawCircle(305, 15, 15, RED); // 円（始点x,始点y,半径,色）
+    canvas.setCursor(100, 15); // カーソル位置の指定
+    canvas.print("         ");
+    canvas.print("PIR OFF!!"); // Hello Worldのディスプレイ表示
   }
+  /*
+    canvas.setCursor(0, 0);                         // 座標を指定（x, y）
+  canvas.setFont(&fonts::lgfxJapanGothic_24);     // ゴシック体（8,12,16,20,24,28,32,36,40）
+  canvas.println("液晶表示 ゴシック体");            // 表示内容をcanvasに準備
+  */
+  //canvas.drawLine(0, 15, 320, 15, WHITE);
+  canvas.drawLine(0, 30, 320, 30, WHITE);
+  canvas.drawLine(0, 180, 320, 180, WHITE);
+  canvas.drawLine(106, 180, 106, 240, WHITE);
+  canvas.drawLine(212, 180, 212, 240, WHITE);
+  canvas.pushSprite(0, 0);  // メモリ内に描画したcanvasを座標を指定して表示する
 }
