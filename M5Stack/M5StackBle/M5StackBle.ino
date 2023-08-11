@@ -1,3 +1,4 @@
+#include <string.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 //#include <BLEUtils.h>
@@ -42,7 +43,12 @@ BLECharacteristic* pCharacteristic = NULL;
 volatile statusBLEState bleState=disconnect;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-bool beforeStateSwitch=LOW;
+static bool beforeStateSwitchA=LOW;
+static bool beforeStateSwitchB=LOW;
+static int giBattery = 0;
+static int giBatteryOld = 0xFF;
+String strValue;
+size_t strValueLength;
 
 int volume = 1;
 
@@ -56,12 +62,13 @@ void fontDisp(uint16_t x, uint16_t y, uint8_t* buf) {
   uint32_t bg_color = TFT_BLACK;
 
   uint8_t bn = SDfonts.getRowLength();               // 1行当たりのバイト数取得
+  /*
   Serial.print(SDfonts.getWidth(), DEC);            // フォントの幅の取得
   Serial.print("x");
   Serial.print(SDfonts.getHeight(), DEC);           // フォントの高さの取得
   Serial.print(" ");
   Serial.println((uint16_t)SDfonts.getCode(), HEX); // 直前し処理したフォントのUTF16コード表示
-
+*/
   for (uint8_t i = 0; i < SDfonts.getLength(); i += bn ) {
     for (uint8_t j = 0; j < bn; j++) {
       for (uint8_t k = 0; k < 8; k++) {
@@ -74,7 +81,6 @@ void fontDisp(uint16_t x, uint16_t y, uint8_t* buf) {
     }
   }
 }
-
 
 // 指定した文字列を指定したサイズで表示する
 // pUTF8(in) UTF8文字列
@@ -92,7 +98,54 @@ void fontDump(uint16_t x, uint16_t y, char* pUTF8, uint8_t sz) {
   SDfonts.close();                                  // フォントのクローズ
 }
 
+void writeMessageBox(String str){
+  char Buf[50];
+  
+  uint16_t top=90;
+  uint16_t left=0;
+  uint16_t bottom=210;
+  uint16_t right=320;
+  uint8_t size=8;
 
+  uint8_t rowNum=(uint8_t)(left-right)/size;
+  uint8_t strLength=(uint8_t)str.length();
+  uint8_t startStr=0;
+  uint8_t stopStr=rowNum;
+  String rowStr;
+  uint8_t currentRow=0; 
+  
+  Serial.println(str);
+  Serial.println("rowNum");
+  Serial.println(rowNum,DEC);
+
+  do{
+    rowStr=str.substring(startStr,stopStr);
+    rowStr.toCharArray(Buf, rowNum);
+    fontDump(left,top+currentRow*size,Buf,size);
+    startStr+=rowNum;
+    stopStr+=rowNum;
+    currentRow++;
+  //Serial.println("stopStr");
+  //Serial.println(stopStr,DEC);
+  }while(stopStr<strLength);
+}
+
+void eraceMessageBox(){
+  canvas.fillRect(0,90,320 ,210, BLACK);
+}
+/**
+*/
+void canvasErace(int x,int y,int size,int number){
+  int size1px=7;
+  canvas.fillRect(x, y,number*(size*size1px) ,y+(size*size1px) , BLACK);//文字消去
+}
+
+void canvasPrint(int x,int y,int size,char * str){
+      canvas.setTextSize(size);            // 文字倍率変更
+      //canvasErace(x,y,size,strlen(str));
+      canvas.setCursor(x, y);
+      canvas.print(str);
+}
 
 /*コールバック関数用クラス*/
 
@@ -113,8 +166,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
 class MyCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
       std::string value = pCharacteristic->getValue();
-      String strValue=value.c_str();
-
+      strValue=value.c_str();
       if (strValue.length() > 0) {
         if(strValue.equals("a")){
             Serial.println("ASAP");
@@ -132,6 +184,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
             Serial.println("EMERGENCY");
             bleState=EMERGENCY;
         }else{
+            Serial.println(strValue);
             bleState=none;
         }
         Serial.println("*********");
@@ -159,9 +212,13 @@ class MySecurity : public BLESecurityCallbacks {
   }
 
   void onPassKeyNotify(uint32_t pass_key){
+    char charBuf[50];
     // ペアリング時のPINの表示
     Serial.println("onPassKeyNotify number");
     Serial.println(pass_key);
+    eraceMessageBox();
+    sprintf(charBuf,"onPassKeyNotify number : %d",pass_key);
+    canvasPrint(10,120,1, charBuf);
   }
 
   bool onSecurityRequest(){
@@ -171,12 +228,13 @@ class MySecurity : public BLESecurityCallbacks {
 
   void onAuthenticationComplete(esp_ble_auth_cmpl_t cmpl){
     Serial.println("onAuthenticationComplete");
+    eraceMessageBox();
     if(cmpl.success){
       // ペアリング完了
-      Serial.println("auth success");
+      canvasPrint(10,120,1, "Pearing Successed");
     }else{
       // ペアリング失敗
-      Serial.println("auth failed");
+      canvasPrint(10,120,1, "Pearing failed");
     }
   }
 };
@@ -184,7 +242,7 @@ class MySecurity : public BLESecurityCallbacks {
 void setup() {
   // put your setup code here, to run once:
   M5.begin(); // M5 Coreの初期化
-  //M5.Power.begin(); // Power.moduleの初期化
+  M5.Power.begin(); // Power.moduleの初期化
 
   Serial.begin(115200); // シリアル接続の開始
   delay(500);
@@ -218,8 +276,11 @@ void setup() {
   pSecurity->setCapability(ESP_IO_CAP_OUT);
   pSecurity->setInitEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
 
+  /*
+  //Pearing用PassKeyをランダムとする
   uint32_t passkey = BLE_PASSKEY;
   esp_ble_gap_set_security_param(ESP_BLE_SM_SET_STATIC_PASSKEY, &passkey, sizeof(uint32_t));
+  */
   
   // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
   // Create a BLE Descriptor
@@ -232,14 +293,11 @@ void setup() {
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(false);
   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
+  
   //advertisingの開始
   BLEDevice::startAdvertising();
   
   Serial.println("Hello World"); // シリアル出力
-  M5.Lcd.setRotation(1);//画面回転角(0~3)
-  M5.Lcd.setTextFont(4); // フォントの指定
-  M5.Lcd.setCursor(10, 120); // カーソル位置の指定
-  M5.Lcd.print("START!!"); // Hello Worldのディスプレイ表示
 
   pinMode(PIR_PIN,INPUT_PULLUP);//PIRの出力ピンを設定
 
@@ -259,40 +317,57 @@ void setup() {
   */
   canvas.createSprite(lcd.width(), lcd.height());
 
-  fontDump(10, 210, "呼び出し", 16);
+  fontDump(20, 210, "呼び出し", 16);
   //fontDump(50, 40, "Windowsと接続します", 20);
   //fontDump(50, 80, "M5StauckBle!!", 24);
+  canvas.setTextFont(4); // フォントの指定
+  canvas.setCursor(10, 120); // カーソル位置の指定
+  /*
+  //M5StuckBasicでは使えないみたい
+  if(!M5.Power.canControl()) {
+    //can't control.
+    canvas.print("NG Power");
+    return;
+  }*/
+  canvas.pushSprite(0, 0);  // メモリ内に描画したcanvasを座標を指定して表示する
 }
-
 void loop() {
+  char Buf[50];
   String strSend;//送信文字列
   M5.update();  // ボタン状態更新
-  canvas.setTextSize(2);            // 文字倍率変更
+  canvas.setTextSize(1);            // 文字倍率変更
   //LEDランプによるステータス表示
   switch(bleState){
-    case connect://青色常時点灯
-      canvas.setCursor(10, 10); // カーソル位置の指定
+    case connect:
       //printEfont("接続しました!", 0, 16*1); 
-      //M5.Lcd.clear(BLACK);//Lcd画面消去
-      canvas.print("Connect!!"); // Hello Worldのディスプレイ表示
+      canvas.fillRect(0, 0, 150, 29, BLACK);
+      canvasErace(10,10,1,10);
+      canvas.setCursor(10, 10);
+      canvas.print("Connect");
       break;
-    case disconnect://青色点滅
-      canvas.setCursor(10, 10); // カーソル位置の指定
+    case disconnect:
       //printEfont("切断しました!", 0, 16*1); 
-      //M5.Lcd.clear(BLACK);//Lcd画面消去
-      canvas.print("DisConnect!!"); // Hello Worldのディスプレイ表示
+      canvasErace(10,10,1,10);
+      canvas.setCursor(10, 10);
+      canvas.print("DisConnect");
       break;
     case ASAP:
-      canvas.setCursor(10, 10); // カーソル位置の指定
-      canvas.print("ASAP"); // Hello Worldのディスプレイ表示
+      canvasPrint(80, 57,1,"ASAP");
+      canvas.setTextSize(1); 
+      canvas.fillCircle(40, 60, 17, GREEN); // 円（始点x,始点y,半径,色）
       break;
     case WAIT:
-      canvas.setCursor(10, 10); // カーソル位置の指定
-      canvas.print("WAIT"); // Hello Worldのディスプレイ表示
+      canvasPrint(80, 57,1,"WAIT");
+      canvas.setTextSize(1); 
+      canvas.fillCircle(40, 60, 17, YELLOW); // 円（始点x,始点y,半径,色）
       break;
     case WRONG:
-      canvas.setCursor(10, 10); // カーソル位置の指定
-      canvas.print("WRONG"); // Hello Worldのディスプレイ表示
+      canvasPrint(80, 57,1,"WRONG");
+      canvas.setTextSize(1);
+      canvas.fillCircle(40, 60, 17, RED); // 円（始点x,始点y,半径,色）
+      break;
+    case none:
+      writeMessageBox(strValue);
       break;
   }
   // disconnecting
@@ -307,19 +382,17 @@ void loop() {
     // do stuff here on connecting
     oldDeviceConnected = deviceConnected;
   }
-
-  M5.update();  // ボタン状態更新
   if (deviceConnected) {
     if (M5.BtnA.isPressed()) {
-      if (beforeStateSwitch == LOW) {  //スイッチがOff→onにてデータを送る
+      if (beforeStateSwitchA == LOW) {  //スイッチがOff→onにてデータを送る
         Serial.println("PUSH_BUTTON ON");
         strSend = "PUSH_ON";
         pCharacteristic->setValue(strSend.c_str());
         pCharacteristic->notify();
-        beforeStateSwitch = HIGH;
+        beforeStateSwitchA = HIGH;
       }
     } else {
-      if (beforeStateSwitch == HIGH) {  //スイッチがon→Offにてデータを送る
+      if (beforeStateSwitchA == HIGH) {  //スイッチがon→Offにてデータを送る
         M5.Speaker.tone(659, 200);
         delay(200);
         M5.Speaker.tone(523, 200);
@@ -327,54 +400,77 @@ void loop() {
         strSend = "PUSH_OFF";
         pCharacteristic->setValue(strSend.c_str());
         pCharacteristic->notify();
-        beforeStateSwitch = LOW;
+        beforeStateSwitchA = LOW;
       }
     }
   } else {
   }
 
-  if(M5.BtnC.wasPressed()) {
-    M5.Speaker.tone(440, 100);
-    delay(100);
-    M5.Speaker.mute();
-    delay(100);
-    M5.Speaker.tone(440, 100);
-    delay(100);
-    M5.Speaker.mute();
-    delay(100);
-    M5.Speaker.tone(440, 100);
-
-      int key=BLE_PASSKEY;
-      uint8_t* valueBleKey=(uint8_t*)(&key);
-      
-      Serial.println("PushButtonC Pearing!!");
-      pCharacteristic->setValue(valueBleKey, 4);
-      pCharacteristic->notify();
+  if (!deviceConnected) {
+    if(M5.BtnC.isPressed()) {
+      M5.Speaker.tone(440, 100);
+      delay(100);
+      M5.Speaker.mute();
+      delay(100);
+      M5.Speaker.tone(440, 100);
+      delay(100);
+      M5.Speaker.mute();
+      delay(100);
+      M5.Speaker.tone(440, 100);
+      if(beforeStateSwitchB==LOW){
+        beforeStateSwitchB=HIGH;
+        canvas.fillCircle(275, 15, 15, BLACK);
+        canvas.drawCircle(275, 15, 15, BLUE); // 円（始点x,始点y,半径,色
+      }else{
+        canvas.fillCircle(275, 15, 15, BLACK);
+        beforeStateSwitchB=LOW;
+      }
+    }
+  }else{
+    beforeStateSwitchB=LOW;
+    canvas.drawCircle(275, 15, 15, BLUE); // 円（始点x,始点y,半径,色
   }
+
+  /*
+  giBattery = M5.Power.getBatteryLevel();
+  if( giBatteryOld != giBattery )
+  {
+    canvas.fillRect(160, 0, 200, 29, BLACK);
+    canvas.setCursor(160, 10);
+    canvas.printf("%3d \%",giBattery);
+    // 前回値更新
+    giBatteryOld = giBattery;
+  }else{
+  }
+  */
 
   //canvas.fillScreen(BLACK);         // 背景塗り潰し
   if(digitalRead(PIR_PIN)){
     canvas.fillCircle(305, 15, 15, RED);
-    canvas.setCursor(100, 15); // カーソル位置の指定
+    //canvas.setCursor(100, 15); // カーソル位置の指定
     //M5.Lcd.clear(BLACK);//Lcd画面消去
-    canvas.print("        ");
-    canvas.print("PIR ON!!"); // Hello Worldのディスプレイ表示
+    //canvas.print("        ");
+    //canvas.print("PIR ON!!"); // Hello Worldのディスプレイ表示
   }else{
     canvas.fillCircle(305, 15, 15, BLACK);
     canvas.drawCircle(305, 15, 15, RED); // 円（始点x,始点y,半径,色）
-    canvas.setCursor(100, 15); // カーソル位置の指定
-    canvas.print("         ");
-    canvas.print("PIR OFF!!"); // Hello Worldのディスプレイ表示
-  }
+    //canvas.setCursor(100, 15); // カーソル位置の指定
+    //canvas.print("         ");
+    //canvas.print("PIR OFF!!"); // Hello Worldのディスプレイ表示
+  }  
   /*
     canvas.setCursor(0, 0);                         // 座標を指定（x, y）
   canvas.setFont(&fonts::lgfxJapanGothic_24);     // ゴシック体（8,12,16,20,24,28,32,36,40）
   canvas.println("液晶表示 ゴシック体");            // 表示内容をcanvasに準備
   */
-  //canvas.drawLine(0, 15, 320, 15, WHITE);
+  
+  canvas.drawCircle(40, 60, 18, WHITE); // 円（始点x,始点y,半径,色）
+  canvas.drawCircle(40, 60, 19, WHITE); // 円（始点x,始点y,半径,色）
+  canvas.drawCircle(40, 60, 20, WHITE); // 円（始点x,始点y,半径,色）
   canvas.drawLine(0, 30, 320, 30, WHITE);
-  canvas.drawLine(0, 180, 320, 180, WHITE);
-  canvas.drawLine(106, 180, 106, 240, WHITE);
-  canvas.drawLine(212, 180, 212, 240, WHITE);
-  canvas.pushSprite(0, 0);  // メモリ内に描画したcanvasを座標を指定して表示する
+  canvas.drawLine(0, 90, 320, 90, WHITE);
+  canvas.drawLine(0, 210, 320, 210, WHITE);
+  canvas.drawLine(106, 210, 106, 240, WHITE);
+  canvas.drawLine(212, 210, 212, 240, WHITE);
+  canvas.pushSprite(0, 0);
 }
