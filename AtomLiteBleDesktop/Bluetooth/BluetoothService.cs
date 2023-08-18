@@ -139,6 +139,7 @@ namespace AtomLiteBleDesktop
                     var result = await service.GetCharacteristicsAsync(BluetoothCacheMode.Cached);//この関数でDevice.ConnectionStatusがSuccessかUnSuccessかが決まる。よって実際に接続できたかはこの関数が実行されたのちにConnectionStausを調べなくてはいけない
                     if (result.Status == GattCommunicationStatus.Success)
                     {
+                        /*
                         if (service.Device.ConnectionStatus == BluetoothConnectionStatus.Connected)
                         {
                             foreach (var characteristic in result.Characteristics)
@@ -152,6 +153,15 @@ namespace AtomLiteBleDesktop
                         else
                         {
                             return null;
+                        }
+                        */
+                        //起動時にデバイスがOFFされていても、Characteristicのコールアウト関数は登録し、電源ＯＮ時に再接続できるようにする
+                        foreach (var characteristic in result.Characteristics)
+                        {
+                            var bluetoothCharacteristic = new BluetoothCharacteristic(characteristic);
+                            bluetoothCharacteristic.NotifyReceiveCharacteristic += registeredCharacteristicNotify;
+                            characteristics.Add(bluetoothCharacteristic);
+                            logger.Info("set EventHandler:" + bluetoothCharacteristic.Name);
                         }
                     }
                     else
