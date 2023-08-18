@@ -49,6 +49,8 @@ static int giBattery = 0;
 static int giBatteryOld = 0xFF;
 String strValue;
 size_t strValueLength;
+bool isUpdateReceiveData=false;
+uint8_t currentRow=0; 
 
 int volume = 1;
 
@@ -99,35 +101,42 @@ void fontDump(uint16_t x, uint16_t y, char* pUTF8, uint8_t sz) {
 }
 
 void writeMessageBox(String str){
-  char Buf[50];
+  char Buf[255];
   
   uint16_t top=90;
   uint16_t left=0;
   uint16_t bottom=210;
   uint16_t right=320;
-  uint8_t size=8;
+  uint8_t size=16;//フォントサイズ(8,10,12,14,16,20,24)
 
-  uint8_t rowNum=(uint8_t)(left-right)/size;
-  uint8_t strLength=(uint8_t)str.length();
+  uint8_t rowNum=(uint8_t)((right-left)/size);
+  uint8_t strLength=(uint8_t)str.length()/3;//UTF-8が3byteのため
   uint8_t startStr=0;
   uint8_t stopStr=rowNum;
+  uint8_t endStr=0;
   String rowStr;
-  uint8_t currentRow=0; 
   
   Serial.println(str);
-  Serial.println("rowNum");
-  Serial.println(rowNum,DEC);
+  Serial.println("Start writing");
 
   do{
-    rowStr=str.substring(startStr,stopStr);
-    rowStr.toCharArray(Buf, rowNum);
+    rowStr=str.substring(startStr*3,stopStr*3);
+    rowStr.toCharArray(Buf, rowNum*3);
     fontDump(left,top+currentRow*size,Buf,size);
     startStr+=rowNum;
     stopStr+=rowNum;
     currentRow++;
-  //Serial.println("stopStr");
-  //Serial.println(stopStr,DEC);
-  }while(stopStr<strLength);
+  }while(stopStr<=strLength);
+  //ラストの一行を表示する
+  endStr=(stopStr-rowNum)+(strLength%rowNum);
+  if(endStr>0){
+    rowStr=str.substring(startStr*3,endStr*3);
+    rowStr.toCharArray(Buf, rowNum*3);
+    fontDump(left,top+currentRow*size,Buf,size);
+    currentRow++;
+  }else{
+    currentRow--;
+  }
 }
 
 void eraceMessageBox(){
@@ -187,6 +196,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
             Serial.println(strValue);
             bleState=none;
         }
+        isUpdateReceiveData=true;
         Serial.println("*********");
         Serial.print("New value: ");
         for (int i = 0; i < value.length(); i++)
@@ -195,7 +205,6 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         Serial.println();
         Serial.println("*********");
       }
-      
     }
 };
 
@@ -336,7 +345,7 @@ void loop() {
   String strSend;//送信文字列
   M5.update();  // ボタン状態更新
   canvas.setTextSize(1);            // 文字倍率変更
-  //LEDランプによるステータス表示
+
   switch(bleState){
     case connect:
       //printEfont("接続しました!", 0, 16*1); 
@@ -351,25 +360,31 @@ void loop() {
       canvas.setCursor(10, 10);
       canvas.print("DisConnect");
       break;
-    case ASAP:
-      canvasPrint(80, 57,1,"ASAP");
-      canvas.setTextSize(1); 
-      canvas.fillCircle(40, 60, 17, GREEN); // 円（始点x,始点y,半径,色）
-      break;
-    case WAIT:
-      canvasPrint(80, 57,1,"WAIT");
-      canvas.setTextSize(1); 
-      canvas.fillCircle(40, 60, 17, YELLOW); // 円（始点x,始点y,半径,色）
-      break;
-    case WRONG:
-      canvasPrint(80, 57,1,"WRONG");
-      canvas.setTextSize(1);
-      canvas.fillCircle(40, 60, 17, RED); // 円（始点x,始点y,半径,色）
-      break;
-    case none:
-      writeMessageBox(strValue);
-      break;
   }
+  if(isUpdateReceiveData){
+    switch(bleState){
+      case ASAP:
+        canvasPrint(80, 57,1,"ASAP");
+        canvas.setTextSize(1); 
+        canvas.fillCircle(40, 60, 17, GREEN); // 円（始点x,始点y,半径,色）
+        break;
+      case WAIT:
+        canvasPrint(80, 57,1,"WAIT");
+        canvas.setTextSize(1); 
+        canvas.fillCircle(40, 60, 17, YELLOW); // 円（始点x,始点y,半径,色）
+        break;
+      case WRONG:
+        canvasPrint(80, 57,1,"WRONG");
+        canvas.setTextSize(1);
+        canvas.fillCircle(40, 60, 17, RED); // 円（始点x,始点y,半径,色）
+        break;
+      case none:
+        writeMessageBox(strValue);
+        break;
+    }
+    isUpdateReceiveData=false;
+  }
+  
   // disconnecting
   if (!deviceConnected && oldDeviceConnected) {
     delay(500); // give the bluetooth stack the chance to get things ready
