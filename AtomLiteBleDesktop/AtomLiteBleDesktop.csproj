@@ -150,6 +150,7 @@
     </Compile>
     <Compile Include="HomePagePropertyChanged.cs" />
     <Compile Include="SettingsPagePropertyChanged.cs" />
+    <Compile Include="ToastNotificationReceiveBle.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -162,6 +163,14 @@
     <Content Include="Assets\LargeTile.scale-150.png" />
     <Content Include="Assets\LargeTile.scale-200.png" />
     <Content Include="Assets\LargeTile.scale-400.png" />
+    <Content Include="Assets\Music\Rotary_Phone-Ringtone01-1.mp3" />
+    <Content Include="Assets\Music\Telephone-Ringtone01-1.mp3" />
+    <Content Include="Assets\Music\Telephone-Ringtone02-1.mp3" />
+    <Content Include="Assets\Music\Warning-Siren01-1.mp3" />
+    <Content Include="Assets\Music\Warning-Siren02-04%28Fast-Short%29.mp3" />
+    <Content Include="Assets\Music\Warning-Siren03-01%28High-Mid%29.mp3" />
+    <Content Include="Assets\Music\Warning-Siren04-01.mp3" />
+    <Content Include="Assets\Music\Warning-Siren05-01%28Fast-Mid%29.mp3" />
     <Content Include="Assets\SmallTile.scale-100.png" />
     <Content Include="Assets\SmallTile.scale-125.png" />
     <Content Include="Assets\SmallTile.scale-150.png" />

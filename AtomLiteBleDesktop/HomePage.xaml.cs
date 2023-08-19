@@ -15,7 +15,9 @@ using Windows.ApplicationModel.ExtendedExecution;
 using Windows.Data.Xml.Dom;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Foundation.Metadata;
 using Windows.Storage;
+using Windows.System.Profile;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
@@ -165,7 +167,7 @@ namespace AtomLiteBleDesktop
 
         private async void Control_GotFocus(object sender, RoutedEventArgs e)
         {
-            if(sender is Button)
+            if (sender is Button)
             {
                 var senderButton = sender as Button;
                 if (senderButton.IsPressed)
@@ -238,9 +240,11 @@ namespace AtomLiteBleDesktop
             }
         }
 
-            private void Button_Click(object sender, RoutedEventArgs e)
+        /*
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
         }
+        */
 
         private void AccesserStatusChange(BluetoothAccesser.NotifyBluetoothAccesserEventArgs.Status status, BluetoothLEDevice sender)
         {
@@ -488,13 +492,14 @@ namespace AtomLiteBleDesktop
                         {
                             if (rxStatus != beforeRxdata)
                             {
-                                NotificationToast(item.DeviceName);
+                                //NotificationToast(item.DeviceName);
+                                
+                                new ToastNotificationReceiveBle().Show( item.DeviceName);
+                                
                                 item.IconCallNumber = "\xE717";
                                 item.NumberCall = numberRx.ToString();
                                 batchUpdateBadgeNum(numberRx ?? 0);
                                 //batchUpdateBadgeGlyphAlert();
-
-
                                 beforeRxdata = rxStatus;
                             }
                         }

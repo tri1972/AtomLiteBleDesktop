@@ -42,6 +42,11 @@ namespace AtomLiteBleDesktop
     /// </summary>
     public sealed partial class SettingsPage : Page
     {
+        //TODO: ボタン類はすべて削除
+        //TODO: デバイスにより着信時の音が変わるようにする
+        //TODO: 現在DBに登録されているデバイス名を表示できるようにする
+        //TODO: DBにデバイスを登録できるようにする
+
         private const string PIRSERVER = "ESP32PIRTRI";
         private const int MAX_RETRY_CONNECT = 5;
 
