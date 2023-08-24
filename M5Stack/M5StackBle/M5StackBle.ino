@@ -398,7 +398,7 @@ void loop() {
     oldDeviceConnected = deviceConnected;
   }
   if (deviceConnected) {
-    if (M5.BtnA.isPressed()) {
+    if (M5.BtnA.pressedFor(50)) {
       if (beforeStateSwitchA == LOW) {  //スイッチがOff→onにてデータを送る
         Serial.println("PUSH_BUTTON ON");
         strSend = "PUSH_ON";
