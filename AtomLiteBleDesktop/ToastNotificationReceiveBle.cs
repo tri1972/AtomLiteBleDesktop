@@ -70,14 +70,23 @@ namespace AtomLiteBleDesktop
                     .SetToastScenario(ToastScenario.Reminder)
                     .AddText("Call Server")
                     .AddText(deviceName)
-                    .AddAttributionText("Attribute ⏰ 工数管理")
-                    //.AddToastInput(selector)
-                    .AddButton(new ToastButton()
-                        .SetContent("開始")
-                        .AddArgument("_ActionTypeCode", " _ActionTypeStartTask"))
-                    .AddButton(new ToastButtonSnooze())
+                    .AddToastInput(new ToastSelectionBox("snoozeTime")
+                    {
+                        DefaultSelectionBoxItemId = "15",
+                        Items =
+                        {//下記ではリストボックスのリストを生成する、第一引数のidにて指定された値で再通知時間(分単位)がきまる(id="1"なら1分)
+                            new ToastSelectionBoxItem("1", "1 minutes"),
+                            new ToastSelectionBoxItem("5", "5 minutes"),
+                            new ToastSelectionBoxItem("15", "15 minutes"),
+                            new ToastSelectionBoxItem("60", "1 hour"),
+                            new ToastSelectionBoxItem("240", "4 hours")
+                        }
+                    })
+                    .AddButton(new ToastButtonSnooze() { SelectionBoxId = "snoozeTime" })
+                    .AddButton(new ToastButtonDismiss())
                     .Show();
-            }else
+            }
+            else
             {
                 return false;
             }
