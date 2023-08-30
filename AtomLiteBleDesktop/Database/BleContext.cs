@@ -25,13 +25,15 @@ namespace AtomLiteBleDesktop.Database
                 {
                     ServerName = "ESP32PIRTRI",
                     ServiceUUID = "e72609f6-2bcb-4fb0-824a-5276ec9e355d",
-                    CharacteristicUUID = "cca99442-dab6-4f69-8bc2-685e2412d178"
+                    CharacteristicUUID = "cca99442-dab6-4f69-8bc2-685e2412d178",
+                    NumberSound=0
                 });
                 db.Posts.Add(new Post
                 {
                     ServerName = "M5STACKTRI",
                     ServiceUUID = "ee007086-0dc9-4a48-b381-0f9e56d8c597",
-                    CharacteristicUUID = "245c84dc-9422-41fb-bbf9-ddcd7da28120"
+                    CharacteristicUUID = "245c84dc-9422-41fb-bbf9-ddcd7da28120",
+                    NumberSound = 1
                 });
                 db.SaveChanges();
             }
@@ -71,6 +73,7 @@ namespace AtomLiteBleDesktop.Database
         public string ServerName { get; set; }
         public string ServiceUUID { get; set; }
         public string CharacteristicUUID { get; set; }
+        
         public int NumberSound { get; set; }
 
     }

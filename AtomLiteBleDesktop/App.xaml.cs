@@ -4,9 +4,11 @@ using System;
 using System.Linq;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+
 
 namespace AtomLiteBleDesktop
 {
@@ -29,19 +31,15 @@ namespace AtomLiteBleDesktop
             this.InitializeComponent();
             this.Suspending += OnSuspending;
             this.Resuming += new EventHandler<Object>(App_Resuming);
-
+            
+            
             using (var db = new BleContext())
             {
                 db.Database.EnsureCreated();
             }
-            //BleContext.DbInitRecord();//Dbに新規にデータを追加したい場合はこれを実行する
+            
 
-            /*
-            servers = new List<string>();
-            servers.Add(PIRSERVER);
-            servers.Add(dummySERVER1);
-            servers.Add(dummySERVER2);
-            */
+            //BleContext.DbInitRecord();//Dbに新規にデータを追加したい場合はこれを実行する
         }
 
         /// <summary>
