@@ -251,7 +251,6 @@ namespace AtomLiteBleDesktop
             switch (status)
             {
                 case NotifyBluetoothAccesserEventArgs.Status.Connected:
-                    //TODO:デバイスの電源が切れていてもConnectedとなってしまう
                     stringHogehogeData_TextDataDispatcher("Connect!!");
                     stringAdd_TextDataDispatcher("\n" + "取得Service名：");//接続した場合のUIへのBindをおこなう
                     if (sender != null)

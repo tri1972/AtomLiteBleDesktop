@@ -204,9 +204,9 @@ namespace AtomLiteBleDesktop
                 {
                     var task = await Task.Run(()=>ConnectServer(dispatcher));
                     if (task)
-                    {
+                    {//デバイスが電源オフだったとしても、キャッシュでデバイスが見つかればTrueとなる→実際に接続できたかどうかの証明にはならない
                         this.status = TypeStatus.Coonected;
-                        this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
+                        this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connecting);//最初の接続時については接続とせずに接続中とする（接続状態のイベントハンドラで接続を検知するようにする）
 
                         foreach(var server in this.services)
                         {

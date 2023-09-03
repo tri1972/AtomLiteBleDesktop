@@ -62,7 +62,7 @@ namespace AtomLiteBleDesktop
 
                 if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
-                    //TODO: 以前中断したアプリケーションから状態を読み込みます
+                    //以前中断したアプリケーションから状態を読み込みます
                 }
 
                 // フレームを現在のウィンドウに配置します
@@ -107,7 +107,6 @@ namespace AtomLiteBleDesktop
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
-            //TODO: アプリケーションの状態を保存してバックグラウンドの動作があれば停止します
             deferral.Complete();
         }
 
