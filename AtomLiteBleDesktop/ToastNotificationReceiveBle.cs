@@ -57,7 +57,7 @@ namespace AtomLiteBleDesktop
             if (0 <= audioSrcNum
                 && audioSrcNum < srcAudios.Count)
             {
-                var serverPost = BleContext.GetServerPosts(deviceName);
+                var serverPost = BleContext.GetServerPost(deviceName);
                 var audio = new ToastAudio()
                 {
                     Loop = false,

@@ -39,7 +39,7 @@ namespace AtomLiteBleDesktop.Database
             }
         }
 
-        public static Post GetServerPosts(string DeviceName)
+        public static Post GetServerPost(string DeviceName)
         {
             using (var retdb = new BleContext())
             {
@@ -48,6 +48,21 @@ namespace AtomLiteBleDesktop.Database
                              select b;
 
                 return record.First();
+                //var ret = retdb.Posts.ToArray();
+            }
+        }
+
+        public static List<Post> GetServerPosts()
+        {
+            using (var retdb = new BleContext())
+            {
+                var ret = retdb.Posts.ToArray();
+                var output = new List<Post>();
+                foreach (var retPost in ret)
+                {
+                    output.Add(retPost);
+                }
+                return output;
                 //var ret = retdb.Posts.ToArray();
             }
         }

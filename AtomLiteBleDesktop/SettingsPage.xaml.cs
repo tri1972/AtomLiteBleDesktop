@@ -32,6 +32,8 @@ using Windows.UI.Notifications;
 using Windows.UI;
 using Windows.System;
 using static AtomLiteBleDesktop.Bluetooth.BluetoothAccesser;
+using AtomLiteBleDesktop.Database;
+using Windows.Media.Import;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=234238 を参照してください
 
@@ -45,6 +47,43 @@ namespace AtomLiteBleDesktop
     /// </summary>
     public sealed partial class SettingsPage : Page
     {
+        public SettingsPage()
+        {
+            this.InitializeComponent();
+            this.ViewModel = new DeviceDBViewModel();
+        }
+        public DeviceDBViewModel ViewModel { get; set; }
     }
+    public class DBDevice
+    {
+        public string Name { get; set; }
+        public string ServiceUUID { get; set; }
+        public string CharacteristicUUID { get; set; }
+        public string Sound{ get; set; }
+        public DBDevice()
+        {
+        }
+
+    }
+    public class DeviceDBViewModel
+    {
+        private ObservableCollection<DBDevice> recordings = new ObservableCollection<DBDevice>();
+        public ObservableCollection<DBDevice> Recordings { get { return this.recordings; } }
+        public DeviceDBViewModel()
+        {
+            foreach(var post in BleContext.GetServerPosts())
+            {
+                this.recordings.Add(new DBDevice()
+                {
+                    Name = post.ServerName,
+                    ServiceUUID = post.ServiceUUID,
+                    CharacteristicUUID = post.CharacteristicUUID,
+                    Sound=post.NumberSound.ToString()
+                });
+
+            }
+        }
+    }
+
 
 }

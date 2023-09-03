@@ -6,8 +6,41 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
 
+    <ListView  ItemsSource="{x:Bind ViewModel.Recordings}">
+        <ListView.HeaderTemplate>
+            <DataTemplate>
+                <Grid Padding="12" Background="{ThemeResource SystemBaseLowColor}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="408"/>
+                        <ColumnDefinition Width="360"/>
+                        <ColumnDefinition Width="360"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="DeviceName" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                    <TextBlock Grid.Column="1" Text="ServiceUUID" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                    <TextBlock Grid.Column="2" Text="CharacteristicUUID" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                </Grid>
+            </DataTemplate>
+        </ListView.HeaderTemplate>
+        <ListView.ItemTemplate>
+            <DataTemplate x:Name="TableDataTemplate" x:DataType="local:DBDevice">
+                <Grid Height="48" AutomationProperties.Name="{x:Bind  Name}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="48"/>
+                        <ColumnDefinition Width="360"/>
+                        <ColumnDefinition Width="360"/>
+                        <ColumnDefinition Width="360"/>
+                    </Grid.ColumnDefinitions>
+                    <Ellipse Height="32" Width="32" VerticalAlignment="Center">
+                        <Ellipse.Fill>
+                            <ImageBrush ImageSource="Placeholder.png"/>
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{ThemeResource BaseTextBlockStyle}" Text="{x:Bind  Name}" />
+                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{x:Bind ServiceUUID}"/>
+                    <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{x:Bind CharacteristicUUID}"/>
+                </Grid>
+            </DataTemplate>
+        </ListView.ItemTemplate>
+    </ListView>
 
-    <Grid>
-        <TextBlock TextAlignment="Center" VerticalAlignment="Center" FontSize="30">Setting page</TextBlock>
-    </Grid>
 </Page>

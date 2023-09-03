@@ -214,7 +214,7 @@ namespace AtomLiteBleDesktop
                                     break;
                             }
                             this.isCancelRepeatReceivingBlink = true;//送信ボタンが押されたら点滅はキャンセルされる
-                            var server = BleContext.GetServerPosts(serverListview.DeviceName);
+                            var server = BleContext.GetServerPost(serverListview.DeviceName);
                             if (server != null)
                             {
                                 mDevice.SendData(server.ServiceUUID, server.CharacteristicUUID, sendData);
