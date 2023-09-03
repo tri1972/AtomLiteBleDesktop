@@ -21,7 +21,7 @@ namespace AtomLiteBleDesktop
     /// それ自体で使用できる空白ページまたはフレーム内に移動できる空白ページ。
     /// </summary>
     public sealed partial class LogPage : Page
-    {
+    {//TODO: ログ情報を表示する
         public LogPage()
         {
             this.InitializeComponent();
