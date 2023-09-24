@@ -1,0 +1,35 @@
+﻿<ContentDialog
+    x:Class="AtomLiteBleDesktop.SettingPageContentDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AtomLiteBleDesktop"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="DB設定"
+    PrimaryButtonText="OK"
+    SecondaryButtonText="Chancel"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick">
+
+    <Grid Padding="12" Background="{ThemeResource AppBarBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Row="0" Grid.Column="0"  Text="DeviceName"></TextBlock>
+        <TextBlock Grid.Row="1" Grid.Column="0"  Text="S_UUID"></TextBlock>
+        <TextBlock Grid.Row="2" Grid.Column="0"  Text="C_UUID"></TextBlock>
+        <TextBlock Grid.Row="3" Grid.Column="0"  Text="Sound"></TextBlock>
+        <TextBox Grid.Row="0" Grid.Column="1" x:Name="dialogTextBoxDeviceName" Text="{x:Bind Path=ViewModel.Name, Mode=TwoWay}" TextWrapping="Wrap"/>
+        <TextBox Grid.Row="1" Grid.Column="1" x:Name="dialogTextBoxServiceUUID" Text="{x:Bind Path=ViewModel.ServiceUUID, Mode=TwoWay}" TextWrapping="Wrap"/>
+        <TextBox Grid.Row="2" Grid.Column="1" x:Name="dialogTextBoxCharacteristicUUID" Text="{x:Bind Path=ViewModel.CharacteristicUUID, Mode=TwoWay}" TextWrapping="Wrap"/>
+        <TextBox Grid.Row="3" Grid.Column="1" x:Name="dialogTextBoxSound" Text="{x:Bind Path=ViewModel.Sound, Mode=TwoWay}" TextWrapping="Wrap"/>
+    </Grid>
+</ContentDialog>

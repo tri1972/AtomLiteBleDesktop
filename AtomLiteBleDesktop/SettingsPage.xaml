@@ -6,38 +6,48 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
 
-    <ListView  ItemsSource="{x:Bind ViewModel.Recordings}">
+    <ListView x:Name="SettingListView"  ItemsSource="{x:Bind ViewModel.Recordings}">
         <ListView.HeaderTemplate>
             <DataTemplate>
                 <Grid Padding="12" Background="{ThemeResource SystemBaseLowColor}">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="408"/>
-                        <ColumnDefinition Width="360"/>
-                        <ColumnDefinition Width="360"/>
+                        <ColumnDefinition Width="0.02*"/>
+                        <ColumnDefinition Width="0.14*"/>
+                        <ColumnDefinition Width="0.35*"/>
+                        <ColumnDefinition Width="0.35*"/>
+                        <ColumnDefinition Width="0.14*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="DeviceName" Style="{ThemeResource CaptionTextBlockStyle}"/>
-                    <TextBlock Grid.Column="1" Text="ServiceUUID" Style="{ThemeResource CaptionTextBlockStyle}"/>
-                    <TextBlock Grid.Column="2" Text="CharacteristicUUID" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                    <TextBlock Grid.Column="0" Text="Id" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                    <TextBlock Grid.Column="1" Text="DeviceName" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                    <TextBlock Grid.Column="2" Text="ServiceUUID" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                    <TextBlock Grid.Column="3" Text="CharacteristicUUID" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                    <TextBlock Grid.Column="4" Text="Sound" Style="{ThemeResource CaptionTextBlockStyle}"/>
                 </Grid>
             </DataTemplate>
         </ListView.HeaderTemplate>
         <ListView.ItemTemplate>
             <DataTemplate x:Name="TableDataTemplate" x:DataType="local:DBDevice">
-                <Grid Height="48" AutomationProperties.Name="{x:Bind  Name}">
+                <Grid Height="48" AutomationProperties.Name="{x:Bind  Name}" DoubleTapped="Control_Setting_DoubleTapped">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="48"/>
-                        <ColumnDefinition Width="360"/>
-                        <ColumnDefinition Width="360"/>
-                        <ColumnDefinition Width="360"/>
+                        <ColumnDefinition Width="0.02*"/>
+                        <ColumnDefinition Width="0.14*"/>
+                        <ColumnDefinition Width="0.35*"/>
+                        <ColumnDefinition Width="0.35*"/>
+                        <ColumnDefinition Width="0.14*"/>
                     </Grid.ColumnDefinitions>
-                    <Ellipse Height="32" Width="32" VerticalAlignment="Center">
-                        <Ellipse.Fill>
-                            <ImageBrush ImageSource="Placeholder.png"/>
-                        </Ellipse.Fill>
-                    </Ellipse>
-                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{ThemeResource BaseTextBlockStyle}" Text="{x:Bind  Name}" />
-                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{x:Bind ServiceUUID}"/>
-                    <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{x:Bind CharacteristicUUID}"/>
+                    <TextBlock x:Name="TextBlock_Column0" Grid.Column="0" VerticalAlignment="Center" Text="{x:Bind Id, Mode=TwoWay}"/>
+                    <TextBlock x:Name="TextBlock_Column1" Grid.Column="1" VerticalAlignment="Center" Text="{x:Bind Name , Mode=TwoWay}"/>
+                    <!--
+                    <TextBox Text="{x:Bind  Name}" VerticalAlignment="Center" GotFocus="Control_Setting_GotFocus" Grid.Column="1" 
+                             Visibility="Visible" IsReadOnly="true" Background="#FFF3F3F3"  BorderBrush="#FFF3F3F3" 
+                             SelectionHighlightColor="#FFAD1818" SelectionHighlightColorWhenNotFocused="#FF1823A0" 
+                             PlaceholderForeground="#FF55A90B" FocusVisualPrimaryBrush="#FFEFDE1E" FocusVisualSecondaryBrush="#FFD70FE0" 
+                             IsDoubleTapEnabled="True" IsEnabled="True" DoubleTapped="Control_Setting_DoubleTapped"
+                             />
+                    -->
+                    <TextBlock x:Name="TextBlock_Column2" Grid.Column="2" VerticalAlignment="Center" Text="{x:Bind ServiceUUID, Mode=TwoWay}"/>
+                    <TextBlock x:Name="TextBlock_Column3" Grid.Column="3" VerticalAlignment="Center" Text="{Binding CharacteristicUUID, Mode=TwoWay}" GotFocus="Control_Setting_GotFocus"/>
+                    <TextBlock x:Name="TextBlock_Column4" Grid.Column="4" VerticalAlignment="Center" Text="{Binding Sound, Mode=TwoWay}" GotFocus="Control_Setting_GotFocus"/>
                 </Grid>
             </DataTemplate>
         </ListView.ItemTemplate>

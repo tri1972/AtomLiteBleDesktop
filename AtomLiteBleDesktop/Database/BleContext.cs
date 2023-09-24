@@ -39,6 +39,32 @@ namespace AtomLiteBleDesktop.Database
             }
         }
 
+        /// <summary>
+        /// DBのレコードデータを修正します
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="data"></param>
+        public static void DbSetRecord(int id,Post data)
+        {
+            using (var retdb = new BleContext())
+            {
+                var record = from b in retdb.Posts
+                             where b.PostId.Equals(id)
+                             select b;
+                var fristFindData=record.First();
+                fristFindData.ServerName = data.ServerName;
+                fristFindData.ServiceUUID = data.ServiceUUID;
+                fristFindData.CharacteristicUUID = data.CharacteristicUUID;
+                fristFindData.NumberSound = data.NumberSound;
+                retdb.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// デバイス名より、最初に該当したレコードを返します
+        /// </summary>
+        /// <param name="DeviceName"></param>
+        /// <returns></returns>
         public static Post GetServerPost(string DeviceName)
         {
             using (var retdb = new BleContext())

@@ -34,6 +34,7 @@ using Windows.System;
 using static AtomLiteBleDesktop.Bluetooth.BluetoothAccesser;
 using AtomLiteBleDesktop.Database;
 using Windows.Media.Import;
+using System.ComponentModel;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=234238 を参照してください
 
@@ -53,17 +54,131 @@ namespace AtomLiteBleDesktop
             this.ViewModel = new DeviceDBViewModel();
         }
         public DeviceDBViewModel ViewModel { get; set; }
+        
+        private void Control_Setting_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox)
+            {
+                
+                (sender as TextBox).Background = new SolidColorBrush(Color.FromArgb(234,234,234,234));
+                (sender as TextBox).BorderBrush = new SolidColorBrush(Color.FromArgb(234, 234, 234, 234));
+                
+                //(sender as TextBox).IsReadOnly = false;
+            }
+        }
+//TODO : ダブルクリックしたListviewのテキストボックスを編集できるようにする
+        private async void Control_Setting_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            if(sender is Grid)
+            {
+                var grid = (sender as Grid);
+                if(grid.DataContext is DBDevice)
+                {
+                    var dbdeviceSender = grid.DataContext as DBDevice;
+
+                    var dlg = new SettingPageContentDialog();
+                    dlg.ViewModel.Id = dbdeviceSender.Id;
+                    dlg.ViewModel.Name = dbdeviceSender.Name;
+                    dlg.ViewModel.ServiceUUID = dbdeviceSender.ServiceUUID;
+                    dlg.ViewModel.CharacteristicUUID = dbdeviceSender.CharacteristicUUID;
+                    dlg.ViewModel.Sound = dbdeviceSender.Sound;
+                    var result = await dlg.ShowAsync();
+                    if (result == ContentDialogResult.Primary)
+                    {
+                        dbdeviceSender.Id = dlg.ViewModel.Id;
+                        dbdeviceSender.Name= dlg.ViewModel.Name;
+                        dbdeviceSender.ServiceUUID= dlg.ViewModel.ServiceUUID;
+                        dbdeviceSender.CharacteristicUUID = dlg.ViewModel.CharacteristicUUID;
+                        dbdeviceSender.Sound= dlg.ViewModel.Sound;
+                        BleContext.DbSetRecord(dlg.ViewModel.Id, new Post
+                        {
+                            PostId = dlg.ViewModel.Id,
+                            ServerName = dlg.ViewModel.Name,
+                            CharacteristicUUID = dlg.ViewModel.CharacteristicUUID,
+                            ServiceUUID = dlg.ViewModel.ServiceUUID,
+                            NumberSound = int.Parse(dbdeviceSender.Sound)
+                    });
+                    }
+
+
+                    if (sender is ListView)
+                    {
+                        int index = (sender as ListView).SelectedIndex;
+
+                        ((sender as ListView).SelectedValue as TextBox).IsReadOnly = false;
+                    }
+
+                }
+            }
+        }
     }
-    public class DBDevice
+    public class DBDevice : INotifyPropertyChanged
     {
-        public string Name { get; set; }
-        public string ServiceUUID { get; set; }
-        public string CharacteristicUUID { get; set; }
-        public string Sound{ get; set; }
+        private int id;
+        public int Id
+        {
+            get { return this.id; }
+            set
+            {
+                this.id = value;
+                NotifyPropertyChanged("Id");
+            }
+        }
+
+        private string name { get; set; }
+        public string Name 
+        {
+            get { return this.name; }
+            set 
+            { 
+                this.name = value;
+                NotifyPropertyChanged("Name");
+            }
+        }
+
+        private string serviceUUID;
+        public string ServiceUUID 
+        {
+            get { return this.serviceUUID; }
+            set 
+            {
+                this.serviceUUID=value;
+                NotifyPropertyChanged("ServiceUUID");
+            }
+        
+        }
+        private string characteristicUUID;
+        public string CharacteristicUUID 
+        {
+            get { return this.characteristicUUID; }
+            set 
+            { 
+                this.characteristicUUID = value;
+                NotifyPropertyChanged("CharacteristicUUID");
+            }
+        }
+
+        private string sound;
+        public string Sound{
+            get { return this.sound; }
+            set { 
+                this.sound = value;
+                NotifyPropertyChanged("Sound");
+            }
+        }
         public DBDevice()
         {
         }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        void NotifyPropertyChanged(string info)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(info));
+            }
+        }
     }
     public class DeviceDBViewModel
     {
@@ -71,10 +186,11 @@ namespace AtomLiteBleDesktop
         public ObservableCollection<DBDevice> Recordings { get { return this.recordings; } }
         public DeviceDBViewModel()
         {
-            foreach(var post in BleContext.GetServerPosts())
+            foreach (var post in BleContext.GetServerPosts())
             {
                 this.recordings.Add(new DBDevice()
                 {
+                    Id=post.PostId,
                     Name = post.ServerName,
                     ServiceUUID = post.ServiceUUID,
                     CharacteristicUUID = post.CharacteristicUUID,
@@ -84,6 +200,4 @@ namespace AtomLiteBleDesktop
             }
         }
     }
-
-
 }

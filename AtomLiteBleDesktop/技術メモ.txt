@@ -82,5 +82,11 @@ https://learn.microsoft.com/ja-jp/windows/apps/design/style/segoe-ui-symbol-font
 【C#/UWP】{x:Bind} と {Binding} の違い
 https://qiita.com/nemutas/items/1656b7b5328353eeb1d1
 
+データ バインディングの詳細
+https://learn.microsoft.com/ja-jp/windows/uwp/data-binding/data-binding-in-depth
+
 Toastのカスタマイズについて
 https://learn.microsoft.com/ja-jp/windows/apps/design/shell/tiles-and-notifications/send-local-toast?tabs=uwp
+
+MesageDialogの自作
+https://sourcechord.hatenablog.com/entry/2015/09/19/233538
