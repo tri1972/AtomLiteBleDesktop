@@ -10,17 +10,6 @@ namespace AtomLiteBleDesktop
 {
     class ToastNotificationReceiveBle
     {
-        private string[] srcArrayAudios =
-        {
-            "ms-appx:///Assets/Music/Rotary_Phone-Ringtone01-1.mp3",
-            "ms-appx:///Assets/Music/Telephone-Ringtone01-1.mp3",
-            "ms-appx:///Assets/Music/Telephone-Ringtone02-1.mp3",
-            "ms-appx:///Assets/Music/Warning-Siren01-1.mp3",
-            "ms-appx:///Assets/Music/Warning-Siren02-04(Fast-Short).mp3",
-            "ms-appx:///Assets/Music/Warning-Siren03-01(High-Mid).mp3",
-            "ms-appx:///Assets/Music/Warning-Siren04-01.mp3",
-            "ms-appx:///Assets/Music/Warning-Siren05-01(Fast-Mid).mp3",
-        };
 
         private int currentAudioSrcNum;
         public int CurrentAudioSrcNum
@@ -43,9 +32,9 @@ namespace AtomLiteBleDesktop
         public ToastNotificationReceiveBle()
         {
             srcAudios = new List<string>();
-            foreach(var src in srcArrayAudios)
+            foreach(var src in AssetNotifySounds.SrcArrayAudios)
             {
-                srcAudios.Add(src);
+                srcAudios.Add(src.AssetsSource);
             }
         }
 

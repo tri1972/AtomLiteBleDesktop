@@ -107,15 +107,4 @@ namespace AtomLiteBleDesktop.Database
             }
         }
     }
-
-    public class Post
-    {
-        public int PostId { get; set; }
-        public string ServerName { get; set; }
-        public string ServiceUUID { get; set; }
-        public string CharacteristicUUID { get; set; }
-        
-        public int NumberSound { get; set; }
-
-    }
 }

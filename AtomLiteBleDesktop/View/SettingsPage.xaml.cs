@@ -89,7 +89,7 @@ namespace AtomLiteBleDesktop
                         dbdeviceSender.Name= dlg.ViewModel.Name;
                         dbdeviceSender.ServiceUUID= dlg.ViewModel.ServiceUUID;
                         dbdeviceSender.CharacteristicUUID = dlg.ViewModel.CharacteristicUUID;
-                        dbdeviceSender.Sound= dlg.ViewModel.Sound;
+                        dbdeviceSender.Sound = AssetNotifySounds.findIdWithName(dlg.ViewModel.Sound).ToString();
                         BleContext.DbSetRecord(dlg.ViewModel.Id, new Post
                         {
                             PostId = dlg.ViewModel.Id,
@@ -190,12 +190,12 @@ namespace AtomLiteBleDesktop
             {
                 this.recordings.Add(new DBDevice()
                 {
-                    Id=post.PostId,
+                    Id = post.PostId,
                     Name = post.ServerName,
                     ServiceUUID = post.ServiceUUID,
                     CharacteristicUUID = post.CharacteristicUUID,
-                    Sound=post.NumberSound.ToString()
-                });
+                    Sound = AssetNotifySounds.SrcArrayAudios[post.NumberSound].Name
+                }) ;
 
             }
         }
