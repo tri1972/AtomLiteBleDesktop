@@ -30,7 +30,9 @@
         <TextBox Grid.Row="0" Grid.Column="1" x:Name="dialogTextBoxDeviceName" Text="{x:Bind Path=ViewModel.Name, Mode=TwoWay}" TextWrapping="Wrap"/>
         <TextBox Grid.Row="1" Grid.Column="1" x:Name="dialogTextBoxServiceUUID" Text="{x:Bind Path=ViewModel.ServiceUUID, Mode=TwoWay}" TextWrapping="Wrap"/>
         <TextBox Grid.Row="2" Grid.Column="1" x:Name="dialogTextBoxCharacteristicUUID" Text="{x:Bind Path=ViewModel.CharacteristicUUID, Mode=TwoWay}" TextWrapping="Wrap"/>
-        <ComboBox x:Name="dialogComboBoxSound" Grid.Row="3" Grid.Column="1" Header="test" ItemsSource="{x:Bind Path=ViewModelComboBox,  Mode=TwoWay}" SelectedItem="{x:Bind Path=SelectedItem, Mode=TwoWay}" />
+        <ComboBox x:Name="dialogComboBoxSound" Grid.Row="3" Grid.Column="1" 
+                  ItemsSource="{x:Bind Path=ViewModelComboBox,  Mode=TwoWay}" 
+                  SelectedItem="{x:Bind Path=SelectedItem, Mode=TwoWay}" />
         <!--
         <TextBox Grid.Row="3" Grid.Column="1" x:Name="dialogTextBoxSound" Text="{x:Bind Path=ViewModel.Sound, Mode=TwoWay}" TextWrapping="Wrap"/>
         -->

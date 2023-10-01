@@ -35,6 +35,7 @@ using static AtomLiteBleDesktop.Bluetooth.BluetoothAccesser;
 using AtomLiteBleDesktop.Database;
 using Windows.Media.Import;
 using System.ComponentModel;
+using AtomLiteBleDesktop.View;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=234238 を参照してください
 
@@ -48,12 +49,31 @@ namespace AtomLiteBleDesktop
     /// </summary>
     public sealed partial class SettingsPage : Page
     {
+        private ObservableCollection<SettingPageContent> recordings = new ObservableCollection<SettingPageContent>();
+        public ObservableCollection<SettingPageContent> Recordings 
+        { 
+            get 
+            { 
+                return this.recordings; 
+            } 
+        }
+
         public SettingsPage()
         {
             this.InitializeComponent();
-            this.ViewModel = new DeviceDBViewModel();
+            foreach (var post in BleContext.GetServerPosts())
+            {
+                this.recordings.Add(new SettingPageContent()
+                {
+                    Id = post.PostId,
+                    Name = post.ServerName,
+                    ServiceUUID = post.ServiceUUID,
+                    CharacteristicUUID = post.CharacteristicUUID,
+                    Sound = AssetNotifySounds.SrcArrayAudios[post.NumberSound].Name
+                });
+
+            }
         }
-        public DeviceDBViewModel ViewModel { get; set; }
         
         private void Control_Setting_GotFocus(object sender, RoutedEventArgs e)
         {
@@ -72,35 +92,25 @@ namespace AtomLiteBleDesktop
             if(sender is Grid)
             {
                 var grid = (sender as Grid);
-                if(grid.DataContext is DBDevice)
+                if(grid.DataContext is SettingPageContent)
                 {
-                    var dbdeviceSender = grid.DataContext as DBDevice;
+                    var dbdeviceSender = grid.DataContext as SettingPageContent;
 
-                    var dlg = new SettingPageContentDialog();
-                    dlg.ViewModel.Id = dbdeviceSender.Id;
-                    dlg.ViewModel.Name = dbdeviceSender.Name;
-                    dlg.ViewModel.ServiceUUID = dbdeviceSender.ServiceUUID;
-                    dlg.ViewModel.CharacteristicUUID = dbdeviceSender.CharacteristicUUID;
-                    dlg.ViewModel.Sound = dbdeviceSender.Sound;
+                    var dlg = new SettingPageContentDialog
+                        (dbdeviceSender.Id, 
+                        dbdeviceSender.Name, 
+                        dbdeviceSender.ServiceUUID, 
+                        dbdeviceSender.CharacteristicUUID, 
+                        dbdeviceSender.Sound);
                     var result = await dlg.ShowAsync();
                     if (result == ContentDialogResult.Primary)
-                    {
+                    {//dialogで入力されたデータを書き戻し
                         dbdeviceSender.Id = dlg.ViewModel.Id;
                         dbdeviceSender.Name= dlg.ViewModel.Name;
                         dbdeviceSender.ServiceUUID= dlg.ViewModel.ServiceUUID;
                         dbdeviceSender.CharacteristicUUID = dlg.ViewModel.CharacteristicUUID;
-                        dbdeviceSender.Sound = AssetNotifySounds.findIdWithName(dlg.ViewModel.Sound).ToString();
-                        BleContext.DbSetRecord(dlg.ViewModel.Id, new Post
-                        {
-                            PostId = dlg.ViewModel.Id,
-                            ServerName = dlg.ViewModel.Name,
-                            CharacteristicUUID = dlg.ViewModel.CharacteristicUUID,
-                            ServiceUUID = dlg.ViewModel.ServiceUUID,
-                            NumberSound = int.Parse(dbdeviceSender.Sound)
-                    });
+                        dbdeviceSender.Sound = dlg.ViewModel.Sound;
                     }
-
-
                     if (sender is ListView)
                     {
                         int index = (sender as ListView).SelectedIndex;
@@ -109,94 +119,6 @@ namespace AtomLiteBleDesktop
                     }
 
                 }
-            }
-        }
-    }
-    public class DBDevice : INotifyPropertyChanged
-    {
-        private int id;
-        public int Id
-        {
-            get { return this.id; }
-            set
-            {
-                this.id = value;
-                NotifyPropertyChanged("Id");
-            }
-        }
-
-        private string name { get; set; }
-        public string Name 
-        {
-            get { return this.name; }
-            set 
-            { 
-                this.name = value;
-                NotifyPropertyChanged("Name");
-            }
-        }
-
-        private string serviceUUID;
-        public string ServiceUUID 
-        {
-            get { return this.serviceUUID; }
-            set 
-            {
-                this.serviceUUID=value;
-                NotifyPropertyChanged("ServiceUUID");
-            }
-        
-        }
-        private string characteristicUUID;
-        public string CharacteristicUUID 
-        {
-            get { return this.characteristicUUID; }
-            set 
-            { 
-                this.characteristicUUID = value;
-                NotifyPropertyChanged("CharacteristicUUID");
-            }
-        }
-
-        private string sound;
-        public string Sound{
-            get { return this.sound; }
-            set { 
-                this.sound = value;
-                NotifyPropertyChanged("Sound");
-            }
-        }
-        public DBDevice()
-        {
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void NotifyPropertyChanged(string info)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(info));
-            }
-        }
-    }
-    public class DeviceDBViewModel
-    {
-        private ObservableCollection<DBDevice> recordings = new ObservableCollection<DBDevice>();
-        public ObservableCollection<DBDevice> Recordings { get { return this.recordings; } }
-        public DeviceDBViewModel()
-        {
-            foreach (var post in BleContext.GetServerPosts())
-            {
-                this.recordings.Add(new DBDevice()
-                {
-                    Id = post.PostId,
-                    Name = post.ServerName,
-                    ServiceUUID = post.ServiceUUID,
-                    CharacteristicUUID = post.CharacteristicUUID,
-                    Sound = AssetNotifySounds.SrcArrayAudios[post.NumberSound].Name
-                }) ;
-
             }
         }
     }
