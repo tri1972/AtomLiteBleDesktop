@@ -839,6 +839,17 @@ namespace AtomLiteBleDesktop
             }
         }
 
+        private String deviceType;
+        public String DeviceType
+        {
+            get { return this.deviceType; }
+            set
+            {
+                this.deviceType = value;
+                //NotifyPropertyChanged("DeviceType");//現状特に通知すべきUIはない
+            }
+        }
+
         private String iconStatus;
         public String IconStatus
         {
@@ -1023,6 +1034,7 @@ namespace AtomLiteBleDesktop
         public Server(String deviceName, HomePage.typeDeviceStatus status,ResourceDictionary resource)
         {
             this.DeviceName = deviceName;
+            this.DeviceType = BleContext.GetServerPost(deviceName).ServerType;
             this.IconStatus = "\xE702";
             this.IconSignalBars = "\xE870";
             this.Status = status;
@@ -1056,5 +1068,27 @@ namespace AtomLiteBleDesktop
             */
         }
 
+    }
+    public class ListViewTemplateSelector : DataTemplateSelector
+    {//TODO:M5Stack用のListviewUIを作成する
+        public DataTemplate TemplateAtomLIte { get; set; }
+        public DataTemplate TemplateM5Stuck { get; set; }
+
+        protected override DataTemplate SelectTemplateCore(object item)
+        {
+            if(item is Server)
+            {
+                if((item as Server).DeviceType.Equals(BleContext.ServerType.AtomLite.ToString()))
+                {
+                    return TemplateAtomLIte;
+
+                }
+                else if ((item as Server).DeviceType.Equals(BleContext.ServerType.M5Stack.ToString()))
+                {
+                    return TemplateM5Stuck;
+                }
+            }
+            return null;
+        }
     }
 }

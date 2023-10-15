@@ -41,91 +41,177 @@
             <Style x:Key="GridStyle" TargetType="Grid">
                 <Setter Property="HorizontalAlignment" Value="Stretch"/>
             </Style>
-        </Grid.Resources>
-
-        <ListBox ItemsSource="{StaticResource servers}" Grid.Row="0" Grid.Column="1" Margin="0,5,0,10" ItemContainerStyle="{StaticResource ListBoxItemStyle}" >
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Grid Height="300">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*" />
-                            <ColumnDefinition Width="98*" />
-                            <ColumnDefinition Width="1*" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="4*" />
-                            <RowDefinition Height="92*" />
-                            <RowDefinition Height="4*" />
-                        </Grid.RowDefinitions>
-                        <StackPanel  Grid.Column="1"  Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{ThemeResource SystemAccentColorLight1}"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                        <StackPanel  Grid.Column="0"  Grid.Row="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{ThemeResource SystemAccentColorLight2}"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                            <Grid  HorizontalAlignment="Stretch" Height="300">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1*" />
-                                    <ColumnDefinition Width="1*" />
-                                    <ColumnDefinition Width="1*" />
-                                </Grid.ColumnDefinitions>
+            <DataTemplate x:Key="ListBoxAtomLiteTemplate">
+                <Grid Height="300">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="98*" />
+                        <ColumnDefinition Width="1*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="4*" />
+                        <RowDefinition Height="92*" />
+                        <RowDefinition Height="4*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel  Grid.Column="1"  Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{ThemeResource SystemAccentColorLight1}"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    <StackPanel  Grid.Column="0"  Grid.Row="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{ThemeResource SystemAccentColorLight2}"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Grid  HorizontalAlignment="Stretch" Height="300">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="1*" />
+                                <RowDefinition Height="1*" />
+                                <RowDefinition Height="1*" />
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Column="0"  Grid.Row="0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="1*" />
                                     <RowDefinition Height="1*" />
                                     <RowDefinition Height="1*" />
                                 </Grid.RowDefinitions>
-                                <Grid Grid.Column="0"  Grid.Row="0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="1*" />
-                                        <RowDefinition Height="1*" />
-                                        <RowDefinition Height="1*" />
-                                    </Grid.RowDefinitions>
-                                    <Grid  HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" Grid.Column="0"  Grid.Row="0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="1*" />
-                                            <ColumnDefinition Width="1*" />
-                                            <ColumnDefinition Width="7*" />
-                                        </Grid.ColumnDefinitions>
-                                        <FontIcon x:Name="IconStatus" FontFamily="Segoe MDL2 Assets" Glyph="{Binding IconStatus}"  Grid.Row="0"  Grid.Column="0" />
-                                        <FontIcon x:Name="SignalBars" FontFamily="Segoe MDL2 Assets" Glyph="{Binding IconSignalBars}"   Grid.Row="0" Grid.Column="1" />
-                                        <TextBlock x:Name="ServerStatus" Grid.Row="0" Grid.Column="2"  Text="{Binding DeviceName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                                    </Grid>
-                                    <TextBlock x:Name="RxStatus" Grid.Column="0"  Grid.Row="1" Text="{Binding RxStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                                    <Grid  HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Grid.Row="2" Grid.Column="0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="1*" />
-                                            <ColumnDefinition Width="7*" />
-                                        </Grid.ColumnDefinitions>
-                                        <FontIcon x:Name="IconCall1" FontFamily="Segoe MDL2 Assets" Glyph="{Binding IconCallNumber}"  Grid.Column="0"  Grid.Row="0" />
-                                        <TextBlock x:Name="NumberCall" Grid.Row="0" Grid.Column="1"  Text="{Binding NumberCall}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                                    </Grid>
-                                </Grid>
-                                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.Column="0"  Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="3" Background="{Binding PanelListColor, Mode=TwoWay}" Margin="10,10,10,20" Width="Auto" >
+                                <Grid  HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" Grid.Column="0"  Grid.Row="0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="1*" />
                                         <ColumnDefinition Width="1*" />
-                                        <ColumnDefinition Width="1*" />
-                                        <ColumnDefinition Width="1*" />
+                                        <ColumnDefinition Width="7*" />
                                     </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="3*" />
-                                        <RowDefinition Height="2*" />
-                                        <RowDefinition Height="5*" />
-                                    </Grid.RowDefinitions>
-                                    <TextBlock x:Name="Characteristic" Grid.Column="0"  Grid.Row="0" Text="{Binding CharacteristicName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                                    <TextBlock x:Name="CharacteristicStatus" Grid.Column="1"  Grid.Row="0" Text="{Binding CharacteristicStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                                    <TextBlock x:Name="CharacteristicData" Grid.Column="2"  Grid.Row="0" Text="{Binding CharacteristicData}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top" FocusVisualPrimaryBrush="#E4000000"/>
-                                    <TextBlock x:Name="GreenLamp" Grid.Row="1"  Grid.Column="0" Text="{Binding StringGreenLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="LightGreen"/>
-                                    <TextBlock x:Name="YellowLamp" Grid.Row="1" Grid.Column="1" Text="{Binding StringYellowLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="Yellow"/>
-                                    <TextBlock x:Name="RedLamp" Grid.Row="1" Grid.Column="2" Text="{Binding StringRedLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="OrangeRed"/>
-                                    <TextBlock x:Name="BlueLamp" Grid.Row="1" Grid.Column="3" Text="{Binding StringBlueLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="RoyalBlue"/>
-                                    <Button x:Name="Button_ASAP" Content="ASAP" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus"  Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
-                                    <Button x:Name="Button_Wait" Content="Wait" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
-                                    <Button x:Name="Button_Wrong" Content="Wrong" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
-                                    <Button x:Name="Button_Cancel" Content="Cancel" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
+                                    <FontIcon x:Name="IconStatus" FontFamily="Segoe MDL2 Assets" Glyph="{Binding IconStatus}"  Grid.Row="0"  Grid.Column="0" />
+                                    <FontIcon x:Name="SignalBars" FontFamily="Segoe MDL2 Assets" Glyph="{Binding IconSignalBars}"   Grid.Row="0" Grid.Column="1" />
+                                    <TextBlock x:Name="ServerStatus" Grid.Row="0" Grid.Column="2"  Text="{Binding DeviceName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                </Grid>
+                                <TextBlock x:Name="RxStatus" Grid.Column="0"  Grid.Row="1" Text="{Binding RxStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                <Grid  HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Grid.Row="2" Grid.Column="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1*" />
+                                        <ColumnDefinition Width="7*" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon x:Name="IconCall1" FontFamily="Segoe MDL2 Assets" Glyph="{Binding IconCallNumber}"  Grid.Column="0"  Grid.Row="0" />
+                                    <TextBlock x:Name="NumberCall" Grid.Row="0" Grid.Column="1"  Text="{Binding NumberCall}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                                 </Grid>
                             </Grid>
-                        </StackPanel>
-                    </Grid>
-                </DataTemplate>
+                            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.Column="0"  Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="3" Background="{Binding PanelListColor, Mode=TwoWay}" Margin="10,10,10,20" Width="Auto" >
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="3*" />
+                                    <RowDefinition Height="2*" />
+                                    <RowDefinition Height="5*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock x:Name="Characteristic" Grid.Column="0"  Grid.Row="0" Text="{Binding CharacteristicName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                <TextBlock x:Name="CharacteristicStatus" Grid.Column="1"  Grid.Row="0" Text="{Binding CharacteristicStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                <TextBlock x:Name="CharacteristicData" Grid.Column="2"  Grid.Row="0" Text="{Binding CharacteristicData}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top" FocusVisualPrimaryBrush="#E4000000"/>
+                                <TextBlock x:Name="GreenLamp" Grid.Row="1"  Grid.Column="0" Text="{Binding StringGreenLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="LightGreen"/>
+                                <TextBlock x:Name="YellowLamp" Grid.Row="1" Grid.Column="1" Text="{Binding StringYellowLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="Yellow"/>
+                                <TextBlock x:Name="RedLamp" Grid.Row="1" Grid.Column="2" Text="{Binding StringRedLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="OrangeRed"/>
+                                <TextBlock x:Name="BlueLamp" Grid.Row="1" Grid.Column="3" Text="{Binding StringBlueLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="RoyalBlue"/>
+                                <Button x:Name="Button_ASAP" Content="ASAP" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus"  Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
+                                <Button x:Name="Button_Wait" Content="Wait" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
+                                <Button x:Name="Button_Wrong" Content="Wrong" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
+                                <Button x:Name="Button_Cancel" Content="Cancel" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
+                            </Grid>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+            <DataTemplate x:Key="ListBoxM5StuckTemplate">
+                <Grid Height="300">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="98*" />
+                        <ColumnDefinition Width="1*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="4*" />
+                        <RowDefinition Height="92*" />
+                        <RowDefinition Height="4*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel  Grid.Column="1"  Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{ThemeResource SystemAccentColorLight1}"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    <StackPanel  Grid.Column="0"  Grid.Row="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{ThemeResource SystemAccentColorLight2}"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Grid  HorizontalAlignment="Stretch" Height="300">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="1*" />
+                                <RowDefinition Height="1*" />
+                                <RowDefinition Height="1*" />
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Column="0"  Grid.Row="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="1*" />
+                                    <RowDefinition Height="1*" />
+                                    <RowDefinition Height="1*" />
+                                </Grid.RowDefinitions>
+                                <Grid  HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" Grid.Column="0"  Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1*" />
+                                        <ColumnDefinition Width="1*" />
+                                        <ColumnDefinition Width="7*" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon x:Name="IconStatus" FontFamily="Segoe MDL2 Assets" Glyph="{Binding IconStatus}"  Grid.Row="0"  Grid.Column="0" />
+                                    <FontIcon x:Name="SignalBars" FontFamily="Segoe MDL2 Assets" Glyph="{Binding IconSignalBars}"   Grid.Row="0" Grid.Column="1" />
+                                    <TextBlock x:Name="ServerStatus" Grid.Row="0" Grid.Column="2"  Text="{Binding DeviceName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                </Grid>
+                                <TextBlock x:Name="RxStatus" Grid.Column="0"  Grid.Row="1" Text="{Binding RxStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                <Grid  HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Grid.Row="2" Grid.Column="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1*" />
+                                        <ColumnDefinition Width="7*" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon x:Name="IconCall1" FontFamily="Segoe MDL2 Assets" Glyph="{Binding IconCallNumber}"  Grid.Column="0"  Grid.Row="0" />
+                                    <TextBlock x:Name="NumberCall" Grid.Row="0" Grid.Column="1"  Text="{Binding NumberCall}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                </Grid>
+                            </Grid>
+                            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.Column="0"  Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="3" Background="{Binding PanelListColor, Mode=TwoWay}" Margin="10,10,10,20" Width="Auto" >
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="3*" />
+                                    <RowDefinition Height="2*" />
+                                    <RowDefinition Height="5*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock x:Name="Characteristic" Grid.Column="0"  Grid.Row="0" Text="{Binding CharacteristicName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                <TextBlock x:Name="CharacteristicStatus" Grid.Column="1"  Grid.Row="0" Text="{Binding CharacteristicStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                <TextBlock x:Name="CharacteristicData" Grid.Column="2"  Grid.Row="0" Text="{Binding CharacteristicData}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top" FocusVisualPrimaryBrush="#E4000000"/>
+                                <TextBlock x:Name="GreenLamp" Grid.Row="1"  Grid.Column="0" Text="{Binding StringGreenLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="LightGreen"/>
+                                <TextBlock x:Name="YellowLamp" Grid.Row="1" Grid.Column="1" Text="{Binding StringYellowLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="Yellow"/>
+                                <TextBlock x:Name="RedLamp" Grid.Row="1" Grid.Column="2" Text="{Binding StringRedLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="OrangeRed"/>
+                                <TextBlock x:Name="BlueLamp" Grid.Row="1" Grid.Column="3" Text="{Binding StringBlueLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="RoyalBlue"/>
+                                <!--
+                                <Button x:Name="Button_ASAP" Content="ASAP" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus"  Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
+                                <Button x:Name="Button_Wait" Content="Wait" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
+                                <Button x:Name="Button_Wrong" Content="Wrong" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
+                                <Button x:Name="Button_Cancel" Content="Cancel" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
+                                -->
+                            </Grid>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+        </Grid.Resources>
 
-            </ListBox.ItemTemplate>
-        </ListBox>
+
+        <ListView ItemsSource="{StaticResource servers}" Grid.Row="0" Grid.Column="1" Margin="0,5,0,10" ItemContainerStyle="{StaticResource ListBoxItemStyle}" >
+            <!--  使用するDataTemplateを選択するデータテンプレートセレクターの設定  -->
+            <ListView.ItemTemplateSelector>
+                <local:ListViewTemplateSelector
+                    TemplateAtomLIte = "{StaticResource ListBoxAtomLiteTemplate}"
+                    TemplateM5Stuck = "{StaticResource ListBoxM5StuckTemplate}"
+                    />
+            </ListView.ItemTemplateSelector>
+        </ListView>
     </Grid>
 </Page>

@@ -90,3 +90,6 @@ https://learn.microsoft.com/ja-jp/windows/apps/design/shell/tiles-and-notificati
 
 MesageDialogの自作
 https://sourcechord.hatenablog.com/entry/2015/09/19/233538
+
+DataTemplateSelectorでDataTemplateを切り替える
+https://www.gesource.jp/weblog/?p=8323

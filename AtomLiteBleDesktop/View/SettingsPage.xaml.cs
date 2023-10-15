@@ -41,9 +41,6 @@ using AtomLiteBleDesktop.View;
 
 namespace AtomLiteBleDesktop
 {
-    //TODO: デバイスにより着信時の音が変わるようにする
-    //TODO: 現在DBに登録されているデバイス名を表示できるようにする
-    //TODO: DBにデバイスを登録できるようにする
     /// <summary>
     /// それ自体で使用できる空白ページまたはフレーム内に移動できる空白ページ。
     /// </summary>
@@ -86,7 +83,7 @@ namespace AtomLiteBleDesktop
                 //(sender as TextBox).IsReadOnly = false;
             }
         }
-//TODO : ダブルクリックしたListviewのテキストボックスを編集できるようにする
+
         private async void Control_Setting_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             if(sender is Grid)

@@ -9,6 +9,12 @@ namespace AtomLiteBleDesktop.Database
 {
     public class BleContext : DbContext
     {
+        public enum ServerType
+        {
+            AtomLite,
+            M5Stack
+        }
+
         public DbSet<Post> Posts { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
@@ -23,6 +29,7 @@ namespace AtomLiteBleDesktop.Database
                 //var people = Enumerable.Range(1, 100).Select(x => new Post { Title = $"tanaka {x}" }).ToArray();
                 db.Posts.Add(new Post
                 {
+                    ServerType = BleContext.ServerType.AtomLite.ToString(),
                     ServerName = "ESP32PIRTRI",
                     ServiceUUID = "e72609f6-2bcb-4fb0-824a-5276ec9e355d",
                     CharacteristicUUID = "cca99442-dab6-4f69-8bc2-685e2412d178",
@@ -30,6 +37,7 @@ namespace AtomLiteBleDesktop.Database
                 });
                 db.Posts.Add(new Post
                 {
+                    ServerType = BleContext.ServerType.M5Stack.ToString(),
                     ServerName = "M5STACKTRI",
                     ServiceUUID = "ee007086-0dc9-4a48-b381-0f9e56d8c597",
                     CharacteristicUUID = "245c84dc-9422-41fb-bbf9-ddcd7da28120",

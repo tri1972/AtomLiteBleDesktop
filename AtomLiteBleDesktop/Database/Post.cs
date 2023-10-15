@@ -9,6 +9,7 @@ namespace AtomLiteBleDesktop.Database
     public class Post
     {
         public int PostId { get; set; }
+        public string ServerType { get; set; }
         public string ServerName { get; set; }
         public string ServiceUUID { get; set; }
         public string CharacteristicUUID { get; set; }

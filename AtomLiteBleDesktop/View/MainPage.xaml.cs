@@ -84,8 +84,8 @@ namespace AtomLiteBleDesktop
             servers = BleContext.GetServerNames();
 
             var bluetoothAccesser = (BluetoothAccesser)Application.Current.Resources["appBluetoothAccesserInstance"];
-            
-            var result= await bluetoothAccesser.SearchDevices(servers,Dispatcher);
+
+            var result = await bluetoothAccesser.SearchDevices(servers, Dispatcher);
             if (result)
             {
                 //ここで画面が小さくなってしまうと、UIスレッドが止まってしまうため、Connectがじっこうされない・・・
