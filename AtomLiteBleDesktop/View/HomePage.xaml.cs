@@ -1,5 +1,6 @@
 ﻿using AtomLiteBleDesktop.Bluetooth;
 using AtomLiteBleDesktop.Database;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
@@ -73,6 +74,7 @@ namespace AtomLiteBleDesktop
         public HomePage()
         {
             this.InitializeComponent();
+
             batchUpdateBadgeGlyphClear();
 
             //initializePage();
@@ -165,6 +167,36 @@ namespace AtomLiteBleDesktop
             return null;
         }
 
+        private async void sendDataToServer(object sender, TypeStateWaitingSend sendData)
+        {//TODO:データ送信用の関数として送信データをstringとするものをつくる？
+            var serverListview = (sender as FrameworkElement).DataContext as Server;
+            var mDevice = getDevice(serverListview.DeviceName);
+            if (mDevice.Status == TypeStatus.Coonected)
+            {
+                this.isCancelRepeatReceivingBlink = true;//送信ボタンが押されたら点滅はキャンセルされる
+                var server = BleContext.GetServerPost(serverListview.DeviceName);
+                if (server != null)
+                {
+                    mDevice.SendData(server.ServiceUUID, server.CharacteristicUUID, sendData );
+                }
+                else
+                {
+                    MessageDialog md = new MessageDialog("該当のService、Characteristicが登録されていません");
+                    await md.ShowAsync();
+
+                }
+                var listItem = getListItem(serverListview.DeviceName);
+                listItem.NumberCall = "";
+                listItem.IconCallNumber = "";
+            }
+            else
+            {
+                MessageDialog md = new MessageDialog("デバイスに接続されていません");
+                await md.ShowAsync();
+            }
+        }
+
+
         private async void Control_GotFocus(object sender, RoutedEventArgs e)
         {
             if (sender is Button)
@@ -174,66 +206,45 @@ namespace AtomLiteBleDesktop
                 {
                     if (senderButton.DataContext is Server)
                     {
+                        TypeStateWaitingSend sendData;
+
                         var serverListview = (sender as Button).DataContext as Server;
                         var mDevice = getDevice(serverListview.DeviceName);
-                        if (mDevice.Status== TypeStatus.Coonected)
-                        {
-                            TypeStateWaitingSend sendData;
-                            switch (senderButton.Name)
-                            {
-                                case "Button_ASAP":
-                                    sendData = TypeStateWaitingSend.ASAP;
-                                    serverListview.StringGreenLamp = "●";
-                                    serverListview.StringYellowLamp = "〇";
-                                    serverListview.StringRedLamp = "〇";
-                                    serverListview.StringBlueLamp = "〇";
-                                    break;
-                                case "Button_Wait":
-                                    sendData = TypeStateWaitingSend.WAIT;
-                                    serverListview.StringGreenLamp = "〇";
-                                    serverListview.StringYellowLamp = "●";
-                                    serverListview.StringRedLamp = "〇";
-                                    serverListview.StringBlueLamp = "〇";
-                                    break;
-                                case "Button_Wrong":
-                                    sendData = TypeStateWaitingSend.WRONG;
-                                    serverListview.StringGreenLamp = "〇";
-                                    serverListview.StringYellowLamp = "〇";
-                                    serverListview.StringRedLamp = "●";
-                                    serverListview.StringBlueLamp = "〇";
-                                    break;
-                                case "Button_Cancel":
-                                    sendData = TypeStateWaitingSend.Cancel;
-                                    serverListview.StringGreenLamp = "〇";
-                                    serverListview.StringYellowLamp = "〇";
-                                    serverListview.StringRedLamp = "〇";
-                                    serverListview.StringBlueLamp = "●";
-                                    break;
-                                default:
-                                    sendData = TypeStateWaitingSend.None;
-                                    break;
-                            }
-                            this.isCancelRepeatReceivingBlink = true;//送信ボタンが押されたら点滅はキャンセルされる
-                            var server = BleContext.GetServerPost(serverListview.DeviceName);
-                            if (server != null)
-                            {
-                                mDevice.SendData(server.ServiceUUID, server.CharacteristicUUID, sendData);
-                            }
-                            else
-                            {
-                                MessageDialog md = new MessageDialog("該当のService、Characteristicが登録されていません");
-                                await md.ShowAsync();
-
-                            }
-                            var listItem = getListItem(serverListview.DeviceName);
-                            listItem.NumberCall ="";
-                            listItem.IconCallNumber = "";
+                        switch (senderButton.Name)
+                        {//TODO:このボタンによる送信ランプ点灯＋状況送信をボタンなしでトグルとなっている箇所を押すことで切り替えられるようにする
+                            case "Button_ASAP":
+                                sendData = TypeStateWaitingSend.ASAP;
+                                serverListview.StringGreenLamp = "●";
+                                serverListview.StringYellowLamp = "〇";
+                                serverListview.StringRedLamp = "〇";
+                                serverListview.StringBlueLamp = "〇";
+                                break;
+                            case "Button_Wait":
+                                sendData = TypeStateWaitingSend.WAIT;
+                                serverListview.StringGreenLamp = "〇";
+                                serverListview.StringYellowLamp = "●";
+                                serverListview.StringRedLamp = "〇";
+                                serverListview.StringBlueLamp = "〇";
+                                break;
+                            case "Button_Wrong":
+                                sendData = TypeStateWaitingSend.WRONG;
+                                serverListview.StringGreenLamp = "〇";
+                                serverListview.StringYellowLamp = "〇";
+                                serverListview.StringRedLamp = "●";
+                                serverListview.StringBlueLamp = "〇";
+                                break;
+                            case "Button_Cancel":
+                                sendData = TypeStateWaitingSend.Cancel;
+                                serverListview.StringGreenLamp = "〇";
+                                serverListview.StringYellowLamp = "〇";
+                                serverListview.StringRedLamp = "〇";
+                                serverListview.StringBlueLamp = "●";
+                                break;
+                            default:
+                                sendData = TypeStateWaitingSend.None;
+                                break;
                         }
-                        else
-                        {
-                            MessageDialog md = new MessageDialog("デバイスに接続されていません");
-                            await md.ShowAsync();
-                        }
+                        sendDataToServer(sender, sendData);
                         batchUpdateBadgeGlyphClear();
                     }
                 }
@@ -806,9 +817,12 @@ namespace AtomLiteBleDesktop
             });
         }
 
-        private void ListBox_SelectionChanged()
+        private void Send_Data_KeyDown(object sender, KeyRoutedEventArgs e)
         {
-
+            if(e.Key == Windows.System.VirtualKey.Enter)
+            {
+                var sendData=(sender as TextBox).Text;
+            }
         }
     }
     public class Server : INotifyPropertyChanged
@@ -1054,7 +1068,8 @@ namespace AtomLiteBleDesktop
     public class Servers : ObservableCollection<Server>
     {
         public Servers()
-        {
+        {//TODO:このジェネリクスの要素が０では表示できずエラーとなるのでは？
+
             //以下の実装については静的にxamlに結合されるため、表示テストの為に残す（実際に使用する場合はコメントアウトすること
             /*
             Add(new Server("Michael", HomePage.typeDeviceStatus.Connected,null)
@@ -1071,6 +1086,7 @@ namespace AtomLiteBleDesktop
     }
     public class ListViewTemplateSelector : DataTemplateSelector
     {//TODO:M5Stack用のListviewUIを作成する
+        //TODO:xaml側に何らかの問題があり、デバッガを介さないで実行すると落ちてしまう
         public DataTemplate TemplateAtomLIte { get; set; }
         public DataTemplate TemplateM5Stuck { get; set; }
 
