@@ -35,7 +35,7 @@
             <local:Servers x:Key="servers"/>
             <!--ListBox の HorizontalContentAlignmentにてStreachをしても聞かないので外部からstyleで指定する方法を取る-->
             <!--https://kaorun.hatenablog.com/entry/20111015/1318661503 -->
-            <Style x:Key="ListBoxItemStyle" TargetType="ListBoxItem">
+            <Style x:Key="ListBoxItemStyle" TargetType="ListViewItem">
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             </Style>
             <Style x:Key="GridStyle" TargetType="Grid">
@@ -182,6 +182,7 @@
                                     <RowDefinition Height="3*" />
                                     <RowDefinition Height="2*" />
                                     <RowDefinition Height="5*" />
+                                    <RowDefinition Height="5*" />
                                 </Grid.RowDefinitions>
                                 <TextBlock x:Name="Characteristic" Grid.Column="0"  Grid.Row="0" Text="{Binding CharacteristicName}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                                 <TextBlock x:Name="CharacteristicStatus" Grid.Column="1"  Grid.Row="0" Text="{Binding CharacteristicStatus}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
@@ -190,21 +191,18 @@
                                 <TextBlock x:Name="YellowLamp" Grid.Row="1" Grid.Column="1" Text="{Binding StringYellowLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="Yellow"/>
                                 <TextBlock x:Name="RedLamp" Grid.Row="1" Grid.Column="2" Text="{Binding StringRedLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="OrangeRed"/>
                                 <TextBlock x:Name="BlueLamp" Grid.Row="1" Grid.Column="3" Text="{Binding StringBlueLamp}"  FontSize="30" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="RoyalBlue"/>
-                                <!--
                                 <Button x:Name="Button_ASAP" Content="ASAP" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus"  Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
                                 <Button x:Name="Button_Wait" Content="Wait" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
                                 <Button x:Name="Button_Wrong" Content="Wrong" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
                                 <Button x:Name="Button_Cancel" Content="Cancel" Margin="10,10,10,10" Grid.Row="2"  Grid.Column="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" GotFocus="Control_GotFocus" Background="{ThemeResource ButtonBackgroundThemeBrush}" Foreground="{ThemeResource ButtonForegroundThemeBrush}"/>
-                                -->
+                                <TextBox x:Name="SendData" Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2" KeyDown="Send_Data_KeyDown"/>
                             </Grid>
                         </Grid>
                     </StackPanel>
                 </Grid>
             </DataTemplate>
         </Grid.Resources>
-
-
-        <ListView ItemsSource="{StaticResource servers}" Grid.Row="0" Grid.Column="1" Margin="0,5,0,10" ItemContainerStyle="{StaticResource ListBoxItemStyle}" >
+        <ListView ItemsSource="{StaticResource servers}" Grid.Row="0" Grid.Column="1" Margin="0,5,0,10" ItemContainerStyle="{StaticResource ListBoxItemStyle}">
             <!--  使用するDataTemplateを選択するデータテンプレートセレクターの設定  -->
             <ListView.ItemTemplateSelector>
                 <local:ListViewTemplateSelector
