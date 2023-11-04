@@ -12,7 +12,8 @@ namespace AtomLiteBleDesktop.Database
         public enum ServerType
         {
             AtomLite,
-            M5Stack
+            M5Stack,
+            none
         }
 
         public DbSet<Post> Posts { get; set; }
@@ -84,6 +85,32 @@ namespace AtomLiteBleDesktop.Database
                 return record.First();
                 //var ret = retdb.Posts.ToArray();
             }
+        }
+
+        /// <summary>
+        /// デバイス名より、最初に該当したレコードのサーバー種を返します
+        /// </summary>
+        /// <param name="DeviceName"></param>
+        /// <returns></returns>
+        public static ServerType GetServerType(string DeviceName)
+        {
+            ServerType output;
+            var ret = GetServerPost(DeviceName).ServerType;
+
+            if(ret== ServerType.AtomLite.ToString())
+            {
+                output = ServerType.AtomLite;
+            }
+            else if(ret == ServerType.M5Stack.ToString())
+            {
+                output = ServerType.M5Stack;
+
+            }
+            else
+            {
+                output = ServerType.none;
+            }
+            return output;
         }
 
         public static List<Post> GetServerPosts()

@@ -7,13 +7,13 @@ using Windows.Devices.Enumeration;
 
 namespace AtomLiteBleDesktop.Bluetooth
 {
-    public class BluetoothLEDeviceM5Stack:BluetoothLEDevice
+    class BluetoothLEDeviceUnregistered : BluetoothLEDevice
     {
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="deviceInfoIn"></param>
-        public BluetoothLEDeviceM5Stack(DeviceInformation deviceInfoIn) : base(deviceInfoIn)
+        public BluetoothLEDeviceUnregistered(DeviceInformation deviceInfoIn) : base(deviceInfoIn)
         {
 
         }
@@ -22,7 +22,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// コンストラクタ
         /// </summary>
         /// <param name="name"></param>
-        public BluetoothLEDeviceM5Stack(string name) : base(name)
+        public BluetoothLEDeviceUnregistered(string name) : base(name)
         {
 
         }

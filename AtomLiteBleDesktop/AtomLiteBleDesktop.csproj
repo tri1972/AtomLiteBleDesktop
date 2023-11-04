@@ -130,6 +130,7 @@
     <Compile Include="Bluetooth\BluetoothReceiver.cs" />
     <Compile Include="Bluetooth\BluetoothSender.cs" />
     <Compile Include="Bluetooth\BluetoothService.cs" />
+    <Compile Include="Bluetooth\BluetoothLEDeviceUnregistered.cs" />
     <Compile Include="Bluetooth\Constants.cs" />
     <Compile Include="Database\AssetNotifySounds.cs" />
     <Compile Include="Database\Post.cs" />

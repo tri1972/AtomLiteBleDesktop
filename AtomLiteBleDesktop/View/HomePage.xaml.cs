@@ -91,40 +91,36 @@ namespace AtomLiteBleDesktop
                 while (bluetoothAccesser.NumberDevice != bluetoothAccesser.Devices.Count) ;//取得要求Serverがすべて処理されるまで待ち
                 foreach (var device in bluetoothAccesser.Devices)
                 {
-                    if (device.Status == TypeStatus.Finded)
-                    //if (device.IsFindDevice)
-                    {
-                        try
-                        {
-                            listBoxInitialize_TextDataDispatcher(device.Name, typeDeviceStatus.Find);
-                            //listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.Find, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received, 0);
-                        }
-                        catch (Exception err)
-                        {
-                            Debug.WriteLine(err.Message);
-                        }
-                    }
-                    else if (device.Status == TypeStatus.Coonected)
-                    {
-                        ;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            listBoxInitialize_TextDataDispatcher(device.Name, typeDeviceStatus.NotFind);
-                            //listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.NotFind, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received, 0);
-                        }
-                        catch (Exception err)
-                        {
-                            Debug.WriteLine(err.Message);
-                        }
-                    }
                     if (device != null)
                     {
-                        if (device.Status == TypeStatus.Coonected)
+                        if (device.Status == TypeStatus.Finded)
+                        //if (device.IsFindDevice)
+                        {
+                            try
+                            {
+                                listBoxInitialize_TextDataDispatcher(device.Name, typeDeviceStatus.Find);
+                                //listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.Find, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received, 0);
+                            }
+                            catch (Exception err)
+                            {
+                                Debug.WriteLine(err.Message);
+                            }
+                        }
+                        else if (device.Status == TypeStatus.Coonected)
                         {
                             AccesserStatusChange(NotifyBluetoothAccesserEventArgs.Status.Connected, null);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                listBoxInitialize_TextDataDispatcher(device.Name, typeDeviceStatus.NotFind);
+                                //listBoxAdd_TextDataDispatcher(device.Name, typeDeviceStatus.NotFind, null, null, null, null, BluetoothCharacteristic.TypeStateReseive.Received, 0);
+                            }
+                            catch (Exception err)
+                            {
+                                Debug.WriteLine(err.Message);
+                            }
                         }
                         device.NotifyConnectingServer += NotifyConnectServerBluetoothEventHandler;
                         device.NotifyReceiveCharacteristic += NotifyBluetoothLEDeviceCharacteristicEvent;

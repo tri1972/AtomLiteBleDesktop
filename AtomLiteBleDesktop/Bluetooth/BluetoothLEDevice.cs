@@ -21,7 +21,7 @@ namespace AtomLiteBleDesktop
     /// <summary>
     /// BluetoothLe(BLE)のデバイス情報を格納する
     /// </summary>
-    public class BluetoothLEDevice //: INotifyPropertyChanged
+    public abstract class BluetoothLEDevice //: INotifyPropertyChanged
     {
 
         //NotifyReceiveCharacteristicイベントで返されるデータ

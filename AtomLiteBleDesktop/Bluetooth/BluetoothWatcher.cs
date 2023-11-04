@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AtomLiteBleDesktop.Database;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -13,6 +14,10 @@ namespace AtomLiteBleDesktop.Bluetooth
 {
     public class BluetoothWatcher
     {
+        /// <summary>
+        /// 登録されたサーバが見つかる間、何回検索を繰り返すか
+        /// </summary>
+        private const int NUM_RETRY_FIND_SERVER = 100;
 
         /// <summary>
         /// log4net用インスタンス
@@ -92,21 +97,21 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// <returns></returns>
         public BluetoothLEDevice FindServerDevice(string server)
         {
-            BluetoothLEDevice output = new BluetoothLEDevice(server);
+            BluetoothLEDevice output = null;
             this.startBleDeviceWatcher();
-            //1s待って。接続Server名が取得できなければfalseを返す
-            int counter = 10;
+            //一定回数検索をくりかえし、接続Server名が取得できなければnullを返す
+            int counter = NUM_RETRY_FIND_SERVER;
             while (counter>0)
             {
                 foreach (var device in this.knownDevices)
-                {
+                {//TODO:この関数がnullを返すため、二つあるデバイスの内一つしか認識しない→knownDevicesに近隣のデバイスが乗ってこない内にここにくるためnullが返る
                     if (device.Name == server)
                     {
                         output = device;
                         break;
                     }
                 }
-                if (output.Status== BluetoothLEDevice.TypeStatus.Finded)
+                if (output!=null && output.Status== BluetoothLEDevice.TypeStatus.Finded)
                 {
 #if DEBUG
                     logger.Info( "Finded " + server);
@@ -116,9 +121,41 @@ namespace AtomLiteBleDesktop.Bluetooth
                 Thread.Sleep(10);
                 counter--;
             }
+#if DEBUG
+            //logger.Info("Find Server retried " + (counter * 10).ToString() + "ms");
+#endif
             return output;
         }
-
+        /*
+        public BluetoothLEDevice FindServerDevice(string server)
+        {
+            BluetoothLEDevice output = new BluetoothLEDevice(server);
+            this.startBleDeviceWatcher();
+            //1s待って。接続Server名が取得できなければfalseを返す
+            int counter = 10;
+            while (counter > 0)
+            {
+                foreach (var device in this.knownDevices)
+                {
+                    if (device.Name == server)
+                    {
+                        output = device;
+                        break;
+                    }
+                }
+                if (output.Status == BluetoothLEDevice.TypeStatus.Finded)
+                {
+#if DEBUG
+                    logger.Info("Finded " + server);
+#endif
+                    break;
+                }
+                Thread.Sleep(10);
+                counter--;
+            }
+            return output;
+        }
+        */
         private void startBleDeviceWatcher()
         {
             try
@@ -183,6 +220,28 @@ namespace AtomLiteBleDesktop.Bluetooth
                 deviceWatcher = null;
             }
         }
+        private static BluetoothLEDevice getInstanceBluetoothLEDevice(DeviceInformation deviceInfo)
+        {
+            var type = BleContext.GetServerType(deviceInfo.Name);
+            BluetoothLEDevice findDevice;
+            if (type == BleContext.ServerType.AtomLite)
+            {
+                findDevice = new BluetoothLEDeviceATOMLite(deviceInfo);
+
+            }
+            else if (type == BleContext.ServerType.M5Stack)
+            {
+                findDevice = new BluetoothLEDeviceM5Stack(deviceInfo);
+
+            }
+            else
+            {
+                findDevice = new BluetoothLEDeviceUnregistered(deviceInfo);
+
+            }
+
+            return findDevice;
+        }
 
         /// <summary>
         /// とりあえず見つかったBluetoothデバイスを順番に列挙していく
@@ -205,10 +264,11 @@ namespace AtomLiteBleDesktop.Bluetooth
                         {
                             if (deviceInfo.Name != string.Empty)
                             {
+                                BluetoothLEDevice findDevice = getInstanceBluetoothLEDevice(deviceInfo);
                                 if (this.pirServer == deviceInfo.Name)
                                 {
                                     //接続したBleデバイス情報で接続用のデバイスを作成する
-                                    this.deviceInfoSerchedServer = new BluetoothLEDevice(deviceInfo);
+                                    this.deviceInfoSerchedServer = findDevice;
                                     this.pirServerSearched = this.pirServer;
                                 }
                                 else
@@ -218,7 +278,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                                 Debug.WriteLine("Detect Deveice" + deviceInfo.Id + ":" + deviceInfo.Name);
                                 // If device has a friendly name display it immediately.
                                 //nameのあるDeviceを配列に保存する
-                                knownDevices.Add(new BluetoothLEDevice(deviceInfo));
+                                knownDevices.Add(findDevice);
                             }
                             else
                             {
@@ -258,7 +318,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                         // If device has been updated with a friendly name it's no longer unknown.
                         if (deviceInfo.Name != String.Empty)
                         {
-                            knownDevices.Add(new BluetoothLEDevice(deviceInfo));
+                            knownDevices.Add(getInstanceBluetoothLEDevice(deviceInfo));
                             UnknownDevices.Remove(deviceInfo);
                         }
                     }
@@ -266,6 +326,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                 }
             }
         }
+
         /// <summary>
         /// 列挙されたBluetoothデバイスのなかで削除されたら呼ばれる
         /// </summary>

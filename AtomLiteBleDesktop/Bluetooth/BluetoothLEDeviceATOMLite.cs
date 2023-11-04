@@ -15,7 +15,16 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// <param name="deviceInfoIn"></param>
         public BluetoothLEDeviceATOMLite(DeviceInformation deviceInfoIn):base( deviceInfoIn)
         {
-            
+
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="name"></param>
+        public BluetoothLEDeviceATOMLite(string name) : base(name)
+        {
+
         }
     }
 }
