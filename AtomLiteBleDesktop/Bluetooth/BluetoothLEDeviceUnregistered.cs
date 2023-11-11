@@ -26,6 +26,15 @@ namespace AtomLiteBleDesktop.Bluetooth
         {
 
         }
+        /// <summary>
+        /// 指定したデータを送信する
+        /// </summary>
+        /// <param name="serviceUUID"></param>
+        /// <param name="characteristicUUID"></param>
+        override public void SendData(string serviceUUID, string characteristicUUID, BluetoothCharacteristic.TypeStateWaitingSend sendData)
+        {
+            ;
+        }
 
     }
 }

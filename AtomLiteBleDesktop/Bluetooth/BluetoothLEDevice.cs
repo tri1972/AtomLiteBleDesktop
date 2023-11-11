@@ -97,15 +97,10 @@ namespace AtomLiteBleDesktop
             get { return this.isPaired; }
         }
 
-        private TypeStatus status;
         /// <summary>
         /// デバイスの現状の接続状態を取得します
         /// </summary>
-        public TypeStatus Status
-        {
-            set { this.status = value; }
-            get { return this.status; }
-        }
+        abstract public TypeStatus Status { get; set; }
 
         /// <summary>
         /// BluetoothLEDeviceのeventハンドラの関数の引数と戻り値を設定
@@ -242,7 +237,18 @@ namespace AtomLiteBleDesktop
                 }
 
             });
+            logger.Info("End of Async Connect");
         }
+
+        /// <summary>
+        /// 指定したデータをServiceより送信する
+        /// </summary>
+        /// <param name="serviceUUID"></param>
+        /// <param name="characteristicUUID"></param>
+        /// <param name="sendData"></param>
+        /// <param name="beforeStatus"></param>
+        /// <param name="services"></param>
+        abstract protected void SendDataService(string serviceUUID, string characteristicUUID, BluetoothCharacteristic.TypeStateWaitingSend sendData, TypeStatus beforeStatus, List<BluetoothService> services);
 
         /// <summary>
         /// 指定したデータを送信する
@@ -253,21 +259,7 @@ namespace AtomLiteBleDesktop
         {
             var beforeStatus = this.status;
             this.status = TypeStatus.Sending;
-            foreach (var server in this.services)
-            {
-                if (server.Service.Uuid == new Guid(serviceUUID))
-                {
-                    foreach (var characteristic in server.Characteristics)
-                    {
-                        if (characteristic.Characteristic.Uuid == new Guid(characteristicUUID))
-                        {
-                            characteristic.WriteCharacterCharacteristic(sendData);
-                            this.status = beforeStatus;
-                        }
-                    }
-                    break;
-                }
-            }
+            SendDataService(serviceUUID, characteristicUUID, sendData, beforeStatus,this.services);
         }
 
         /// <summary>

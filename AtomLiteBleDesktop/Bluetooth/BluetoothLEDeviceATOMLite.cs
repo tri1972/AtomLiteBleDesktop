@@ -9,6 +9,17 @@ namespace AtomLiteBleDesktop.Bluetooth
 {
     public class BluetoothLEDeviceATOMLite : BluetoothLEDevice
     {
+
+        private TypeStatus status;
+        /// <summary>
+        /// デバイスの現状の接続状態を取得します
+        /// </summary>
+        override public TypeStatus Status
+        {
+            set { this.status = value; }
+            get { return this.status; }
+        }
+
         /// <summary>
         /// コンストラクタ
         /// </summary>
@@ -25,6 +36,25 @@ namespace AtomLiteBleDesktop.Bluetooth
         public BluetoothLEDeviceATOMLite(string name) : base(name)
         {
 
+        }
+
+        override protected void SendDataService(string serviceUUID, string characteristicUUID, BluetoothCharacteristic.TypeStateWaitingSend sendData, TypeStatus beforeStatus,List<BluetoothService> services)
+        {
+            foreach (var server in services)
+            {
+                if (server.Service.Uuid == new Guid(serviceUUID))
+                {
+                    foreach (var characteristic in server.Characteristics)
+                    {
+                        if (characteristic.Characteristic.Uuid == new Guid(characteristicUUID))
+                        {
+                            characteristic.WriteCharacterCharacteristic(sendData);
+                            this.status = beforeStatus;
+                        }
+                    }
+                    break;
+                }
+            }
         }
     }
 }
