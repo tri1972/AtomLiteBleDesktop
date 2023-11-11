@@ -195,6 +195,9 @@ namespace AtomLiteBleDesktop
 
         private async void Control_GotFocus(object sender, RoutedEventArgs e)
         {
+#if DEBUG
+            logger.Info("Trriged Control_GotFocus:");
+#endif
             if (sender is Button)
             {
                 var senderButton = sender as Button;
@@ -304,6 +307,9 @@ namespace AtomLiteBleDesktop
         /// <param name="e"></param>
         private void NotifyConnectServerBluetoothEventHandler(object sender, NotifyBluetoothAccesserEventArgs e)
         {
+#if DEBUG
+            logger.Info("Trriged NotifyConnectServerBluetoothEventHandler:" + (sender as BluetoothLEDevice).Name);
+#endif
             if (sender is BluetoothLEDevice)
             {
                 AccesserStatusChange(e.State, sender as BluetoothLEDevice);//①ここでsenderのデバイスがnullなら新規アイテムとして登録される.nullでなければListBoxのステータスを変更
@@ -336,6 +342,9 @@ namespace AtomLiteBleDesktop
         
         void NotifyBluetoothLEDeviceCharacteristicEvent(object sender, NotifyReceiveLEDeviceCharacteristicEventArgs e)
         {
+#if DEBUG
+            logger.Info("Trriged NotifyBluetoothLEDeviceCharacteristicEvent:" + (sender as BluetoothLEDevice).Name);
+#endif
             listBoxAdd_TextDataDispatcher((sender as BluetoothLEDevice).Name, typeDeviceStatus.RxData, e.Service.Service.Uuid.ToString(), e.Characteristic.Characteristic.Uuid.ToString(), "Rx", e.Message, e.State, e.Characteristic.NumberCounteRx);
             /*
             if (e.Service.Service.Uuid.ToString().Equals(SERVICE_UUID_CALL_UNDER_LEVEL))

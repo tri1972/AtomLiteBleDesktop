@@ -8,6 +8,7 @@ using Windows.Security.Cryptography;
 using Windows.Storage.Streams;
 using SDKTemplate;
 using Windows.Devices.Bluetooth;
+using System.Diagnostics;
 
 namespace AtomLiteBleDesktop.Bluetooth
 {
@@ -53,8 +54,10 @@ namespace AtomLiteBleDesktop.Bluetooth
             }
             catch (Exception err)
             {
-                throw err;
+                Debug.WriteLine(err.Message);
+                //throw err;
             }
+            return null;
         }
 
 

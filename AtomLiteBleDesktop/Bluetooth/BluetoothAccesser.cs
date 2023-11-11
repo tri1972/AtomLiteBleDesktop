@@ -209,6 +209,7 @@ namespace AtomLiteBleDesktop.Bluetooth
                     {
                         logger.Info("Timeout finding device : " + deviceName);
                     }
+                    logger.Info("End device Connecting : " + deviceName);
                 }
                 output = true;
             }

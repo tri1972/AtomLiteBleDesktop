@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -37,8 +38,6 @@ namespace AtomLiteBleDesktop
             {
                 db.Database.EnsureCreated();
             }
-            
-
             //BleContext.DbInitRecord();//Dbに新規にデータを追加したい場合はこれを実行する
         }
 
@@ -83,6 +82,8 @@ namespace AtomLiteBleDesktop
             }
 #if DEBUG
             logger.Info("On launched");
+
+            StorageFolder localFolder = ApplicationData.Current.LocalFolder;
 #endif
 
         } 

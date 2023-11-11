@@ -95,6 +95,7 @@ namespace AtomLiteBleDesktop
                 IList<Windows.System.AppDiagnosticInfo> infos = await AppDiagnosticInfo.RequestInfoForAppAsync();
                 IList<AppResourceGroupInfo> resourceInfos = infos[0].GetResourceGroups();
                 await resourceInfos[0].StartSuspendAsync();
+                logger.Info("Closed Window");
             }
 
             // Attach a handler to process the received advertisement. 
@@ -114,46 +115,53 @@ namespace AtomLiteBleDesktop
         /// <param name="watcher">Instance of watcher that triggered the event.</param>
         /// <param name="eventArgs">Event data containing information about the advertisement event.</param>
         private void OnAdvertisementReceived(BluetoothLEAdvertisementWatcher watcher, BluetoothLEAdvertisementReceivedEventArgs eventArgs)
-        {   
-            // We can obtain various information about the advertisement we just received by accessing 
-            // the properties of the EventArgs class
-
-            // The timestamp of the event
-            DateTimeOffset timestamp = eventArgs.Timestamp;
-
-            // The type of advertisement
-            BluetoothLEAdvertisementType advertisementType = eventArgs.AdvertisementType;
-
-            // The received signal strength indicator (RSSI)
-            Int16 rssi = eventArgs.RawSignalStrengthInDBm;
-
-            // The local name of the advertising device contained within the payload, if any
-            string localName = eventArgs.Advertisement.LocalName;
-
-            // Check if there are any manufacturer-specific sections.
-            // If there is, print the raw data of the first manufacturer section (if there are multiple).
-            string manufacturerDataString = "";
-            var manufacturerSections = eventArgs.Advertisement.ManufacturerData;
-            if (manufacturerSections.Count > 0)
+        {
+            try
             {
-                // Only print the first one of the list
-                var manufacturerData = manufacturerSections[0];
-                var data = new byte[manufacturerData.Data.Length];
-                using (var reader = DataReader.FromBuffer(manufacturerData.Data))
+                // We can obtain various information about the advertisement we just received by accessing 
+                // the properties of the EventArgs class
+
+                // The timestamp of the event
+                DateTimeOffset timestamp = eventArgs.Timestamp;
+
+                // The type of advertisement
+                BluetoothLEAdvertisementType advertisementType = eventArgs.AdvertisementType;
+
+                // The received signal strength indicator (RSSI)
+                Int16 rssi = eventArgs.RawSignalStrengthInDBm;
+
+                // The local name of the advertising device contained within the payload, if any
+                string localName = eventArgs.Advertisement.LocalName;
+
+                // Check if there are any manufacturer-specific sections.
+                // If there is, print the raw data of the first manufacturer section (if there are multiple).
+                string manufacturerDataString = "";
+                var manufacturerSections = eventArgs.Advertisement.ManufacturerData;
+                if (manufacturerSections.Count > 0)
                 {
-                    reader.ReadBytes(data);
+                    // Only print the first one of the list
+                    var manufacturerData = manufacturerSections[0];
+                    var data = new byte[manufacturerData.Data.Length];
+                    using (var reader = DataReader.FromBuffer(manufacturerData.Data))
+                    {
+                        reader.ReadBytes(data);
+                    }
+                    // Print the company ID + the raw data in hex format
+                    manufacturerDataString = string.Format("0x{0}: {1}",
+                        manufacturerData.CompanyId.ToString("X"),
+                        BitConverter.ToString(data));
                 }
-                // Print the company ID + the raw data in hex format
-                manufacturerDataString = string.Format("0x{0}: {1}",
-                    manufacturerData.CompanyId.ToString("X"),
-                    BitConverter.ToString(data));
+                Debug.WriteLine(string.Format("[{0}]: type={1}, rssi={2}, name={3}, manufacturerData=[{4}]",
+                        timestamp.ToString("hh\\:mm\\:ss\\.fff"),
+                        advertisementType.ToString(),
+                        rssi.ToString(),
+                        localName,
+                        manufacturerDataString));
             }
-            Debug.WriteLine(string.Format("[{0}]: type={1}, rssi={2}, name={3}, manufacturerData=[{4}]",
-                    timestamp.ToString("hh\\:mm\\:ss\\.fff"),
-                    advertisementType.ToString(),
-                    rssi.ToString(),
-                    localName,
-                    manufacturerDataString));
+            catch(Exception err)
+            {
+                Debug.WriteLine(err.Message);
+            }
         }
         
         /// <summary>

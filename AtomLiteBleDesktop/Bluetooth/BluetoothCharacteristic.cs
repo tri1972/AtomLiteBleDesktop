@@ -259,7 +259,8 @@ namespace AtomLiteBleDesktop.Bluetooth
             }
             catch (Exception err)
             {
-                throw err;
+                Debug.WriteLine(err.Message);
+                //throw err;
             }
         }
 

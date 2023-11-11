@@ -218,7 +218,8 @@ namespace AtomLiteBleDesktop
             }
             catch (Exception err)
             {
-                throw err;
+                Debug.WriteLine(err.Message);
+                //throw err;
             }
         }
 

@@ -122,7 +122,11 @@ namespace AtomLiteBleDesktop.Bluetooth
                 counter--;
             }
 #if DEBUG
-            //logger.Info("Find Server retried " + (counter * 10).ToString() + "ms");
+            logger.Info("Find Server retried " + (counter * 10).ToString() + "ms");
+            if (output == null)
+            {
+                logger.Info("Cant find " + server);
+            }
 #endif
             return output;
         }
