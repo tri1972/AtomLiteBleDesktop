@@ -165,11 +165,11 @@ namespace AtomLiteBleDesktop
         /// <param name="deviceInfoIn"></param>
         public BluetoothLEDevice(DeviceInformation deviceInfoIn)
         {
-            this.status = TypeStatus.Disconnect;
+            this.Status = TypeStatus.Disconnect;
             DeviceInformation = deviceInfoIn;
             this.id = DeviceInformation.Id;
             this.name = DeviceInformation.Name;
-            this.status = TypeStatus.Finded;
+            this.Status = TypeStatus.Finded;
             this.isPaired = DeviceInformation.Pairing.IsPaired;
             this.services = new List<BluetoothService>();
             //setStatusConnection();
@@ -183,7 +183,7 @@ namespace AtomLiteBleDesktop
         {
             this.id = null;
             this.name = name;
-            this.status = TypeStatus.NoFinded;
+            this.Status = TypeStatus.NoFinded;
             this.isPaired = false;
         }
 
@@ -200,7 +200,7 @@ namespace AtomLiteBleDesktop
                     var task = await Task.Run(()=>ConnectServer(dispatcher));
                     if (task)
                     {//デバイスが電源オフだったとしても、キャッシュでデバイスが見つかればTrueとなる→実際に接続できたかどうかの証明にはならない
-                        this.status = TypeStatus.Coonected;
+                        this.Status = TypeStatus.Coonected;
                         this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connecting);//最初の接続時については接続とせずに接続中とする（接続状態のイベントハンドラで接続を検知するようにする）
 
                         foreach(var server in this.services)
@@ -215,7 +215,7 @@ namespace AtomLiteBleDesktop
                     }
                     else
                     {
-                        this.status = TypeStatus.Connecting;
+                        this.Status = TypeStatus.Connecting;
                         this.OnNotifyConnectingServer("Connecting...", NotifyBluetoothAccesserEventArgs.Status.Connecting);
                     }
                     counter--;
@@ -228,7 +228,7 @@ namespace AtomLiteBleDesktop
 #endif
                 if (counter == 0)
                 {
-                    this.status = TypeStatus.Abort;
+                    this.Status = TypeStatus.Abort;
                     this.OnNotifyConnectingServer("Server Connecting Aborted", NotifyBluetoothAccesserEventArgs.Status.Abort);
 #if DEBUG
                     logger.Info("Connecting Aborted"+ this.name);
@@ -257,8 +257,8 @@ namespace AtomLiteBleDesktop
         /// <param name="characteristicUUID"></param>
         public void SendData(string serviceUUID, string characteristicUUID, BluetoothCharacteristic.TypeStateWaitingSend sendData)
         {
-            var beforeStatus = this.status;
-            this.status = TypeStatus.Sending;
+            var beforeStatus = this.Status;
+            this.Status = TypeStatus.Sending;
             SendDataService(serviceUUID, characteristicUUID, sendData, beforeStatus,this.services);
         }
 
