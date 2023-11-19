@@ -264,6 +264,10 @@ namespace AtomLiteBleDesktop
             {
                 output = BluetoothCharacteristic.TypeStateWaitingSend.WRONG;
             }
+            else if (strType.Equals(BluetoothCharacteristic.TypeStateWaitingSend.Clear.ToString()))
+            {
+                output = BluetoothCharacteristic.TypeStateWaitingSend.Clear;
+            }
             else
             {
                 output = BluetoothCharacteristic.TypeStateWaitingSend.None;

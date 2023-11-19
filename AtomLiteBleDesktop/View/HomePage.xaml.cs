@@ -820,8 +820,10 @@ namespace AtomLiteBleDesktop
         {
             if(e.Key == Windows.System.VirtualKey.Enter)
             {
+                sendDataToServer(sender, "Clear");
                 var sendData=(sender as TextBox).Text;
                 sendDataToServer(sender, sendData);
+                (sender as TextBox).Text = "";
             }
         }
     }

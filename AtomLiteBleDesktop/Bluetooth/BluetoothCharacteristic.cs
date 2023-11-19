@@ -41,6 +41,10 @@ namespace AtomLiteBleDesktop.Bluetooth
             /// </summary>
             Cancel,
             /// <summary>
+            /// テキスト消去
+            /// </summary>
+            Clear,
+            /// <summary>
             /// 該当なし
             /// </summary>
             None,
@@ -174,6 +178,9 @@ namespace AtomLiteBleDesktop.Bluetooth
                     break;
                 case TypeStateWaitingSend.Cancel:
                     BluetoothSender.WriteCharacteristic(this.characteristic, "d");
+                    break;
+                case TypeStateWaitingSend.Clear:
+                    BluetoothSender.WriteCharacteristic(this.characteristic, "l");
                     break;
                 default:
                     break;

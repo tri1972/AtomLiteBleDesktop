@@ -34,6 +34,7 @@ enum statusBLEState{
   WRONG,
   EMERGENCY,
   GOOD,
+  CLEAR,
   none,
 };
 
@@ -118,7 +119,6 @@ void writeMessageBox(String str){
   
   Serial.println(str);
   Serial.println("Start writing");
-
   do{
     rowStr=str.substring(startStr*3,stopStr*3);
     rowStr.toCharArray(Buf, rowNum*3);
@@ -192,6 +192,9 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         }else if(strValue.equals("e")){
             Serial.println("EMERGENCY");
             bleState=EMERGENCY;
+        }else if(strValue.equals("l")){
+            Serial.println("CLEAR");
+            bleState=CLEAR;
         }else{
             Serial.println(strValue);
             bleState=none;
@@ -378,7 +381,11 @@ void loop() {
         canvas.setTextSize(1);
         canvas.fillCircle(40, 60, 17, RED); // 円（始点x,始点y,半径,色）
         break;
+      case CLEAR:        
+        eraceMessageBox();
+        break;
       case none:
+        currentRow=0;
         writeMessageBox(strValue);
         break;
     }
