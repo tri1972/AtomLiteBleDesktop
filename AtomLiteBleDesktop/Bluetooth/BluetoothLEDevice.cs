@@ -240,27 +240,45 @@ namespace AtomLiteBleDesktop
             logger.Info("End of Async Connect");
         }
 
-        /// <summary>
-        /// 指定したデータをServiceより送信する
-        /// </summary>
-        /// <param name="serviceUUID"></param>
-        /// <param name="characteristicUUID"></param>
-        /// <param name="sendData"></param>
-        /// <param name="beforeStatus"></param>
-        /// <param name="services"></param>
-        abstract protected void SendDataService(string serviceUUID, string characteristicUUID, BluetoothCharacteristic.TypeStateWaitingSend sendData, TypeStatus beforeStatus, List<BluetoothService> services);
+        public BluetoothCharacteristic.TypeStateWaitingSend ToTypeStateWaitingSend(string strType)
+        {
+            BluetoothCharacteristic.TypeStateWaitingSend output;
+
+            if (strType.Equals(BluetoothCharacteristic.TypeStateWaitingSend.ASAP.ToString()))
+            {
+                output = BluetoothCharacteristic.TypeStateWaitingSend.ASAP;
+            }
+            else if (strType.Equals(BluetoothCharacteristic.TypeStateWaitingSend.Cancel.ToString()))
+            {
+                output = BluetoothCharacteristic.TypeStateWaitingSend.Cancel;
+            }
+            else if (strType.Equals(BluetoothCharacteristic.TypeStateWaitingSend.None.ToString()))
+            {
+                output = BluetoothCharacteristic.TypeStateWaitingSend.None;
+            }
+            else if (strType.Equals(BluetoothCharacteristic.TypeStateWaitingSend.WAIT.ToString()))
+            {
+                output = BluetoothCharacteristic.TypeStateWaitingSend.WAIT;
+            }
+            else if (strType.Equals(BluetoothCharacteristic.TypeStateWaitingSend.WRONG.ToString()))
+            {
+                output = BluetoothCharacteristic.TypeStateWaitingSend.WRONG;
+            }
+            else
+            {
+                output = BluetoothCharacteristic.TypeStateWaitingSend.None;
+            }
+            return output;
+        }
+
 
         /// <summary>
         /// 指定したデータを送信する
         /// </summary>
         /// <param name="serviceUUID"></param>
         /// <param name="characteristicUUID"></param>
-        public void SendData(string serviceUUID, string characteristicUUID, BluetoothCharacteristic.TypeStateWaitingSend sendData)
-        {
-            var beforeStatus = this.Status;
-            this.Status = TypeStatus.Sending;
-            SendDataService(serviceUUID, characteristicUUID, sendData, beforeStatus,this.services);
-        }
+        abstract public void SendData(string serviceUUID, string characteristicUUID, string sendData);
+
 
         /// <summary>
         /// Characteristic受信のイベントハンドラ

@@ -29,8 +29,7 @@ namespace AtomLiteBleDesktop.Bluetooth
 
         public override TypeStatus Status { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-
-        protected override void SendDataService(string serviceUUID, string characteristicUUID, BluetoothCharacteristic.TypeStateWaitingSend sendData, TypeStatus beforeStatus, List<BluetoothService> services)
+        public override void SendData(string serviceUUID, string characteristicUUID, string sendData)
         {
             throw new NotImplementedException();
         }

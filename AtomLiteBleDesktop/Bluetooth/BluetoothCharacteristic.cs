@@ -183,6 +183,14 @@ namespace AtomLiteBleDesktop.Bluetooth
 
         }
 
+        public void WriteCharacterCharacteristic(string data)
+        {
+            this.isCancelRepeatReceiving = true;//送信時には受信繰り返しを中断する
+            this.numberCounteRx = 0;//送信時に受信数をクリアします
+            BluetoothSender.WriteCharacteristic(this.characteristic, data);
+
+        }
+
         public static string GetCharacteristicName(GattCharacteristic characteristic)
         {
             GattNativeCharacteristicUuid output;

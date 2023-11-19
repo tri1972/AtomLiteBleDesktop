@@ -39,21 +39,19 @@ namespace AtomLiteBleDesktop.Bluetooth
         }
 
         /// <summary>
-        /// 指定したデータを送信する
+        /// 
         /// </summary>
         /// <param name="serviceUUID"></param>
         /// <param name="characteristicUUID"></param>
         /// <param name="sendData"></param>
-        /// <param name="beforeStatus"></param>
-        /// <param name="services"></param>
-        override protected void SendDataService
-            (string serviceUUID, 
-            string characteristicUUID, 
-            BluetoothCharacteristic.TypeStateWaitingSend sendData, 
-            TypeStatus beforeStatus, 
-            List<BluetoothService> services)
+        public override void SendData(string serviceUUID, string characteristicUUID, string sendData)
         {
-            foreach (var server in services)
+            var beforeStatus = this.Status;
+            this.Status = TypeStatus.Sending;
+
+            var sendDataType = ToTypeStateWaitingSend(sendData);
+
+            foreach (var server in this.Services)
             {
                 if (server.Service.Uuid == new Guid(serviceUUID))
                 {
@@ -61,7 +59,14 @@ namespace AtomLiteBleDesktop.Bluetooth
                     {
                         if (characteristic.Characteristic.Uuid == new Guid(characteristicUUID))
                         {
-                            characteristic.WriteCharacterCharacteristic(sendData);
+                            if (sendDataType != BluetoothCharacteristic.TypeStateWaitingSend.None)
+                            {
+                                characteristic.WriteCharacterCharacteristic(sendDataType);
+                            }
+                            else
+                            {
+                                characteristic.WriteCharacterCharacteristic(sendData);
+                            }
                             this.status = beforeStatus;
                         }
                     }

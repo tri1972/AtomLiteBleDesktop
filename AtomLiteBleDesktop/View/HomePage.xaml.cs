@@ -163,7 +163,7 @@ namespace AtomLiteBleDesktop
             return null;
         }
 
-        private async void sendDataToServer(object sender, TypeStateWaitingSend sendData)
+        private async void sendDataToServer(object sender, string sendData)
         {//TODO:データ送信用の関数として送信データをstringとするものをつくる？
             var serverListview = (sender as FrameworkElement).DataContext as Server;
             var mDevice = getDevice(serverListview.DeviceName);
@@ -243,18 +243,12 @@ namespace AtomLiteBleDesktop
                                 sendData = TypeStateWaitingSend.None;
                                 break;
                         }
-                        sendDataToServer(sender, sendData);
+                        sendDataToServer(sender, sendData.ToString());
                         batchUpdateBadgeGlyphClear();
                     }
                 }
             }
         }
-
-        /*
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-        }
-        */
 
         private void AccesserStatusChange(BluetoothAccesser.NotifyBluetoothAccesserEventArgs.Status status, BluetoothLEDevice sender)
         {
@@ -827,6 +821,7 @@ namespace AtomLiteBleDesktop
             if(e.Key == Windows.System.VirtualKey.Enter)
             {
                 var sendData=(sender as TextBox).Text;
+                sendDataToServer(sender, sendData);
             }
         }
     }

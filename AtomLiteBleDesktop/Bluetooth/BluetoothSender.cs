@@ -27,13 +27,19 @@ namespace AtomLiteBleDesktop.Bluetooth
                 bytes = Encoding.ASCII.GetBytes(sendData);
                 var writer = new DataWriter();
                 writer.ByteOrder = ByteOrder.LittleEndian;
+
+
+                writer.WriteString(sendData);
+                var writeSuccessful = await WriteBufferToSelectedCharacteristicAsync(characteristicstring, writer.DetachBuffer());
+
+                /*
                 foreach(var bytedata in bytes)
                 {
                     writer.WriteInt32(bytedata);
-
                     var writeSuccessful = await WriteBufferToSelectedCharacteristicAsync(characteristicstring, writer.DetachBuffer());
 
                 }
+                */
                 /*
                 var isValidValue =  Int32.TryParse(sendData, out int readValue);
                 if (isValidValue)
