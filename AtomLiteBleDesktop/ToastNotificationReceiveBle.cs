@@ -42,7 +42,6 @@ namespace AtomLiteBleDesktop
         public bool Show(string deviceName)
         {
             int audioSrcNum = 0;
-            //TODO: メッセージをM5Stuckのほうには遅れるようにする
             if (0 <= audioSrcNum
                 && audioSrcNum < srcAudios.Count)
             {

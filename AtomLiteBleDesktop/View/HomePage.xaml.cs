@@ -164,7 +164,7 @@ namespace AtomLiteBleDesktop
         }
 
         private async void sendDataToServer(object sender, string sendData)
-        {//TODO:データ送信用の関数として送信データをstringとするものをつくる？
+        {
             var serverListview = (sender as FrameworkElement).DataContext as Server;
             var mDevice = getDevice(serverListview.DeviceName);
             if (mDevice.Status == TypeStatus.Coonected)
@@ -1087,7 +1087,7 @@ namespace AtomLiteBleDesktop
 
     }
     public class ListViewTemplateSelector : DataTemplateSelector
-    {//TODO:M5Stack用のListviewUIを作成する
+    {
         //TODO:xaml側に何らかの問題があり、デバッガを介さないで実行すると落ちてしまう
         public DataTemplate TemplateAtomLIte { get; set; }
         public DataTemplate TemplateM5Stuck { get; set; }

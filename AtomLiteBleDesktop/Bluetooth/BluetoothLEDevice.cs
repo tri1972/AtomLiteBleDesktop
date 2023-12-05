@@ -434,28 +434,37 @@ namespace AtomLiteBleDesktop
         /// </summary>
         /// <param name="e"></param>
         /// <param name="sender"></param>
-        private void eventConnectionStatusChanged(Windows.Devices.Bluetooth.BluetoothLEDevice e, object sender)
+        private async void eventConnectionStatusChanged(Windows.Devices.Bluetooth.BluetoothLEDevice e, object sender)
         {
+#if DEBUG
+            logger.Info("ConnectionStatusChanged is "+ e.ConnectionStatus.ToString()+" : "+e.Name);
+#endif
 #warning この関数はBluetoothLEDeviceクラスへ移動すべき
             if (e.ConnectionStatus == BluetoothConnectionStatus.Connected)
             {//初回Connect関数実行時にConnectできなければthis.services.Count=0のため再接続動作ができない
                 //→Characteristicクラスのコンストラクタにてnotifyイベントを受けるようにする
+                GattCommunicationStatus ret= GattCommunicationStatus.Unreachable;
                 if (this.services != null && this.services.Count > 0)
                 {//初回接続時のイベントハンドラによるリクエストについては処理をしないようにする
 
                     foreach (var service in services)
                     {
                         foreach (var characteristic in service.Characteristics)
-                        {//切断された後、再度接続した際はnotifyによるValueChanged イベントを再度受信できるようにする
-                            characteristic.CanNotifyCharacteristic();
+                        {//TODO:Disconnectとなりここら辺が実行される途中で落ちる→この中で使うWriteClientCharacteristicConfigurationDescriptorAsyncが非同期であるため、これが有効になるまでに次の処理に進むためエラー？
+                            //切断された後、再度接続した際はnotifyによるValueChanged イベントを再度受信できるようにする
+                           ret=await Task.Run(()=> characteristic.CanNotifyCharacteristic());
                         }
                     }
                 }
-                this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
-                this.Status = TypeStatus.Coonected;
+                if (ret== GattCommunicationStatus.Success)
+                {//TODO:ここでnotifyを許可にするまで待つようにしても、結局はまたずにすすむ・・・
+                    this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
+                    this.Status = TypeStatus.Coonected;
+                }
             }
             else
             {
+                //TODO : Disconnectedになると落ちてしまうみたい・・・
                 this.Status = BluetoothLEDevice.TypeStatus.Disconnect;
                 this.OnNotifyConnectingServer("ServerStatusChange", NotifyBluetoothAccesserEventArgs.Status.Disconnected);
                 this.Status = TypeStatus.Disconnect;

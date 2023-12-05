@@ -134,11 +134,14 @@ namespace AtomLiteBleDesktop.Bluetooth
         public BluetoothCharacteristic(GattCharacteristic characteristic)
         {
             this.characteristic = characteristic;
-            CanNotifyCharacteristic();
-            this.characteristic.ValueChanged += this.registeredCharacteristicNotify;
-            this.name = GetCharacteristicName(characteristic);
-            this.type=GetCharacteristicType(characteristic);
-            this.isCancelRepeatReceiving = false;
+            var ret= CanNotifyCharacteristic();
+            if (ret.IsCompleted)
+            {
+                this.characteristic.ValueChanged += this.registeredCharacteristicNotify;
+                this.name = GetCharacteristicName(characteristic);
+                this.type = GetCharacteristicType(characteristic);
+                this.isCancelRepeatReceiving = false;
+            }
         }
 
         /// <summary>
@@ -153,12 +156,13 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// <summary>
         /// CharacteristicのNotifyを有効とする
         /// </summary>
-        public async void CanNotifyCharacteristic()
+        public async Task<GattCommunicationStatus> CanNotifyCharacteristic()
         {
             if (this.characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
             {//Notifyをここで有効とする
-                await this.characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                return await this.characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
             }
+            return GattCommunicationStatus.ProtocolError;
         }
 
         public void WriteCharacterCharacteristic(TypeStateWaitingSend data)
