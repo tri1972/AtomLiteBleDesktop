@@ -134,7 +134,9 @@ namespace AtomLiteBleDesktop.Bluetooth
         public BluetoothCharacteristic(GattCharacteristic characteristic)
         {
             this.characteristic = characteristic;
-            var ret= CanNotifyCharacteristic();
+            initBleCharacteristic();
+            /*
+            var ret= a CanNotifyCharacteristic();
             if (ret.IsCompleted)
             {
                 this.characteristic.ValueChanged += this.registeredCharacteristicNotify;
@@ -142,6 +144,19 @@ namespace AtomLiteBleDesktop.Bluetooth
                 this.type = GetCharacteristicType(characteristic);
                 this.isCancelRepeatReceiving = false;
             }
+            */
+        }
+        private async void initBleCharacteristic()
+        {
+            var ret = await CanNotifyCharacteristic();
+            if (ret== GattCommunicationStatus.Success)
+            {
+                this.characteristic.ValueChanged += this.registeredCharacteristicNotify;
+                this.name = GetCharacteristicName(characteristic);
+                this.type = GetCharacteristicType(characteristic);
+                this.isCancelRepeatReceiving = false;
+            }
+
         }
 
         /// <summary>

@@ -452,15 +452,26 @@ namespace AtomLiteBleDesktop
                         foreach (var characteristic in service.Characteristics)
                         {//TODO:Disconnectとなりここら辺が実行される途中で落ちる→この中で使うWriteClientCharacteristicConfigurationDescriptorAsyncが非同期であるため、これが有効になるまでに次の処理に進むためエラー？
                             //切断された後、再度接続した際はnotifyによるValueChanged イベントを再度受信できるようにする
+                           
                            ret=await Task.Run(()=> characteristic.CanNotifyCharacteristic());
+                           if (ret == GattCommunicationStatus.Success)
+                           {//TODO:ここでnotifyを許可にするまで待つようにしても、結局はまたずにすすむ・・・
+                             //この実装だとserviceが持っているcharacteristicのうちどれかがnotifyになれば接続されたとなるが、本当はserviceが接続したではなく
+                             //Chracteristicsが接続したとするべき
+                                this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);//serviceのなかにChracteristicsがひとつだけなら、この形のservice単位の実装でOKだが、本当は複数Chracteristicsがあると考えるべき
+                                this.Status = TypeStatus.Coonected;
+                           }
                         }
                     }
                 }
+                /*
                 if (ret== GattCommunicationStatus.Success)
                 {//TODO:ここでnotifyを許可にするまで待つようにしても、結局はまたずにすすむ・・・
+                 //この実装だとserviceが持っているcharacteristicのうちどれかがnotifyになれば接続されたとなる
                     this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);
                     this.Status = TypeStatus.Coonected;
                 }
+                */
             }
             else
             {
