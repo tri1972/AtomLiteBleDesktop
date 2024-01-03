@@ -19,9 +19,15 @@ UploadSpeed:115200
 #define PUSH_BUTTON_PIN 25 //押しボタンのPINを指定
 #define BUTTON_LED_PIN 21 //押しボタンのLEDを指定
  
-#define SPEAKER 22    //圧電スピーカーのGPIO番号を指定
-#define SPEAKER_CHANNEL 1 // ledcWriteToneのChannel番号を指定
 #define IS_GPIO_POS false //GPIO出力を正論理でやるか否か
+
+#define BUZZER_PIN 22
+//音を鳴らす時間
+#define BEAT 500
+//音階名と周波数の対応
+#define C4 261.6
+#define A4 440
+#define F4 349.228
 
 union LedStatus{
   struct {
@@ -305,6 +311,9 @@ void setup() {
   setLED(BLUE_LED, LOW);
   */
   oldLedStatus.UCHAR_8=currentLedStatus.UCHAR_8;
+  //圧電スピーカーセットアップ
+  ledcSetup(1,12000, 8);
+  ledcAttachPin(BUZZER_PIN,1);
 }
 
 void loop() {
@@ -353,6 +362,10 @@ void loop() {
           pCharacteristic->setValue(strSend.c_str());
           pCharacteristic->notify();
           beforeStateSwitch=HIGH;
+          ledcWriteTone(1,F4);
+          delay(BEAT);
+          
+          ledcWriteTone(1, 0);    // 音を止める
         }
       }else{
         digitalWrite(BUTTON_LED_PIN, LOW);
@@ -362,6 +375,9 @@ void loop() {
           pCharacteristic->setValue(strSend.c_str());
           pCharacteristic->notify();
           beforeStateSwitch=LOW;
+
+          ledcWriteTone(1,A4);
+          delay(BEAT);
         }
       }
     }
