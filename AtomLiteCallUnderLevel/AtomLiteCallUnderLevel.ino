@@ -28,6 +28,7 @@ UploadSpeed:115200
 #define C4 261.6
 #define A4 440
 #define F4 349.228
+#define C5 523.251
 
 union LedStatus{
   struct {
@@ -51,6 +52,8 @@ bool oldDeviceConnected = false;
 uint32_t value = 0;
 hw_timer_t * tim0 = NULL;
 uint16_t gpioLEDStatus=0;
+bool stopSound=false;
+bool stopSoundOld=true;
 
 //参考Url_Bluetooth：https://hawksnowlog.blogspot.com/2021/09/esp32-implementes-notify-services.html
 //参考Url_Timer割り込み：https://lang-ship.com/blog/work/esp32-timer/
@@ -78,6 +81,7 @@ enum statusBLEState{
   WRONG,
   EMERGENCY,
   GOOD,
+  CALL,
   none,
 };
 
@@ -224,6 +228,27 @@ void clearLed(){
       setLED(GREEN_LED, LOW );
       setLED(BLUE_LED, LOW );
 }
+
+void soundBrink(){
+  bool brink=true;
+  if(stopSound!=stopSoundOld){
+    for(int i=0;i<5;i++){
+      if(brink){
+        ledcWriteTone(1,C5);
+        delay(BEAT);
+        brink=false;
+      }else{
+        ledcWriteTone(1, 0);    // 音を止める
+        brink=true;
+        delay(BEAT);
+      }
+    }
+    ledcWriteTone(1, 0);    // 音を止める
+    stopSound=true;
+  }
+  stopSoundOld=stopSound;
+}
+
 void setup() {
   Serial.begin(115200);
   int time;                           // the variable used to set the Timer
@@ -340,13 +365,16 @@ void loop() {
     case ASAP:
       M5.dis.drawpix(0, dispColor(0, 0, 255));
       setLED(GREEN_LED, HIGH);
+      soundBrink();
       break;
     case WAIT:
+      stopSound=false;
       M5.dis.drawpix(0, dispColor(0, 0, 255));
       setLED(RED_LED, HIGH );
       setLED(GREEN_LED, HIGH);
       break;
     case WRONG:
+      stopSound=false;
       M5.dis.drawpix(0, dispColor(0, 0, 255));
       setLED(RED_LED, HIGH);
       break;
@@ -364,7 +392,6 @@ void loop() {
           beforeStateSwitch=HIGH;
           ledcWriteTone(1,F4);
           delay(BEAT);
-          
           ledcWriteTone(1, 0);    // 音を止める
         }
       }else{
