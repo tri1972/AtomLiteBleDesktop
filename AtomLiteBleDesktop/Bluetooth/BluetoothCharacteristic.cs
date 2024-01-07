@@ -254,7 +254,7 @@ namespace AtomLiteBleDesktop.Bluetooth
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="eventArgs"></param>
-        private async void  registeredCharacteristicNotify(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
+        public async void  registeredCharacteristicNotify(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
         {
             try
             {

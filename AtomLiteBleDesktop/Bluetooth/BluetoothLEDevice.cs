@@ -460,7 +460,13 @@ namespace AtomLiteBleDesktop
                              //Chracteristicsが接続したとするべき
                                 this.OnNotifyConnectingServer("Connected Server!", NotifyBluetoothAccesserEventArgs.Status.Connected);//serviceのなかにChracteristicsがひとつだけなら、この形のservice単位の実装でOKだが、本当は複数Chracteristicsがあると考えるべき
                                 this.Status = TypeStatus.Coonected;
-                           }
+
+                                characteristic.Characteristic.ValueChanged += characteristic.registeredCharacteristicNotify;
+                            }
+                            else
+                            {
+                                ;
+                            }
                         }
                     }
                 }
