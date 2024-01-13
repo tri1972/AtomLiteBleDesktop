@@ -81,12 +81,17 @@ enum statusBLEState{
   WRONG,
   EMERGENCY,
   GOOD,
-  CALL,
-  none,
+  none
+};
+
+enum statusSoundState{
+  CALL_ON,
+  CALL_OFF
 };
 
 volatile statusBlinkMode statusBlink;
 volatile statusBLEState bleState=disconnect;
+volatile statusSoundState soundState=CALL_OFF;
  
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
@@ -121,6 +126,12 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         }else if(strValue.equals("e")){
             Serial.println("EMERGENCY");
             bleState=EMERGENCY;
+        }else if(strValue.equals("f")){
+            Serial.println("CALL_ON");
+            soundState=CALL_ON;
+        }else if(strValue.equals("g")){
+            Serial.println("CALL_OFF");
+            soundState=CALL_OFF;
         }else{
             bleState=none;
         }
@@ -228,22 +239,25 @@ void clearLed(){
       setLED(GREEN_LED, LOW );
       setLED(BLUE_LED, LOW );
 }
-
 void soundBrink(){
   bool brink=true;
-  if(stopSound!=stopSoundOld){
-    for(int i=0;i<5;i++){
-      if(brink){
-        ledcWriteTone(1,C5);
-        delay(BEAT);
-        brink=false;
-      }else{
-        ledcWriteTone(1, 0);    // 音を止める
-        brink=true;
-        delay(BEAT);
-      }
+  for(int i=0;i<6;i++){
+    if(brink){
+      ledcWriteTone(1,C5);
+      delay(BEAT);
+      brink=false;
+    }else{
+      ledcWriteTone(1, 0);    // 音を止める
+      brink=true;
+      delay(BEAT);
     }
-    ledcWriteTone(1, 0);    // 音を止める
+  }
+  ledcWriteTone(1, 0);    // 音を止める
+}
+
+void soundBrinkSingle(){
+  if(stopSound!=stopSoundOld){
+    soundBrink();
     stopSound=true;
   }
   stopSoundOld=stopSound;
@@ -349,6 +363,7 @@ void loop() {
     case connect://青色常時点灯
       M5.dis.drawpix(0, dispColor(0, 0, 255));
       setLED(BLUE_LED, HIGH);
+      stopSound=false;
       break;
     case disconnect://青色点滅
       switch(statusBlink){
@@ -365,49 +380,59 @@ void loop() {
     case ASAP:
       M5.dis.drawpix(0, dispColor(0, 0, 255));
       setLED(GREEN_LED, HIGH);
-      soundBrink();
+      soundBrinkSingle();
       break;
     case WAIT:
-      stopSound=false;
       M5.dis.drawpix(0, dispColor(0, 0, 255));
       setLED(RED_LED, HIGH );
       setLED(GREEN_LED, HIGH);
+      stopSound=false;
       break;
     case WRONG:
-      stopSound=false;
       M5.dis.drawpix(0, dispColor(0, 0, 255));
       setLED(RED_LED, HIGH);
+      stopSound=false;
       break;
   }
-        //digitalWrite(BUTTON_LED_PIN, HIGH);
-    // notify changed value
-    if (deviceConnected) {
-      if(digitalRead(PUSH_BUTTON_PIN)==HIGH ){
-        digitalWrite(BUTTON_LED_PIN, HIGH);
-        if(beforeStateSwitch==LOW){//スイッチがon→Offにてデータを送る
-          Serial.println("PUSH_BUTTON OFF");
-          strSend = "PUSH_OFF";
-          pCharacteristic->setValue(strSend.c_str());
-          pCharacteristic->notify();
-          beforeStateSwitch=HIGH;
-          ledcWriteTone(1,F4);
-          delay(BEAT);
-          ledcWriteTone(1, 0);    // 音を止める
-        }
-      }else{
-        digitalWrite(BUTTON_LED_PIN, LOW);
-        if(beforeStateSwitch==HIGH){//スイッチがOff→onにてデータを送る
-          Serial.println("PUSH_BUTTON ON");
-          strSend = "PUSH_ON";
-          pCharacteristic->setValue(strSend.c_str());
-          pCharacteristic->notify();
-          beforeStateSwitch=LOW;
 
-          ledcWriteTone(1,A4);
-          delay(BEAT);
-        }
+  //atomliteより出力される音を変更
+  switch(soundState){
+    case CALL_ON:
+      soundBrink();
+      break;
+    case CALL_OFF:
+      stopSound=false;
+      break;
+  }
+  //digitalWrite(BUTTON_LED_PIN, HIGH);
+  // notify changed value
+  if (deviceConnected) {
+    if(digitalRead(PUSH_BUTTON_PIN)==HIGH ){
+      digitalWrite(BUTTON_LED_PIN, HIGH);
+      if(beforeStateSwitch==LOW){//スイッチがon→Offにてデータを送る
+        Serial.println("PUSH_BUTTON OFF");
+        strSend = "PUSH_OFF";
+        pCharacteristic->setValue(strSend.c_str());
+        pCharacteristic->notify();
+        beforeStateSwitch=HIGH;
+        ledcWriteTone(1,F4);
+        delay(BEAT);
+        ledcWriteTone(1, 0);    // 音を止める
+      }
+    }else{
+      digitalWrite(BUTTON_LED_PIN, LOW);
+      if(beforeStateSwitch==HIGH){//スイッチがOff→onにてデータを送る
+        Serial.println("PUSH_BUTTON ON");
+        strSend = "PUSH_ON";
+        pCharacteristic->setValue(strSend.c_str());
+        pCharacteristic->notify();
+        beforeStateSwitch=LOW;
+
+        ledcWriteTone(1,A4);
+        delay(BEAT);
       }
     }
+  }
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) {
         delay(500); // give the bluetooth stack the chance to get things ready
