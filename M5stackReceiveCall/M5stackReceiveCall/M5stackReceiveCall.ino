@@ -1,4 +1,5 @@
-#include <BLEDevice.h>
+//#include <BLEDevice.h>
+#include <NimBLEDevice.h>
 //#include <BLEServer.h>
 //#include <BLEUtils.h>
 //#include <BLE2902.h>
@@ -26,6 +27,13 @@ static LGFX lcd; // LGFXのインスタンスを作成。
 static LGFX_Sprite canvas(&lcd);  // スプライトを使う場合はLGFX_Spriteのインスタンスを作成
 uint8_t currentRow=0; 
 
+void lcdPrintln(char * str){      
+  lcd.startWrite();
+  lcd.println(str);
+  lcd.endWrite();
+  lcd.display();
+}
+
 void canvasPrint(int x,int y,int size,char * str){
       canvas.setTextSize(size);            // 文字倍率変更
       //canvasErace(x,y,size,strlen(str));
@@ -33,75 +41,71 @@ void canvasPrint(int x,int y,int size,char * str){
       canvas.print(str);
 }
 
-void writeMessageBox(String str){
-  char Buf[255];
-  
-  uint16_t top=90;
-  uint16_t left=0;
-  uint16_t bottom=210;
-  uint16_t right=320;
-  uint8_t size=16;//フォントサイズ(8,10,12,14,16,20,24)
+class funcClientCallbacks: public BLEClientCallbacks {
+    void onConnect(BLEClient* pClient) {
+    };
+    void onDisconnect(BLEClient* pClient) {
+        connected = false;
+    }
+};
 
-  uint8_t rowNum=(uint8_t)((right-left)/size);
-  uint8_t strLength=(uint8_t)str.length()/3;//UTF-8が3byteのため
-  uint8_t startStr=0;
-  uint8_t stopStr=rowNum;
-  uint8_t endStr=0;
-  String rowStr;
-  
-  Serial.println(str);
-  Serial.println("Start writing");
-  do{
-    rowStr=str.substring(startStr*3,stopStr*3);
-    canvas.print(rowStr);
-    /*//日本語表示用
-    rowStr.toCharArray(Buf, rowNum*3);
-    fontDump(left,top+currentRow*size,Buf,size);
-    */
-    startStr+=rowNum;
-    stopStr+=rowNum;
-    currentRow++;
-  }while(stopStr<=strLength);
-  //ラストの一行を表示する
-  endStr=(stopStr-rowNum)+(strLength%rowNum);
-  if(endStr>0){
-    rowStr=str.substring(startStr*3,endStr*3);
-    canvas.print(rowStr);
-    /*//日本語表示用
-    rowStr.toCharArray(Buf, rowNum*3);
-    fontDump(left,top+currentRow*size,Buf,size);
-    */
-    currentRow++;
-  }else{
-    currentRow--;
+class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
+{
+  void onResult(BLEAdvertisedDevice *advertisedDevice)
+  {
+    Serial.printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
+    
+    lcd.startWrite();
+    lcd.printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
+    lcd.endWrite();
+    lcd.display();
+
+    if(advertisedDevice->getName()==SERVER_NAME){
+      lcd.startWrite();
+      
+      Serial.println("Find Device!");
+      lcd.println("Find Device!");
+      Serial.println(advertisedDevice->getAddress().toString().c_str());
+      lcd.println(advertisedDevice->getAddress().toString().c_str());
+      advertisedDevice->getScan()->stop();
+      pServerAddress = new BLEAddress(advertisedDevice->getAddress());
+      doConnect = true;
+      
+      lcd.endWrite();
+      lcd.display();
+    }
   }
-}
+};
+/*
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 {
   void onResult(BLEAdvertisedDevice advertisedDevice)
   {
     Serial.printf("Advertised Device: %s \n", advertisedDevice.toString().c_str());
-    writeMessageBox(advertisedDevice.toString().c_str());
+    //writeMessageBox(advertisedDevice.toString().c_str());
+    
+    lcd.startWrite();
+    lcd.printf("Advertised Device: %s \n", advertisedDevice.toString().c_str());
+    lcd.endWrite();
+    lcd.display();
 
     if(advertisedDevice.getName()==SERVER_NAME){
+      lcd.startWrite();
+      
       Serial.println("Find Device!");
-      canvas.print("Find Device!");
+      lcd.println("Find Device!");
       Serial.println(advertisedDevice.getAddress().toString().c_str());
+      lcd.println(advertisedDevice.getAddress().toString().c_str());
       advertisedDevice.getScan()->stop();
       pServerAddress = new BLEAddress(advertisedDevice.getAddress());
       doConnect = true;
+      
+      lcd.endWrite();
+      lcd.display();
     }
-
-    /*
-    if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(serviceUUID))
-    {
-      Serial.println("Device found!");
-      advertisedDevice.getScan()->stop();
-    }
-    */
   }
 };
-
+*/
 void scan()
 {
   BLEScan *pBLEScan = BLEDevice::getScan();
@@ -128,7 +132,8 @@ static void notifyCallback(
     String receiveStr=converter(pData);
     Serial.println("Notify!!");
     Serial.printf("Server output:%s\n",receiveStr);
-    pushButtonServer=!pushButtonServer;
+    pushButtonServer=true;
+    lcdPrintln("Server send data!");
     /*
     if(receiveStr.compareTo("PUSH_ON")){
       Serial.println("true");
@@ -145,6 +150,7 @@ bool connectToServer(BLEAddress pAddress) {
     Serial.println(pAddress.toString().c_str());
 
     BLEClient*  pClient  = BLEDevice::createClient();
+    pClient->setClientCallbacks(new funcClientCallbacks());
     pClient->connect(pAddress);
 
     BLERemoteService* pRemoteService = pClient->getService(serviceUUID); 
@@ -172,39 +178,53 @@ void setup()
   
   lcd.init();  
   lcd.setRotation(1);         // 画面向き設定（0～3で設定、4～7は反転)　※CORE2、GRAYの場合
-  canvas.setColorDepth(8);                             // CORE2 GRAY のスプライトは16bit以上で表示されないため8bitに設定
-                              /*
+  /*
   canvas.setTextWrap(false);  // 改行をしない（画面をはみ出す時自動改行する場合はtrue）
   canvas.setTextSize(1);      // 文字サイズ（倍率）
   */
+  lcd.setTextColor(TFT_BLACK, TFT_WHITE);
+
+  lcd.setFont(&fonts::lgfxJapanGothic_16);
+  lcdPrintln("HelloWorld");
+  lcdPrintln("こんにちは世界");
+
+  lcd.setCursor(0, 0);
+  lcd.setTextScroll(true);
+  lcd.setScrollRect(0 , 0 , lcd.width() , lcd.height() );
+  lcd.setTextSize(1);            // 文字倍率変更
+
+  /*//spriteで画面表示を行う箇所（スクロールさせるためとりあえずコメントアウト
+  canvas.setColorDepth(8);                             // CORE2 GRAY のスプライトは16bit以上で表示されないため8bitに設定
   canvas.createSprite(lcd.width(), lcd.height());
   canvas.setTextFont(4); // フォントの指定
   canvas.setCursor(10, 120); // カーソル位置の指定
   canvas.pushSprite(0, 0);  // メモリ内に描画したcanvasを座標を指定して表示する
-
+  */
   M5.Speaker.setVolume(10);
-
-  // setupで単発実行。繰り返し実行するならloopに配置する必要がある
-  scan(); 
 }
-
+int i = 0;
 void loop()
 {
   M5.update();  // ボタン状態更新
-  canvas.setTextSize(1);            // 文字倍率変更
-  if (doConnect == true) {
+
+  if(!connected){//接続されていなければアドバタイジングされているデバイスをスキャンする
+    lcdPrintln("切断!! Scanning中...");
+    scan(); 
+  }
+
+  if (doConnect == true) {//デバイスが見つかれば接続動作にはいる
     delay(1 * 1000); 
     if (connectToServer(*pServerAddress)) {
-      Serial.println("connected!");
-        canvasPrint(80, 57,1,"connected!");
-        canvas.setTextSize(1); 
+      lcdPrintln("接続!!");
+      //lcdPrintln("connected!");
       connected = true;
     } else {
-    Serial.println("We have failed to connect to the server.");
-    connected = false;
+      lcdPrintln("We have failed to connect to the server.");
+      connected = false;
     }
     doConnect = false;
   }
+
   
   if (connected) {
     if(M5.BtnC.isPressed()) {
@@ -213,10 +233,13 @@ void loop()
   }
 
   if(pushButtonServer){
+    //Serial.println("pushButtonServer true");
     M5.Speaker.tone(659, 200);
+    delay(500);
+    pushButtonServer=false;
   }else{
+    //Serial.println("pushButtonServer false");
     M5.Speaker.mute();
   }
-
   canvas.pushSprite(0, 0);
 }

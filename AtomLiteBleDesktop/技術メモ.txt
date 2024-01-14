@@ -61,6 +61,17 @@ UIスレッドの実行を待つ方法。
 あまりうまくいっていないように見える
 https://learn.microsoft.com/ja-jp/uwp/api/windows.ui.core.coredispatcher.runasync?view=winrt-22621#windows-ui-core-coredispatcher-runasync(windows-ui-core-coredispatcherpriority-windows-ui-core-dispatchedhandler)
 
+ESP32用のBLEライブラリの軽量版 -NimBLE-
+https://babyjiji.hatenablog.com/entry/2022/01/27/224546
+
+ESP32によるBLEクライアントの作成
+http://marchan.e5.valueserver.jp/cabin/comp/jbox/arc212/doc21205.html
+
+M5stack core2とM5AtomをBLE通信する。
+https://qiita.com/yutaka_m/items/283126079ec6f4052f0e
+
+LovyanGFX テキストスクロールのテスト 
+https://gist.github.com/mongonta0716/31682fed9cd7a21471f287645a77de18
 
 アプリの実行延長を行う
 https://learn.microsoft.com/ja-jp/windows/uwp/launch-resume/run-minimized-with-extended-execution
