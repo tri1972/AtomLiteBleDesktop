@@ -14,6 +14,10 @@
 #define CHARACTERISTIC_UUID "cca99442-dab6-4f69-8bc2-685e2412d178"
 #define SERVER_NAME         "ESP32PIRTRI"
 
+#define RANGE_SCROLL_X 0
+#define RANGE_SCROLL_Y 16
+#define FONT_MAGNIFICATION 1
+
 static BLEUUID serviceUUID(SERVICE_UUID);
 static BLEUUID charUUID(CHARACTERISTIC_UUID);
 
@@ -31,7 +35,15 @@ void lcdPrintln(char * str){
   lcd.startWrite();
   lcd.println(str);
   lcd.endWrite();
-  lcd.display();
+  //lcd.display();
+}
+
+void lcdPrint(char * str,int x,int y){
+  lcd.startWrite();
+  lcd.setCursor(x, y);
+  lcd.print(str);
+  lcd.endWrite();
+  //lcd.display();
 }
 
 void canvasPrint(int x,int y,int size,char * str){
@@ -39,6 +51,29 @@ void canvasPrint(int x,int y,int size,char * str){
       //canvasErace(x,y,size,strlen(str));
       canvas.setCursor(x, y);
       canvas.print(str);
+}
+
+/*
+  スクロール外に文字列描画
+  x:文字開始位置x
+  y:文字開始位置y
+  rect_x：文字数範囲x（全角文字(最大 26))
+  rect_x：文字数範囲y
+  text：文字列
+*/
+void lcdPrintFix(int x,int y,int rect_x,int rect_y,String text){
+  float maxStrNumRow=320/(FONT_MAGNIFICATION*16*0.75);
+  // setScrollRectの範囲指定を解除します。
+  lcd.clearScrollRect();
+  lcd.startWrite();
+  lcd.setCursor(x, y);
+  for(int i=0 ;i<rect_x*2;i++){//全角文字列数で計算
+    lcd.print(" ");
+  }
+  lcd.endWrite();
+  //lcd.display();
+  lcdPrint((char *)text.c_str(),x,y);
+  lcd.setScrollRect(RANGE_SCROLL_X , RANGE_SCROLL_Y , lcd.width() , lcd.height() );
 }
 
 class funcClientCallbacks: public BLEClientCallbacks {
@@ -58,7 +93,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     lcd.startWrite();
     lcd.printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
     lcd.endWrite();
-    lcd.display();
+    //lcd.display();
 
     if(advertisedDevice->getName()==SERVER_NAME){
       lcd.startWrite();
@@ -72,7 +107,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
       doConnect = true;
       
       lcd.endWrite();
-      lcd.display();
+      //lcd.display();
     }
   }
 };
@@ -182,16 +217,15 @@ void setup()
   canvas.setTextWrap(false);  // 改行をしない（画面をはみ出す時自動改行する場合はtrue）
   canvas.setTextSize(1);      // 文字サイズ（倍率）
   */
-  lcd.setTextColor(TFT_BLACK, TFT_WHITE);
+  lcd.setTextColor(TFT_WHITE,TFT_BLACK);
 
   lcd.setFont(&fonts::lgfxJapanGothic_16);
-  lcdPrintln("HelloWorld");
   lcdPrintln("こんにちは世界");
 
   lcd.setCursor(0, 0);
   lcd.setTextScroll(true);
-  lcd.setScrollRect(0 , 0 , lcd.width() , lcd.height() );
-  lcd.setTextSize(1);            // 文字倍率変更
+  lcd.setScrollRect(RANGE_SCROLL_X , RANGE_SCROLL_Y , lcd.width() , lcd.height() );
+  lcd.setTextSize(FONT_MAGNIFICATION);            // 文字倍率変更
 
   /*//spriteで画面表示を行う箇所（スクロールさせるためとりあえずコメントアウト
   canvas.setColorDepth(8);                             // CORE2 GRAY のスプライトは16bit以上で表示されないため8bitに設定
@@ -231,7 +265,12 @@ void loop()
       pushButtonServer=false;
     }
   }
-
+  if (Serial.available()) {
+    String text = Serial.readStringUntil(0x0a);
+    if (text.length() > 0){
+      lcdPrintFix(0,0,26,0,text);
+    }
+  }
   if(pushButtonServer){
     //Serial.println("pushButtonServer true");
     M5.Speaker.tone(659, 200);
@@ -241,5 +280,6 @@ void loop()
     //Serial.println("pushButtonServer false");
     M5.Speaker.mute();
   }
-  canvas.pushSprite(0, 0);
+  lcd.display();
+  //canvas.pushSprite(0, 0);
 }
