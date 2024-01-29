@@ -15,7 +15,7 @@
 #define SERVER_NAME         "ESP32PIRTRI"
 
 #define RANGE_SCROLL_X 0
-#define RANGE_SCROLL_Y 16
+#define RANGE_SCROLL_Y 32
 #define FONT_MAGNIFICATION 1
 
 static BLEUUID serviceUUID(SERVICE_UUID);
@@ -30,6 +30,14 @@ static BLERemoteCharacteristic* pRemoteCharacteristic;
 static LGFX lcd; // LGFXのインスタンスを作成。
 static LGFX_Sprite canvas(&lcd);  // スプライトを使う場合はLGFX_Spriteのインスタンスを作成
 uint8_t currentRow=0; 
+
+hw_timer_t * timer = NULL;
+volatile uint32_t current_time = 0;
+
+static bool IsKeepAliveScan=false;
+static bool IsKeepAlive=false;
+int IsKeepAliveDetectCount=false;
+volatile uint32_t IsKeepAliveCount = 0;
 
 void lcdPrintln(char * str){      
   lcd.startWrite();
@@ -61,19 +69,24 @@ void canvasPrint(int x,int y,int size,char * str){
   rect_x：文字数範囲y
   text：文字列
 */
-void lcdPrintFix(int x,int y,int rect_x,int rect_y,String text){
+void lcdPrintFix(int x,int y,int rect_x,int rect_y,String text,int color){
   float maxStrNumRow=320/(FONT_MAGNIFICATION*16*0.75);
   // setScrollRectの範囲指定を解除します。
   lcd.clearScrollRect();
   lcd.startWrite();
-  lcd.setCursor(x, y);
-  for(int i=0 ;i<rect_x*2;i++){//全角文字列数で計算
+  lcd.setTextColor(color,TFT_BLACK);
+  lcd.setTextSize(FONT_MAGNIFICATION);            // 文字倍率変更
+  lcd.setCursor(x*16, y*16);
+  for(int i=0 ;i< (int)(rect_x*2/FONT_MAGNIFICATION);i++){//全角文字列数で計算
     lcd.print(" ");
   }
-  lcd.endWrite();
   //lcd.display();
-  lcdPrint((char *)text.c_str(),x,y);
+  lcdPrint((char *)text.c_str(),x*16,y*16);
+  lcd.endWrite();
+  lcd.setTextSize(1);            // 文字倍率変更
   lcd.setScrollRect(RANGE_SCROLL_X , RANGE_SCROLL_Y , lcd.width() , lcd.height() );
+  lcd.setTextColor(TFT_WHITE,TFT_BLACK);
+  lcd.setCursor(0, 0);
 }
 
 class funcClientCallbacks: public BLEClientCallbacks {
@@ -111,36 +124,14 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     }
   }
 };
-/*
-class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
-{
-  void onResult(BLEAdvertisedDevice advertisedDevice)
-  {
-    Serial.printf("Advertised Device: %s \n", advertisedDevice.toString().c_str());
-    //writeMessageBox(advertisedDevice.toString().c_str());
-    
-    lcd.startWrite();
-    lcd.printf("Advertised Device: %s \n", advertisedDevice.toString().c_str());
-    lcd.endWrite();
-    lcd.display();
 
-    if(advertisedDevice.getName()==SERVER_NAME){
-      lcd.startWrite();
-      
-      Serial.println("Find Device!");
-      lcd.println("Find Device!");
-      Serial.println(advertisedDevice.getAddress().toString().c_str());
-      lcd.println(advertisedDevice.getAddress().toString().c_str());
-      advertisedDevice.getScan()->stop();
-      pServerAddress = new BLEAddress(advertisedDevice.getAddress());
-      doConnect = true;
-      
-      lcd.endWrite();
-      lcd.display();
-    }
-  }
-};
-*/
+void onTimer(){
+  IsKeepAliveCount++;
+  IsKeepAliveScan=true;
+  //current_time = millis();
+  //Serial.printf("No. %u, %u ms\n", counter, current_time);
+}
+
 void scan()
 {
   BLEScan *pBLEScan = BLEDevice::getScan();
@@ -168,16 +159,6 @@ static void notifyCallback(
     Serial.println("Notify!!");
     Serial.printf("Server output:%s\n",receiveStr);
     pushButtonServer=true;
-    lcdPrintln("Server send data!");
-    /*
-    if(receiveStr.compareTo("PUSH_ON")){
-      Serial.println("true");
-      pushButtonServer=true;
-    }else{
-      Serial.println("false");
-      pushButtonServer=false;
-    }
-    */
 }
 
 bool connectToServer(BLEAddress pAddress) {
@@ -213,44 +194,35 @@ void setup()
   
   lcd.init();  
   lcd.setRotation(1);         // 画面向き設定（0～3で設定、4～7は反転)　※CORE2、GRAYの場合
-  /*
-  canvas.setTextWrap(false);  // 改行をしない（画面をはみ出す時自動改行する場合はtrue）
-  canvas.setTextSize(1);      // 文字サイズ（倍率）
-  */
   lcd.setTextColor(TFT_WHITE,TFT_BLACK);
-
   lcd.setFont(&fonts::lgfxJapanGothic_16);
-  lcdPrintln("こんにちは世界");
-
+  lcdPrintFix(0,1,10,0,"こんにちは世界",TFT_GREEN);
   lcd.setCursor(0, 0);
   lcd.setTextScroll(true);
   lcd.setScrollRect(RANGE_SCROLL_X , RANGE_SCROLL_Y , lcd.width() , lcd.height() );
   lcd.setTextSize(FONT_MAGNIFICATION);            // 文字倍率変更
 
-  /*//spriteで画面表示を行う箇所（スクロールさせるためとりあえずコメントアウト
-  canvas.setColorDepth(8);                             // CORE2 GRAY のスプライトは16bit以上で表示されないため8bitに設定
-  canvas.createSprite(lcd.width(), lcd.height());
-  canvas.setTextFont(4); // フォントの指定
-  canvas.setCursor(10, 120); // カーソル位置の指定
-  canvas.pushSprite(0, 0);  // メモリ内に描画したcanvasを座標を指定して表示する
-  */
   M5.Speaker.setVolume(10);
+
+  timer = timerBegin(0, 80, true);  // タイマ作成
+  timerAttachInterrupt(timer, &onTimer, true);    // タイマ割り込みサービス・ルーチン onTimer を登録
+  timerAlarmWrite(timer, 1000, true);  // 割り込みタイミング(ms)の設定
+  timerAlarmEnable(timer);  // タイマ有効化
 }
 int i = 0;
 void loop()
 {
   M5.update();  // ボタン状態更新
 
-  if(!connected){//接続されていなければアドバタイジングされているデバイスをスキャンする
-    lcdPrintln("切断!! Scanning中...");
+  if(!connected){//接続されていなければアドバタイジングされているデバイスをスキャンする    
+    lcdPrintFix(0,0,10,0,"BLE切断",TFT_RED);
     scan(); 
   }
 
   if (doConnect == true) {//デバイスが見つかれば接続動作にはいる
     delay(1 * 1000); 
     if (connectToServer(*pServerAddress)) {
-      lcdPrintln("接続!!");
-      //lcdPrintln("connected!");
+      lcdPrintFix(0,0,10,0,"BLE接続",TFT_WHITE);
       connected = true;
     } else {
       lcdPrintln("We have failed to connect to the server.");
@@ -265,18 +237,37 @@ void loop()
       pushButtonServer=false;
     }
   }
-  if (Serial.available()) {
-    String text = Serial.readStringUntil(0x0a);
-    if (text.length() > 0){
-      lcdPrintFix(0,0,26,0,text);
+  if(IsKeepAliveScan){
+    if (Serial.available()) {
+      String text = Serial.readStringUntil(0x0a);
+      if (text.length() > 0){
+        IsKeepAliveDetectCount++;
+      }else{
+        ;
+      }
     }
+    IsKeepAliveScan=false;
+  }
+
+  if(IsKeepAliveCount>3){
+    //Serial.println("Alivecount!!!! 10");
+    if(IsKeepAliveDetectCount>0){
+      lcdPrintFix(0,1,10,0,"ALIVE確認",TFT_WHITE);
+      //Serial.println("Alive!!!!");
+    }else{
+      lcdPrintFix(0,1,10,0,"DEAD確認",TFT_RED);
+    }
+    IsKeepAliveDetectCount=0;
+    IsKeepAliveCount=0;
   }
   if(pushButtonServer){
+    lcdPrintFix(10,0,10,0,"呼び出し中",TFT_RED);
     //Serial.println("pushButtonServer true");
     M5.Speaker.tone(659, 200);
     delay(500);
     pushButtonServer=false;
   }else{
+    lcdPrintFix(10,0,10,0,"",TFT_RED);
     //Serial.println("pushButtonServer false");
     M5.Speaker.mute();
   }
