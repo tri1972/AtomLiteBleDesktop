@@ -138,7 +138,7 @@ namespace AtomLiteBleDesktop
                             // Writing a byte to the serial device.
                             DataWriter dw = new DataWriter(serialDevice.OutputStream);
                             //dw.WriteByte(0x0a);
-                            dw.WriteString("\r");
+                            dw.WriteString("a");
                             var ret = dw.StoreAsync();
                         }
                     }

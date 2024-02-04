@@ -26,6 +26,7 @@ static boolean doConnect = false;
 static boolean connected = false;
 static boolean pushButtonServer=false;
 static BLERemoteCharacteristic* pRemoteCharacteristic;
+static BLEClient*  pClient = NULL;
 
 static LGFX lcd; // LGFXのインスタンスを作成。
 static LGFX_Sprite canvas(&lcd);  // スプライトを使う場合はLGFX_Spriteのインスタンスを作成
@@ -35,9 +36,11 @@ hw_timer_t * timer = NULL;
 volatile uint32_t current_time = 0;
 
 static bool IsKeepAliveScan=false;
-static bool IsKeepAlive=false;
+//static bool IsKeepAlive=false;
 int IsKeepAliveDetectCount=false;
 volatile uint32_t IsKeepAliveCount = 0;
+bool IsKeepAliveDetect=false;
+bool IsKeepAliveDetectBefore=false;
 
 void lcdPrintln(char * str){      
   lcd.startWrite();
@@ -101,7 +104,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 {
   void onResult(BLEAdvertisedDevice *advertisedDevice)
   {
-    Serial.printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
+    //Serial.printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
     
     lcd.startWrite();
     lcd.printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
@@ -165,7 +168,7 @@ bool connectToServer(BLEAddress pAddress) {
     Serial.print("Forming a connection to ");
     Serial.println(pAddress.toString().c_str());
 
-    BLEClient*  pClient  = BLEDevice::createClient();
+    pClient  = BLEDevice::createClient();
     pClient->setClientCallbacks(new funcClientCallbacks());
     pClient->connect(pAddress);
 
@@ -182,6 +185,15 @@ bool connectToServer(BLEAddress pAddress) {
     pRemoteCharacteristic->registerForNotify(notifyCallback);
     return true;
 }
+
+void disconnectToServer(){
+  if(pClient!=NULL){
+    pClient->disconnect();
+    Serial.println("Disconnecting");
+  }else{
+    Serial.println("Already Disconnected");
+  }
+} 
 
 void setup()
 {
@@ -206,10 +218,13 @@ void setup()
 
   timer = timerBegin(0, 80, true);  // タイマ作成
   timerAttachInterrupt(timer, &onTimer, true);    // タイマ割り込みサービス・ルーチン onTimer を登録
-  timerAlarmWrite(timer, 1000, true);  // 割り込みタイミング(ms)の設定
+  timerAlarmWrite(timer, 100, true);  // 割り込みタイミング(ms)の設定
   timerAlarmEnable(timer);  // タイマ有効化
 }
+
 int i = 0;
+String value="";
+
 void loop()
 {
   M5.update();  // ボタン状態更新
@@ -217,8 +232,11 @@ void loop()
   if(!connected){//接続されていなければアドバタイジングされているデバイスをスキャンする    
     lcdPrintFix(0,0,10,0,"BLE切断",TFT_RED);
     scan(); 
+  }else{
+    if(M5.BtnC.isPressed()) {
+      pushButtonServer=false;
+    }
   }
-
   if (doConnect == true) {//デバイスが見つかれば接続動作にはいる
     delay(1 * 1000); 
     if (connectToServer(*pServerAddress)) {
@@ -230,16 +248,43 @@ void loop()
     }
     doConnect = false;
   }
-
   
-  if (connected) {
-    if(M5.BtnC.isPressed()) {
-      pushButtonServer=false;
+  if(Serial.available()){
+    while (Serial.available()) {
+      char data = Serial.read();
+      if(data==0x61){
+      //if(data==0x0a){
+        Serial.println("find ret!!!");
+        IsKeepAliveDetectCount++;
+        break;
+      }
     }
+    Serial.end();
+    Serial.begin(115200);
   }
   if(IsKeepAliveScan){
+    if(IsKeepAliveCount>3){
+      //Serial.println("Alivecount!!!! 10");
+      if(IsKeepAliveDetectCount>0){
+        lcdPrintFix(0,1,10,0,"ALIVE確認",TFT_WHITE);
+        IsKeepAliveDetect=true;
+        IsKeepAliveDetectCount=0;
+        //Serial.println("Alive!!!!");
+      }else{
+        lcdPrintFix(0,1,10,0,"DEAD確認",TFT_RED);
+        IsKeepAliveDetect=false;
+      }
+      IsKeepAliveCount=0;
+    }
+    IsKeepAliveScan=false;
+  }
+  
+  /*
+  if(IsKeepAliveScan){
     if (Serial.available()) {
-      String text = Serial.readStringUntil(0x0a);
+      String text = Serial.readStringUntil(0x0a);    
+      Serial.end();
+      Serial.begin(115200);
       if (text.length() > 0){
         IsKeepAliveDetectCount++;
       }else{
@@ -248,18 +293,36 @@ void loop()
     }
     IsKeepAliveScan=false;
   }
-
   if(IsKeepAliveCount>3){
     //Serial.println("Alivecount!!!! 10");
     if(IsKeepAliveDetectCount>0){
       lcdPrintFix(0,1,10,0,"ALIVE確認",TFT_WHITE);
+      IsKeepAliveDetect=true;
       //Serial.println("Alive!!!!");
     }else{
       lcdPrintFix(0,1,10,0,"DEAD確認",TFT_RED);
+      IsKeepAliveDetect=false;
     }
     IsKeepAliveDetectCount=0;
     IsKeepAliveCount=0;
   }
+*/
+
+  if(IsKeepAliveDetect){//PC:off→on
+    if(!IsKeepAliveDetectBefore){
+      disconnectToServer();
+      lcdPrintFix(0,0,10,0,"AliveBLE切断",TFT_RED);
+      IsKeepAliveDetectBefore=IsKeepAliveDetect;
+    }
+  }else{//PC:on→off
+    if(IsKeepAliveDetectBefore){
+      connected=false;
+      doConnect = false;
+      lcdPrintFix(0,0,10,0,"DeadBLE接続",TFT_RED);
+      IsKeepAliveDetectBefore=IsKeepAliveDetect;
+    }
+  }
+
   if(pushButtonServer){
     lcdPrintFix(10,0,10,0,"呼び出し中",TFT_RED);
     //Serial.println("pushButtonServer true");
