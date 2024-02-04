@@ -30,6 +30,8 @@ namespace AtomLiteBleDesktop
         /// </summary>
         private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        private ThreadPoolTimer _timer;
+
         /// <summary>
         ///単一アプリケーション オブジェクトを初期化します。これは、実行される作成したコードの
         ///最初の行であるため、論理的には main() または WinMain() と等価です。
@@ -94,138 +96,11 @@ namespace AtomLiteBleDesktop
 #endif
             this._timer = ThreadPoolTimer.CreatePeriodicTimer(_timerEvent, TimeSpan.FromSeconds(1));
 
-            //initSerialPort();
-
-        }
-        private int _count;
-        private ThreadPoolTimer _timer;
-        private SerialDevice device;
-
-        private async void driveSerial()
-        {
-
-            string portName = "COM6";
-            string aqs = SerialDevice.GetDeviceSelector(portName);
-            DeviceInformationCollection serialDeviceInfos = await DeviceInformation.FindAllAsync(aqs);
-            //DeviceInformationCollection serialDeviceInfos = await DeviceInformation.FindAllAsync(SerialDevice.GetDeviceSelector());
-
-            foreach (DeviceInformation serialDeviceInfo in serialDeviceInfos)
-            {
-                try
-                {
-                    using (SerialDevice serialDevice = await SerialDevice.FromIdAsync(serialDeviceInfo.Id))
-                    {
-
-                        if (serialDevice != null)
-                        {
-                            if (serialDevice.IsRequestToSendEnabled)
-                            {
-                                serialDevice.BaudRate = 115200;
-                                serialDevice.DataBits = 8;
-                                serialDevice.StopBits = SerialStopBitCount.One;
-                                serialDevice.Parity = SerialParity.None;
-                                serialDevice.Handshake = SerialHandshake.None;
-                                serialDevice.ReadTimeout = TimeSpan.FromMilliseconds(1000);
-                                serialDevice.WriteTimeout = TimeSpan.FromMilliseconds(1000);
-                            }
-                            serialDevice.ErrorReceived += SerialDeviceError;
-                            // Found a valid serial device.
-
-                            // Reading a byte from the serial device.
-                            //DataReader dr = new DataReader(serialDevice.InputStream);
-                            //int readByte = dr.ReadByte();
-
-                            // Writing a byte to the serial device.
-                            DataWriter dw = new DataWriter(serialDevice.OutputStream);
-                            //dw.WriteByte(0x0a);
-                            dw.WriteString("a");
-                            var ret = dw.StoreAsync();
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // Couldn't instantiate the device
-                }
-            }
-
         }
 
         private async void _timerEvent(ThreadPoolTimer timer)
         {
-            driveSerial();
-            /*
-            try
-            {
-                Debug.WriteLine("1secTick : " + this._count.ToString() + "Count");
-
-                logger.Info("Send Serial data 1secTick");
-                this._count++;
-                if (device != null)
-                {
-                    using (DataWriter dataWriteeObject = new DataWriter(device.OutputStream))
-                    {
-                        dataWriteeObject.WriteString("\r");
-                        var ret = dataWriteeObject.StoreAsync();
-                        
-                        if (ret!=null && ret.Status == AsyncStatus.Completed)
-                        {
-#if DEBUG
-                            logger.Info("Send Serial data");
-#endif
-                        }
-                        else
-                        {
-#if DEBUG
-                            //logger.Info("Error Send Serial data : " + ret.Status.ToString());
-#endif
-
-                        }
-                        await Task.Delay(100);
-                    }
-
-
-                }
-            }catch(SystemException e)
-            {
-                throw e;
-            }
-            */
-        }
-
-        private void SerialDeviceError(SerialDevice sender, ErrorReceivedEventArgs e)
-        {
-            ;
-        }
-
-        private async void initSerialPort()
-        {
-            string portName = "COM6";
-            string aqs = SerialDevice.GetDeviceSelector(portName);
-
-            var myDevices = await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync(aqs, null);
-            if (myDevices.Count == 0)
-            {
-                return;
-            }
-            else
-            {
-                //TODO: 下記がnullになると落ちてしまうので対策が必要・・・
-                device = await SerialDevice.FromIdAsync(myDevices[0].Id);
-                if (device.IsRequestToSendEnabled)
-                {
-                    device.BaudRate = 115200;
-                    device.DataBits = 8;
-                    device.StopBits = SerialStopBitCount.One;
-                    device.Parity = SerialParity.None;
-                    device.Handshake = SerialHandshake.None;
-                    device.ReadTimeout = TimeSpan.FromMilliseconds(1000);
-                    device.WriteTimeout = TimeSpan.FromMilliseconds(1000);
-                }
-                device.ErrorReceived += SerialDeviceError;
-
-            }
-
+            SerialCommunication.SerialCommunicationTx.DriveSerial();
         }
 
         /// <summary>
