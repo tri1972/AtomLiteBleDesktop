@@ -26,6 +26,7 @@ static boolean doConnect = false;
 static boolean connected = false;
 static boolean pushButtonServer=false;
 static BLERemoteCharacteristic* pRemoteCharacteristic;
+//static boolean isInitBLEClient=false;
 static BLEClient*  pClient = NULL;
 
 static LGFX lcd; // LGFXのインスタンスを作成。
@@ -33,9 +34,10 @@ static LGFX_Sprite canvas(&lcd);  // スプライトを使う場合はLGFX_Sprit
 uint8_t currentRow=0; 
 
 hw_timer_t * timer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 volatile uint32_t current_time = 0;
 
-static bool IsKeepAliveScan=false;
+volatile static bool IsKeepAliveScan=false;
 //static bool IsKeepAlive=false;
 int IsKeepAliveDetectCount=false;
 volatile uint32_t IsKeepAliveCount = 0;
@@ -94,9 +96,11 @@ void lcdPrintFix(int x,int y,int rect_x,int rect_y,String text,int color){
 
 class funcClientCallbacks: public BLEClientCallbacks {
     void onConnect(BLEClient* pClient) {
+        Serial.println("onConnect Execute");
     };
     void onDisconnect(BLEClient* pClient) {
         connected = false;
+        Serial.println("onDisconnect Execute");
     }
 };
 
@@ -114,9 +118,9 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     if(advertisedDevice->getName()==SERVER_NAME){
       lcd.startWrite();
       
-      Serial.println("Find Device!");
+      //Serial.println("Find Device!");
       lcd.println("Find Device!");
-      Serial.println(advertisedDevice->getAddress().toString().c_str());
+      //Serial.println(advertisedDevice->getAddress().toString().c_str());
       lcd.println(advertisedDevice->getAddress().toString().c_str());
       advertisedDevice->getScan()->stop();
       pServerAddress = new BLEAddress(advertisedDevice->getAddress());
@@ -129,8 +133,11 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 };
 
 void onTimer(){
+  
+  portENTER_CRITICAL_ISR(&timerMux);
   IsKeepAliveCount++;
   IsKeepAliveScan=true;
+  portEXIT_CRITICAL_ISR(&timerMux);
   //current_time = millis();
   //Serial.printf("No. %u, %u ms\n", counter, current_time);
 }
@@ -165,16 +172,17 @@ static void notifyCallback(
 }
 
 bool connectToServer(BLEAddress pAddress) {
-    Serial.print("Forming a connection to ");
-    Serial.println(pAddress.toString().c_str());
+    //Serial.print("Forming a connection to ");
+    //Serial.println(pAddress.toString().c_str());
 
     pClient  = BLEDevice::createClient();
     pClient->setClientCallbacks(new funcClientCallbacks());
     pClient->connect(pAddress);
+    //isInitBLEClient=true;
 
     BLERemoteService* pRemoteService = pClient->getService(serviceUUID); 
     //notify してクライアントの電源が切れると、サーバー側も電源を落とす。サービスが読み込めなくなるため。
-    Serial.println(pRemoteService->toString().c_str());
+    //Serial.println(pRemoteService->toString().c_str());
     if (pRemoteService == nullptr) {
       return false;
     }
@@ -187,6 +195,14 @@ bool connectToServer(BLEAddress pAddress) {
 }
 
 void disconnectToServer(){
+  /*
+  if(isInitBLEClient){
+    pClient->disconnect();
+    Serial.println("Disconnecting");
+  }else{
+    Serial.println("Already Disconnected");
+  }
+  */
   if(pClient!=NULL){
     pClient->disconnect();
     Serial.println("Disconnecting");
@@ -208,7 +224,8 @@ void setup()
   lcd.setRotation(1);         // 画面向き設定（0～3で設定、4～7は反転)　※CORE2、GRAYの場合
   lcd.setTextColor(TFT_WHITE,TFT_BLACK);
   lcd.setFont(&fonts::lgfxJapanGothic_16);
-  lcdPrintFix(0,1,10,0,"こんにちは世界",TFT_GREEN);
+  //lcdPrintFix(0,1,10,0,"こんにちは世界",TFT_GREEN);
+  lcdPrintFix(0,1,10,0,"DEAD確認",TFT_RED);
   lcd.setCursor(0, 0);
   lcd.setTextScroll(true);
   lcd.setScrollRect(RANGE_SCROLL_X , RANGE_SCROLL_Y , lcd.width() , lcd.height() );
@@ -218,7 +235,7 @@ void setup()
 
   timer = timerBegin(0, 80, true);  // タイマ作成
   timerAttachInterrupt(timer, &onTimer, true);    // タイマ割り込みサービス・ルーチン onTimer を登録
-  timerAlarmWrite(timer, 100, true);  // 割り込みタイミング(ms)の設定
+  timerAlarmWrite(timer, 1000, true);  // 割り込みタイミング(us)の設定 = 1msでの設定
   timerAlarmEnable(timer);  // タイマ有効化
 }
 
@@ -254,72 +271,54 @@ void loop()
       char data = Serial.read();
       if(data==0x61){
       //if(data==0x0a){
-        Serial.println("find ret!!!");
         IsKeepAliveDetectCount++;
+        //Serial.println("SerialReceivedAliveDetect!!!!");
+        //Serial.print(IsKeepAliveDetectCount, DEC);
         break;
       }
     }
-    Serial.end();
-    Serial.begin(115200);
-  }
-  if(IsKeepAliveScan){
-    if(IsKeepAliveCount>3){
-      //Serial.println("Alivecount!!!! 10");
-      if(IsKeepAliveDetectCount>0){
-        lcdPrintFix(0,1,10,0,"ALIVE確認",TFT_WHITE);
-        IsKeepAliveDetect=true;
-        IsKeepAliveDetectCount=0;
-        //Serial.println("Alive!!!!");
-      }else{
-        lcdPrintFix(0,1,10,0,"DEAD確認",TFT_RED);
-        IsKeepAliveDetect=false;
-      }
-      IsKeepAliveCount=0;
-    }
-    IsKeepAliveScan=false;
+    //Serial.end();
+    //Serial.begin(115200);
   }
   
-  /*
-  if(IsKeepAliveScan){
-    if (Serial.available()) {
-      String text = Serial.readStringUntil(0x0a);    
-      Serial.end();
-      Serial.begin(115200);
-      if (text.length() > 0){
-        IsKeepAliveDetectCount++;
+  //if(IsKeepAliveScan){
+    if(IsKeepAliveCount>1000){
+      //Serial.println("Alivecount!!!! 10");
+      if(IsKeepAliveDetectCount>0){
+        //lcdPrintFix(0,1,10,0,"ALIVE確認",TFT_WHITE);
+        IsKeepAliveDetect=true;
+        IsKeepAliveDetectCount=0;
+        //Serial.println("AliveDetectTrue!!!!");
       }else{
-        ;
+        //lcdPrintFix(0,1,10,0,"DEAD確認",TFT_RED);
+        IsKeepAliveDetect=false;
+        //Serial.println("AliveDetectFalse!!!!");
       }
+      portENTER_CRITICAL(&timerMux);
+      IsKeepAliveCount=0;
+      portEXIT_CRITICAL(&timerMux);
     }
     IsKeepAliveScan=false;
-  }
-  if(IsKeepAliveCount>3){
-    //Serial.println("Alivecount!!!! 10");
-    if(IsKeepAliveDetectCount>0){
-      lcdPrintFix(0,1,10,0,"ALIVE確認",TFT_WHITE);
-      IsKeepAliveDetect=true;
-      //Serial.println("Alive!!!!");
-    }else{
-      lcdPrintFix(0,1,10,0,"DEAD確認",TFT_RED);
-      IsKeepAliveDetect=false;
-    }
-    IsKeepAliveDetectCount=0;
-    IsKeepAliveCount=0;
-  }
-*/
+  //}
 
   if(IsKeepAliveDetect){//PC:off→on
     if(!IsKeepAliveDetectBefore){
+      noInterrupts();
+      lcdPrintFix(0,1,10,0,"ALIVE確認",TFT_WHITE);//BLE接続か接続中だとALIVE確認の表示がされない
+      Serial.println("Alive!!!!");
+      interrupts();
       disconnectToServer();
-      lcdPrintFix(0,0,10,0,"AliveBLE切断",TFT_RED);
       IsKeepAliveDetectBefore=IsKeepAliveDetect;
     }
   }else{//PC:on→off
     if(IsKeepAliveDetectBefore){
+      noInterrupts();
+      Serial.println("Dead!!!!");
       connected=false;
       doConnect = false;
-      lcdPrintFix(0,0,10,0,"DeadBLE接続",TFT_RED);
+      lcdPrintFix(0,1,10,0,"DEAD確認",TFT_RED);
       IsKeepAliveDetectBefore=IsKeepAliveDetect;
+      interrupts();
     }
   }
 
