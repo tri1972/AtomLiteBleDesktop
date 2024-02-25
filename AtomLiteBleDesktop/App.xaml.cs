@@ -95,6 +95,7 @@ namespace AtomLiteBleDesktop
             StorageFolder localFolder = ApplicationData.Current.LocalFolder;
 #endif
             this._timer = ThreadPoolTimer.CreatePeriodicTimer(_timerEvent, TimeSpan.FromSeconds(1));
+            //var devices= SerialCommunication.SerialCommunicationTx.FindDevices();
 
         }
 

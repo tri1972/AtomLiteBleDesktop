@@ -55,9 +55,17 @@ namespace AtomLiteBleDesktop
             } 
         }
 
+        ObservableCollection<string> Ports = new ObservableCollection<string>();
+
+
+
+        public SettingPageBind ResourceSettingPage { get; set; }
+
         public SettingsPage()
         {
             this.InitializeComponent();
+            this.ResourceSettingPage = new SettingPageBind();
+
             foreach (var post in BleContext.GetServerPosts())
             {
                 this.recordings.Add(new SettingPageContent()
@@ -70,8 +78,47 @@ namespace AtomLiteBleDesktop
                 });
 
             }
+            
+            Ports.Add("COM0");
+            Ports.Add("COM1");
+            Ports.Add("COM2");
+            Ports.Add("COM3");
+            Ports.Add("COM4");
+            Ports.Add("COM5");
+            Ports.Add("COM6");
+            Ports.Add("COM7");
+            Ports.Add("COM8");
+
         }
-        
+
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private async void PortsCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            bool ret = true;
+
+            //ret= await SerialCommunication.SerialCommunicationTx.IsFindSerialPort("COM0");
+            if (ret)
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    this.ResourceSettingPage.IsEnebledSerialPort = "true";
+                });
+
+            }
+            else
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    this.ResourceSettingPage.IsEnebledSerialPort = "false";
+
+                });
+            }
+        }
+
         private void Control_Setting_GotFocus(object sender, RoutedEventArgs e)
         {
             if (sender is TextBox)
@@ -116,6 +163,25 @@ namespace AtomLiteBleDesktop
                     }
 
                 }
+            }
+        }
+    }
+
+    public class SettingPageBind: BindableBase
+    {
+
+        private string isEnebledSerialPort;
+        public string IsEnebledSerialPort
+        {
+            get
+            {
+                return this.isEnebledSerialPort;
+            }
+            set
+            {
+                this.isEnebledSerialPort = value;
+                this.isEnebledSerialPort = "false";
+                this.SetProperty(ref this.isEnebledSerialPort, value);
             }
         }
     }

@@ -44,6 +44,91 @@ namespace AtomLiteBleDesktop.SerialCommunication
 
         }
         */
+        public static async Task< Dictionary<int, Dictionary<string, DeviceInformation>>> FindDevices()
+        {
+            var device = new Dictionary<int, Dictionary<string, DeviceInformation>>();
+            
+
+            string portNameDefine = "COM";
+            string portName;
+            for (int i = 0; i < 16; i++)
+            {
+                portName = portNameDefine + i.ToString();
+                string aqs = SerialDevice.GetDeviceSelector(portName);
+                if (aqs != null)
+                {
+                    var serialDeviceInfos = await DeviceInformation.FindAllAsync(aqs);
+                    if (serialDeviceInfos != null)
+                    {
+                        if (serialDeviceInfos.Count > 0)
+                        {
+
+                            foreach(var serialDeviceInfo in serialDeviceInfos)
+                            {
+                                if(serialDeviceInfo.IsEnabled)
+                                {
+                                    var tmp = new Dictionary<string, DeviceInformation>();
+                                    tmp.Add(portName, serialDeviceInfo);
+                                    device.Add(i, tmp);
+                                    break;
+
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+            return device;
+        }
+
+        public static async Task<bool> IsFindSerialPort(string portName)
+        {
+            string aqs = SerialDevice.GetDeviceSelector(portName);
+            //SerialDevice serialDevice = null;
+            bool output;
+            DataWriter dw = null;
+            try
+            {
+                var serialDeviceInfos = await DeviceInformation.FindAllAsync(aqs);
+                if (serialDeviceInfos != null)
+                {
+                    foreach (var serialDeviceInfo in serialDeviceInfos)
+                    {
+                        var serialDevice = await SerialDevice.FromIdAsync(serialDeviceInfo.Id);
+                        if (serialDevice.IsRequestToSendEnabled)
+                        {
+                            return true;
+                        }
+
+                    }
+                }
+                /*
+                if (serialDeviceInfos != null)
+                {
+                    using (dw = new DataWriter(serialDevice.OutputStream))
+                    {
+                        // Found a valid serial device.
+
+                        // Reading a byte from the serial device.
+                        //DataReader dr = new DataReader(serialDevice.InputStream);
+                        //int readByte = dr.ReadByte();
+
+                        // Writing a byte to the serial device.
+                        dw = new DataWriter(serialDevice.OutputStream);
+                        //dw.WriteByte(0x0a);
+                        dw.WriteString("a");
+                        var ret = dw.StoreAsync();
+
+                    }
+                }*/
+            }
+            catch (Exception)
+            {
+            }
+            return false;
+        }
+
         public static async void DriveSerial()
         {
             string portName = "COM6";
