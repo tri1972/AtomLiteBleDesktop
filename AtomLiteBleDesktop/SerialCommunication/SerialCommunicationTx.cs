@@ -11,6 +11,11 @@ namespace AtomLiteBleDesktop.SerialCommunication
 {
     class SerialCommunicationTx
     {
+
+        /// <summary>
+        /// log4net用インスタンス
+        /// </summary>
+        private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         /*
         private static SerialDevice device;
 
@@ -82,12 +87,14 @@ namespace AtomLiteBleDesktop.SerialCommunication
             return device;
         }
 
+        /// <summary>
+        /// Portが有効か判定する（デバイスマネージャーに出てこないポートはfalseとなる）
+        /// </summary>
+        /// <param name="portName"></param>
+        /// <returns></returns>
         public static async Task<bool> IsFindSerialPort(string portName)
         {
             string aqs = SerialDevice.GetDeviceSelector(portName);
-            //SerialDevice serialDevice = null;
-            bool output;
-            DataWriter dw = null;
             try
             {
                 var serialDeviceInfos = await DeviceInformation.FindAllAsync(aqs);
@@ -95,33 +102,16 @@ namespace AtomLiteBleDesktop.SerialCommunication
                 {
                     foreach (var serialDeviceInfo in serialDeviceInfos)
                     {
-                        var serialDevice = await SerialDevice.FromIdAsync(serialDeviceInfo.Id);
-                        if (serialDevice.IsRequestToSendEnabled)
+                        if (serialDeviceInfo.IsEnabled)
                         {
                             return true;
                         }
-
+                        else
+                        {
+                            return false;
+                        }
                     }
                 }
-                /*
-                if (serialDeviceInfos != null)
-                {
-                    using (dw = new DataWriter(serialDevice.OutputStream))
-                    {
-                        // Found a valid serial device.
-
-                        // Reading a byte from the serial device.
-                        //DataReader dr = new DataReader(serialDevice.InputStream);
-                        //int readByte = dr.ReadByte();
-
-                        // Writing a byte to the serial device.
-                        dw = new DataWriter(serialDevice.OutputStream);
-                        //dw.WriteByte(0x0a);
-                        dw.WriteString("a");
-                        var ret = dw.StoreAsync();
-
-                    }
-                }*/
             }
             catch (Exception)
             {
@@ -144,7 +134,7 @@ namespace AtomLiteBleDesktop.SerialCommunication
                     foreach (DeviceInformation serialDeviceInfo in serialDeviceInfos)
                     {
                         serialDevice = await SerialDevice.FromIdAsync(serialDeviceInfo.Id);
-                        if (serialDevice.IsRequestToSendEnabled)
+                        if (serialDevice != null && serialDevice.IsRequestToSendEnabled)
                         {
                             serialDevice.BaudRate = 115200;
                             serialDevice.DataBits = 8;
@@ -157,10 +147,14 @@ namespace AtomLiteBleDesktop.SerialCommunication
                             break;
 
                         }
+                        else
+                        {
+                            logger.Info("SerialDevice is null :" + serialDeviceInfo.Name);
+                        }
 
                     }
                 }
-                if (serialDeviceInfos != null)
+                if (serialDeviceInfos != null && serialDevice!=null)
                 {
                     using (dw = new DataWriter(serialDevice.OutputStream))
                     {

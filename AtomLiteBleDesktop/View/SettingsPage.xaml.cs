@@ -46,6 +46,11 @@ namespace AtomLiteBleDesktop
     /// </summary>
     public sealed partial class SettingsPage : Page
     {
+        /// <summary>
+        /// 検索対象となるポート数
+        /// </summary>
+        private const int NUMBER_SEARCHING_PORT = 16;
+
         private ObservableCollection<SettingPageContent> recordings = new ObservableCollection<SettingPageContent>();
         public ObservableCollection<SettingPageContent> Recordings 
         { 
@@ -78,7 +83,7 @@ namespace AtomLiteBleDesktop
                 });
 
             }
-            
+            /*
             Ports.Add("COM0");
             Ports.Add("COM1");
             Ports.Add("COM2");
@@ -88,19 +93,29 @@ namespace AtomLiteBleDesktop
             Ports.Add("COM6");
             Ports.Add("COM7");
             Ports.Add("COM8");
-
+            */
         }
 
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
+
+            for(int i=0;i< NUMBER_SEARCHING_PORT; i++)
+            {
+                var namePort = "COM" + i.ToString();
+                ret = await SerialCommunication.SerialCommunicationTx.IsFindSerialPort(namePort);
+                if (ret)
+                {
+                    Ports.Add(namePort);
+                }
+            }
         }
 
+
+        static bool ret=false;
         private async void PortsCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            bool ret = true;
-
-            //ret= await SerialCommunication.SerialCommunicationTx.IsFindSerialPort("COM0");
+            ret= await SerialCommunication.SerialCommunicationTx.IsFindSerialPort((sender as ComboBox).SelectedValue.ToString());
             if (ret)
             {
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
@@ -165,12 +180,28 @@ namespace AtomLiteBleDesktop
                 }
             }
         }
+
+        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 
+    /// <summary>
+    /// SendingPage.xamlとのBindingクラス
+    /// </summary>
     public class SettingPageBind: BindableBase
     {
 
         private string isEnebledSerialPort;
+        /// <summary>
+        /// SerialPortが有効か否か
+        /// </summary>
         public string IsEnebledSerialPort
         {
             get
@@ -179,9 +210,21 @@ namespace AtomLiteBleDesktop
             }
             set
             {
-                this.isEnebledSerialPort = value;
-                this.isEnebledSerialPort = "false";
                 this.SetProperty(ref this.isEnebledSerialPort, value);
+                this.isEnebledSerialPort = value;
+            }
+        }
+
+        private bool isSendingKeepAlive;
+        /// <summary>
+        /// KeepAliveを送るか否か
+        /// </summary>
+        public  bool IsSendingKeepAlive
+        {
+            get { return this.isSendingKeepAlive; }
+            set {
+                this.SetProperty(ref this.isSendingKeepAlive, value);
+                this.isSendingKeepAlive = value; 
             }
         }
     }

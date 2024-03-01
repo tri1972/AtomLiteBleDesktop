@@ -11,6 +11,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <ListView x:Name="SettingListView"  ItemsSource="{x:Bind Recordings}" Grid.Row="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
@@ -61,14 +62,18 @@
             <Grid.Resources>
                 <local:SettingPageBind x:Key="settingPageBinds"/>
             </Grid.Resources>
-
-            <Button Content="testest" Grid.Column="1" Margin="10" FontWeight="Bold" Height="Auto" Width="Auto" HorizontalAlignment="Left"/>
-            <ComboBox x:Name="PortsCombo" Header="SerialPorts" Grid.Column="0"  Height="Auto" Width="Auto" ItemsSource="{x:Bind Ports}" SelectionChanged="PortsCombo_SelectionChanged" >
+            <TextBlock Grid.Column="0" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Text="Keepl Aliveを送信するPort" Margin="20,0,20,0"/>
+            <ComboBox x:Name="PortsCombo" Grid.Column="1"  Height="Auto" Width="Auto" ItemsSource="{x:Bind Ports}" SelectionChanged="PortsCombo_SelectionChanged" >
             </ComboBox>
-            <!--
-            <TextBlock Grid.Column="2" HorizontalAlignment="Left" Margin="89,0,0,0"  TextWrapping="Wrap" VerticalAlignment="Center"  Text="ほげほげ"/>
-            -->
-            <TextBlock Grid.Column="2" HorizontalAlignment="Left" Margin="89,0,0,0"  TextWrapping="Wrap" VerticalAlignment="Center"  Text="{x:Bind Path=ResourceSettingPage.IsEnebledSerialPort,Mode=TwoWay}"/>
+            <TextBlock Grid.Column="2" HorizontalAlignment="Left"  TextWrapping="Wrap" VerticalAlignment="Center"  Text="{x:Bind Path=ResourceSettingPage.IsEnebledSerialPort,Mode=TwoWay}" Margin="20,0,20,0"/>
+        </Grid>
+        <Grid x:Name="LayoutSub2" Background="#FFF1F0F0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="2" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <CheckBox Content="KeepAlive 送信可・不可"  Grid.Column="0" VerticalAlignment="Top" IsChecked="{x:Bind Path=ResourceSettingPage.IsSendingKeepAlive,Mode=TwoWay}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked"/>
         </Grid>
     </Grid>
 

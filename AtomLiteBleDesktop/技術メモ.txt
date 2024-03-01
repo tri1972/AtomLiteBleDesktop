@@ -117,6 +117,3 @@ http://coelacanth.jp.net/uwp_0007/
 UWPアプリでArduinoとシリアル通信→基本的にはこの実装だが、周期送信すると例外エラーとなる
 http://shirotsuku.sakura.ne.jp/blog/?p=1369
 https://learn.microsoft.com/ja-jp/uwp/api/windows.devices.serialcommunication.serialdevice?view=winrt-22621
-
-データ バインディングの詳細
-https://learn.microsoft.com/ja-jp/windows/uwp/data-binding/data-binding-in-depth
