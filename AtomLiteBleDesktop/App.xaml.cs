@@ -48,6 +48,21 @@ namespace AtomLiteBleDesktop
                 db.Database.EnsureCreated();
             }
             //BleContext.DbInitRecord();//Dbに新規にデータを追加したい場合はこれを実行する
+            var dbSqlite=new  DBSQLiteBase<DBSQLiteBle>(0);
+            
+            dbSqlite.InitializeDatabase();
+            dbSqlite.Add(new DBSQLiteBle()
+            {
+                CharacteristicUUID = "test", 
+                NumberSound=0, 
+                PostId=0, 
+                ServerName="hoeg", 
+                ServerType ="fuga", 
+                ServiceUUID = "hage"
+            });
+            
+            dbSqlite.GetAllData();
+            dbSqlite.GetLastData();
         }
 
         /// <summary>
