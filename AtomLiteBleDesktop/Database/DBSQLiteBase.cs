@@ -32,6 +32,11 @@ namespace AtomLiteBleDesktop.Database
 
     public  class DBSQLiteBase<T>
     {
+        /// <summary>
+        /// log4net用インスタンス
+        /// </summary>
+        private static readonly log4net.ILog logger = LogHelper.GetInstanceLog4net(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         private const string FILE_NAME= "sqliteSample.db";
 
         private string fileName;
@@ -42,15 +47,13 @@ namespace AtomLiteBleDesktop.Database
         }
 
         private string dbpath;
-
+        private DBSQLiteBase<DBSQLiteBaseConfig> configDBContext;
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <param name="numRelease">リリース番号</param>
-        public DBSQLiteBase(int numRelease)
+        public DBSQLiteBase()
         {
             this.dbpath = Path.Combine(ApplicationData.Current.LocalFolder.Path, FILE_NAME);
-            //var configDBContext = new DBSQLiteBase<DBSQLiteBaseConfig>(0);
 
         }
 
@@ -80,35 +83,101 @@ namespace AtomLiteBleDesktop.Database
         /// データベース初期化
         /// </summary>
         /// <param name="fileName"></param>
-        public async void InitializeDatabase(string fileName=null)
+        public async void InitializeDatabase(int releaseNumber, string fileName=null)
         {
-            string currentFilePath;
-
-            if (fileName == null)
+            try
             {
-                currentFilePath = this.dbpath;
-            }
-            else
-            {
-                currentFilePath= Path.Combine(ApplicationData.Current.LocalFolder.Path, fileName);
-            }
+                string currentFilePath;
 
-            await ApplicationData.Current.LocalFolder.CreateFileAsync(FILE_NAME, CreationCollisionOption.OpenIfExists);
+                if (fileName == null)
+                {
+                    currentFilePath = this.dbpath;
+                    fileName = FILE_NAME;
+                }
+                else
+                {
+                    currentFilePath = Path.Combine(ApplicationData.Current.LocalFolder.Path, fileName);
+                }
+
+                //ファイルが存在しなければ新規作成。存在していればそのファイルをオープン
+                await ApplicationData.Current.LocalFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
+
+
+                if (this.configDBContext == null)
+                {
+                    this.configDBContext = new DBSQLiteBase<DBSQLiteBaseConfig>();
+                    //this.configDBContext.CreateNewTable(currentFilePath);
+                    var lastData = this.configDBContext.GetLastData();
+                    if (lastData != null)
+                    {
+                        if (lastData.NumberRelease < releaseNumber)
+                        {
+                            DeleteTable(this.getTableName(), currentFilePath);
+                            this.CreateNewTable(currentFilePath);
+                            this.configDBContext.Add(new DBSQLiteBaseConfig() { NumberRelease = releaseNumber });
+                            /*
+                            var storageFile = await ApplicationData.Current.LocalFolder.GetFileAsync(fileName);
+                            await storageFile.DeleteAsync();
+                            this.configDBContext.CreateNewTable(currentFilePath);
+                            this.configDBContext.Add(new DBSQLiteBaseConfig() { NumberRelease = releaseNumber });
+                            */
+                        }
+                    }
+                    else
+                    {
+                        this.configDBContext.Add(new DBSQLiteBaseConfig() { NumberRelease = releaseNumber });
+                    }
+                }
+
+                this.CreateNewTable(currentFilePath);
+            }
+            catch(Exception e)
+            {
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// テーブルを削除する
+        /// </summary>
+        /// <param name="tableName">削除するテーブル名</param>
+        /// <param name="currentFilePath">テーブルの入ったファイルパス</param>
+        public void DeleteTable(string tableName, string currentFilePath)
+        {
+            using (SqliteConnection db =
+               new SqliteConnection($"Filename={currentFilePath}"))
+            {
+                db.Open();
+
+                String tableCommand = "DROP TABLE " + tableName;
+                SqliteCommand deleteTable = new SqliteCommand(tableCommand, db);
+
+                deleteTable.ExecuteReader();
+
+            }
+        }
+
+        /// <summary>
+        /// 作成したファイルに対してtableを構築する
+        /// </summary>
+        /// <param name="currentFilePath">作成したファイル名</param>
+        public void CreateNewTable(string currentFilePath)
+        {
             using (SqliteConnection db =
                new SqliteConnection($"Filename={currentFilePath}"))
             {
                 db.Open();
 
                 String tableCommand = "CREATE TABLE IF NOT " +
-                    "EXISTS "+
-                    this.getTableName() + 
+                    "EXISTS " +
+                    this.getTableName() +
                     " (Id INTEGER PRIMARY KEY, ";
 
-                for(int i=0;i< this.getColumnInfos().Count;i++)
+                for (int i = 0; i < this.getColumnInfos().Count; i++)
                 {
-                    if(i!= this.getColumnInfos().Count - 1)
+                    if (i != this.getColumnInfos().Count - 1)
                     {
-                        tableCommand += this.getColumnInfos()[i].Name + " "+ this.getColumnInfos()[i].Type.ToString()+ " NULL,";
+                        tableCommand += this.getColumnInfos()[i].Name + " " + this.getColumnInfos()[i].Type.ToString() + " NULL,";
                     }
                     else
                     {
@@ -131,6 +200,7 @@ namespace AtomLiteBleDesktop.Database
             try
             {
                 var input = new List<object>();
+
                 foreach (var data in inputTexts.GetType().GetProperties())
                 {
                     input.Add(data.GetValue(inputTexts));
@@ -159,7 +229,11 @@ namespace AtomLiteBleDesktop.Database
                     }
                     insertCommand.ExecuteReader();
                 }
-            }catch (Exception e)
+            }catch(SqliteException e)
+            {
+                logger.Error("Sqllite Error :"+ e.Message);
+            }
+            catch (Exception e)
             {
                 throw e;
             }
@@ -191,7 +265,14 @@ namespace AtomLiteBleDesktop.Database
                 }
             }
             entries = getRecords(sqlStr);
-            return entries[0];
+            if (entries.Count() > 0)
+            {
+                return entries[0];
+            }
+            else
+            {
+                return default(T);
+            }
         }
 
         /// <summary>

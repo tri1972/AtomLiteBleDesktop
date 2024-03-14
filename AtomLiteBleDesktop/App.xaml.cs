@@ -1,4 +1,5 @@
 ﻿using AtomLiteBleDesktop.Database;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Diagnostics;
@@ -38,31 +39,38 @@ namespace AtomLiteBleDesktop
         /// </summary>
         public App()
         {
-            this.InitializeComponent();
-            this.Suspending += OnSuspending;
-            this.Resuming += new EventHandler<Object>(App_Resuming);
-            
-            
-            using (var db = new BleContext())
+            try
             {
-                db.Database.EnsureCreated();
+                this.InitializeComponent();
+                this.Suspending += OnSuspending;
+                this.Resuming += new EventHandler<Object>(App_Resuming);
+
+
+                using (var db = new BleContext())
+                {
+                    db.Database.EnsureCreated();
+                }
+                //BleContext.DbInitRecord();//Dbに新規にデータを追加したい場合はこれを実行する
+                var dbSqlite = new DBSQLiteBase<DBSQLiteBle>();
+
+                dbSqlite.InitializeDatabase(5);
+                dbSqlite.Add(new DBSQLiteBle()
+                {
+                    CharacteristicUUID = "test",
+                    NumberSound = 0,
+                    PostId = 0,
+                    ServerName = "hoeg",
+                    ServerType = "fuga",
+                    ServiceUUID = "hage"
+                });
+
+                dbSqlite.GetAllData();
+                dbSqlite.GetLastData();
             }
-            //BleContext.DbInitRecord();//Dbに新規にデータを追加したい場合はこれを実行する
-            var dbSqlite=new  DBSQLiteBase<DBSQLiteBle>(0);
-            
-            dbSqlite.InitializeDatabase();
-            dbSqlite.Add(new DBSQLiteBle()
+            catch (SqliteException e)
             {
-                CharacteristicUUID = "test", 
-                NumberSound=0, 
-                PostId=0, 
-                ServerName="hoeg", 
-                ServerType ="fuga", 
-                ServiceUUID = "hage"
-            });
-            
-            dbSqlite.GetAllData();
-            dbSqlite.GetLastData();
+                Debug.WriteLine(e.Message);
+            }
         }
 
         /// <summary>
