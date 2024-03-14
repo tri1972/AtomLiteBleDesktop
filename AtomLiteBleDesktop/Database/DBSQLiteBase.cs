@@ -102,25 +102,28 @@ namespace AtomLiteBleDesktop.Database
                 //ファイルが存在しなければ新規作成。存在していればそのファイルをオープン
                 await ApplicationData.Current.LocalFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
 
-
                 if (this.configDBContext == null)
                 {
                     this.configDBContext = new DBSQLiteBase<DBSQLiteBaseConfig>();
-                    //this.configDBContext.CreateNewTable(currentFilePath);
-                    var lastData = this.configDBContext.GetLastData();
-                    if (lastData != null)
+                    if (!this.configDBContext.HasTable())
                     {
-                        if (lastData.NumberRelease < releaseNumber)
+                        this.configDBContext.CreateNewTable(currentFilePath);
+                    }
+                    if (this.configDBContext.Count() > 0)
+                    {
+                        var lastData = this.configDBContext.GetLastData();
+                        if (lastData != null)
                         {
-                            DeleteTable(this.getTableName(), currentFilePath);
-                            this.CreateNewTable(currentFilePath);
+                            if (lastData.NumberRelease < releaseNumber)
+                            {
+                                DeleteTable(this.getTableName(), currentFilePath);
+                                this.CreateNewTable(currentFilePath);
+                                this.configDBContext.Add(new DBSQLiteBaseConfig() { NumberRelease = releaseNumber });
+                            }
+                        }
+                        else
+                        {
                             this.configDBContext.Add(new DBSQLiteBaseConfig() { NumberRelease = releaseNumber });
-                            /*
-                            var storageFile = await ApplicationData.Current.LocalFolder.GetFileAsync(fileName);
-                            await storageFile.DeleteAsync();
-                            this.configDBContext.CreateNewTable(currentFilePath);
-                            this.configDBContext.Add(new DBSQLiteBaseConfig() { NumberRelease = releaseNumber });
-                            */
                         }
                     }
                     else
@@ -131,10 +134,83 @@ namespace AtomLiteBleDesktop.Database
 
                 this.CreateNewTable(currentFilePath);
             }
+            catch(SqliteException err)
+            {
+                logger.Error("Sqllite Error :" + err.Message);
+                throw err;
+            }
             catch(Exception e)
             {
                 throw e;
             }
+        }
+
+        /// <summary>
+        /// テーブルが存在するかを確認
+        /// </summary>
+        /// <param name="tableName">テーブル名（指定しなければクラス名で）</param>
+        /// <returns></returns>
+        public bool HasTable(string tableName=null )
+        {
+            bool output = false;
+            if (tableName == null)
+            {
+                tableName = this.getTableName();
+            }
+
+            using (SqliteConnection db =
+               new SqliteConnection($"Filename={this.dbpath}"))
+            {
+                int isExist = 0;
+                db.Open();
+
+                String tableCommand = "SELECT COUNT(*) FROM sqlite_master WHERE TYPE='table' AND name='"+ tableName + "'";
+                SqliteCommand count = new SqliteCommand(tableCommand, db);
+                SqliteDataReader query = count.ExecuteReader();
+                while (query.Read())
+                {
+                    isExist = query.GetInt32(0);
+                }
+                if (isExist == 0)
+                {
+                    output = false;
+                }
+                else
+                {
+                    output= true;
+                }
+
+            }
+            return output;
+        }
+
+        /// <summary>
+        /// レコード数を数える
+        /// </summary>
+        /// <param name="tableName">テーブル名（指定しなければクラス名で）</param>
+        /// <returns></returns>
+        public int Count(string tableName = null)
+        {
+            int output = 0;
+            if (tableName == null)
+            {
+                tableName = this.getTableName();
+            }
+            using (SqliteConnection db =
+               new SqliteConnection($"Filename={this.dbpath}"))
+            {
+                db.Open();
+
+                String tableCommand = "select count(*) from " + tableName;
+                SqliteCommand count = new SqliteCommand(tableCommand, db); 
+                SqliteDataReader query = count.ExecuteReader();
+                while (query.Read())
+                {
+                    output= query.GetInt32(0);
+                }
+
+            }
+            return output;
         }
 
         /// <summary>

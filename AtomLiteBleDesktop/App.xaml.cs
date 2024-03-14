@@ -53,7 +53,7 @@ namespace AtomLiteBleDesktop
                 //BleContext.DbInitRecord();//Dbに新規にデータを追加したい場合はこれを実行する
                 var dbSqlite = new DBSQLiteBase<DBSQLiteBle>();
 
-                dbSqlite.InitializeDatabase(5);
+                dbSqlite.InitializeDatabase(0);
                 dbSqlite.Add(new DBSQLiteBle()
                 {
                     CharacteristicUUID = "test",
